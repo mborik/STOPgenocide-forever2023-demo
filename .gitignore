@@ -1,0 +1,11 @@
+*.lst
+*.exe
+*.sna
+*.tap
+
+/!pripravy
+
+/bank*
+part.bin
+*.pak
+*.bak
