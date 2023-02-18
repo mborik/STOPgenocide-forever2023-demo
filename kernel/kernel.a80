@@ -13,7 +13,7 @@ numberOfBanks = 5
 page128		equ	#7FFD
 act128page	equ	#5B5C
 actborder	equ	#5C48
-FRAMES		equ	23672
+FRAMES		equ	#5C78
 
 
 	module loader
@@ -346,6 +346,9 @@ line2.len = $ - line2.cmds
 
 line3:		db	0, 3
 		dw	line3.len
+		; PAUSE VAL "42"
+		db	C_PAUSE
+		VAL	42, ":"
 line3.cmds	; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
 		VAL	loader.fadeoutandrun, EOL

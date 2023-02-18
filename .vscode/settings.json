@@ -1,4 +1,5 @@
 {
+	"explorer.excludeGitIgnore": true,
 	"files.eol": "\n",
 	"files.associations": {
 		"*.{a80,inc}": "z80-macroasm"
