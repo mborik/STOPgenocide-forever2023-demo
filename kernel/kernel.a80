@@ -25,7 +25,7 @@ begin = $
 introscr.dat:	incbin "loading.pak"
 introscr.len = $ - introscr.dat
 
-basesp
+@basesp
 introscr:	ld	hl,introscr.dat
 		ld	de,#4000
 		jr	depack
@@ -412,12 +412,13 @@ total = $ - line1
 		export act128page
 		export actborder
 		export FRAMES
-		export MUSIC.page
-		export MUSIC.init
-		export MUSIC.play
+		export basesp
 		export kernel
 		export IMCALL
 		export RUNZONE
 		export depack
 		export xchg.vram
 		export xchg.bnk
+		export MUSIC.page
+		export MUSIC.init
+		export MUSIC.play
