@@ -27,10 +27,10 @@ rm -f ${OUTPUT}
 #
 #> cd ../demopart
 #> ASM demopart.a80 -DisFX --lst=demopart.lst
-#> PACK final.bin final.pak
+#> PAK final.bin final.pak
 
 cd ..
-rm -f output bank*
+rm -f bank*
 ASM pg1fx.a80 --lst=kernel/pg1fx.lst --exp=kernel/pg1fx.inc
 PAK bank1 bank1.pak
 ASM pg3fx.a80 --lst=kernel/pg3fx.lst --exp=kernel/pg3fx.inc
@@ -44,4 +44,4 @@ PAK bank7 bank7.pak
 
 cd kernel
 PAK loading.scr loading.pak
-ASM kernel.a80 -DOUTPUT="../build/${OUTPUT}" --lst=kernel.lst --exp=constants.inc
+ASM kernel.a80 -DOUTPUT="\"../build/${OUTPUT}\"" --lst=kernel.lst --exp=constants.inc

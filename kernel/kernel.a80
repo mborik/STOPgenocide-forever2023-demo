@@ -17,27 +17,31 @@ FRAMES		equ	23672
 
 
 	module loader
+		display "Composing loader & kernel"
+
 		org	#8000 - introscr.len
+begin = $
 
 introscr.dat:	incbin "loading.pak"
 introscr.len = $ - introscr.dat
 
-@introscr:	ld	hl,introscr.dat
+basesp
+introscr:	ld	hl,introscr.dat
 		ld	de,#4000
 		jr	depack
 
-@unpackpage:	ld	hl,#51A1
+unpackpage:	ld	hl,#51A1
 		ld	bc,((30 / numberOfBanks) << 8) | #FF
 .pgprog:	ld	(hl),c	; draw progress
 		inc	l
 		djnz	.pgprog
 		ld	(unpackpage+1),hl
 		di
-		ld	hl,#8000
+		ld	hl,RUNZONE
 		ld	de,#C000
 		jr	depack
 
-@fadeoutandrun:	ld	a,25
+fadeoutandrun:	ld	a,25
 .loop:		ei
 		halt
 		halt
@@ -60,10 +64,42 @@ introscr.len = $ - introscr.dat
 		include "dzx0_fast.a80"
 		endmodule
 
+attrhide:	ld	hl,22528
+		ld	c,24
+.atthd2:	ld	b,32
+		push	bc
+.atthd3:	ld	a,(hl)
+		and	7
+		jr	z,.atthd4
+		dec	a
+.atthd4:	push	af
+		ld	a,(hl)
+		and	56
+		jr	z,.atthd5
+		ld	c,8
+		sub	c
+		ld	c,a
+		pop	af
+		or	c
+		jr	.atthd6
+.atthd5:	ld	a,(hl)
+		and	248
+		ld	c,a
+		pop	af
+		or	c
+.atthd6:	ld	(hl),a
+		inc	hl
+		djnz	.atthd3
+		pop	bc
+		dec	c
+		jr	nz,.atthd2
+		ret
+.end = $
+
 	if $ > #8181
-		display "Too long! ",/D,($-#8181)," bytes out!"
+		display "Too long! ",/D,($-#8181)," bytes out of interrupt!"
 	else
-		display /D,(#8181-$)," bytes free..."
+		display /D,(#8181-$)," bytes free before interrupt"
 	endif
 
 		block	(#8181-$),0
@@ -119,6 +155,7 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		ret
 
 
+fxtable:
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this effect descriptor:
 ;
@@ -129,56 +166,14 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 ;     ... or ...
 ;     dw  fx_demopart.length
 
-fxtable:
-
 		db	0
 
-;;-----------------------------------------------------------------------------
-		align	256
-
-im2vector:	block	257, 0
-
-	outend
-
-		org	im2vector
-		block	256 - (attrhide.end - attrhide), 0
-
-attrhide:	ld	hl,22528
-		ld	c,24
-.atthd2:	ld	b,32
-		push	bc
-.atthd3:	ld	a,(hl)
-		and	7
-		jr	z,.atthd4
-		dec	a
-.atthd4:	push	af
-		ld	a,(hl)
-		and	56
-		jr	z,.atthd5
-		ld	c,8
-		sub	c
-		ld	c,a
-		pop	af
-		or	c
-		jr	.atthd6
-.atthd5:	ld	a,(hl)
-		and	248
-		ld	c,a
-		pop	af
-		or	c
-.atthd6:	ld	(hl),a
-		inc	hl
-		djnz	.atthd3
-		pop	bc
-		dec	c
-		jr	nz,.atthd2
-		ret
-.end = $
+im2vector = ((high $) + 1) << 8
+		display /D,(im2vector-$)," bytes free to IM2 vector"
+		block	(im2vector-$) + 257, 0
 
 ;;-----------------------------------------------------------------------------
-		align	256
 
-		nop
 @kernel:	di
 		ld	sp,basesp
 		ld	hl,im2vector
@@ -264,12 +259,154 @@ attrhide:	ld	hl,22528
 .end		ei
 		halt
 		jr	.end
-@kernend
+total = $-begin
 
 		align	256
 @RUNZONE	equ	$
-basesp
+
 	endmodule
+
+
+		display "Composing BASIC"
+		include "sinclairBASIC.inc"
+
+		org	23755-17
+
+; BASIC header
+	tapout OUTPUT,0
+
+		db	0
+		db	C_STOP, "GENOCIDE "
+		dw	bas.total
+		dw	1 ; start line
+		dw	bas.total
+
+	tapend
+
+; BASIC block
+	tapout OUTPUT
+
+	module bas
+line1:		db	0, 1
+		dw	line1.len
+line1.cmds	; POKE VAL "23624",NOT PI:
+		db	C_POKE
+		VAL	23624, ','
+		db	C_NOT, C_PI, ':'
+		; POKE VAL "23693",NOT PI:
+		db	C_POKE
+		VAL	23693, ','
+		db	C_NOT, C_PI, ':'
+		; CLEAR VAL "x":
+		db	C_CLEAR
+		VAL	loader.begin - 1, ':'
+		; POKE VAL "23739",CODE "o":
+		db	C_POKE
+		VAL	23739, ','
+		db	C_CODE, '"o":'
+		; POKE VAL "23388",VAL "16":
+		db	C_POKE
+		VAL	23388, ','
+		VAL	16, ':'
+		; OUT VAL "32765",VAL "16"
+		db	C_OUT
+		VAL	32765, ','
+		VAL	16, ':'
+		; LOAD _"loader" CODE:
+		db	C_LOAD, ' "loader"', C_CODE, ':'
+		; RANDOMIZE USR VAL "x"
+		db	C_RANDOMIZE, C_USR
+		VAL	loader.introscr, EOL
+line1.len = $ - line1.cmds
+
+line2:		db	0, 2
+		dw	line2.len
+line2.cmds	; READ s
+		db	C_READ, 's:'
+		; POKE VAL "23388",s:
+		db	C_POKE
+		VAL	23388, ','
+		db	's:'
+		; OUT VAL "32765",s:
+		db	C_OUT
+		VAL	32765, ','
+		db	's:'
+		; LOAD _"page"+(STR$ s) CODE:
+		db	C_LOAD, ' "bank"+(', C_STRS, 's)', C_CODE, ':'
+		; RANDOMIZE USR VAL "x":
+		db	C_RANDOMIZE, C_USR
+		VAL	loader.unpackpage, ':'
+		; IF s <> VAL "23" THEN
+		db	C_IF, 's', C_NOTEQ
+		VAL	23, C_THEN
+		; GO TO VAL "2"
+		db	C_GOTO
+		VAL	2, EOL
+line2.len = $ - line2.cmds
+
+line3:		db	0, 3
+		dw	line3.len
+line3.cmds	; RANDOMIZE USR VAL "x"
+		db	C_RANDOMIZE, C_USR
+		VAL	loader.fadeoutandrun, EOL
+line3.len = $ - line3.cmds
+
+line9:		db	0, 9
+		dw	.len
+line9.cmds	; DATA...
+		db	C_DATA
+		VAL	#11, ','
+		VAL	#13, ','
+		VAL	#14, ','
+		VAL	#16, ','
+		VAL	#17, EOL
+line9.len = $ - line9.cmds
+
+total = $ - line1
+	endmodule
+	tapend
+
+; loader block
+		display "Storing loader into output tape"
+		savetap OUTPUT, CODE, "loader", loader.begin, loader.total
+
+;;-----------------------------------------------------------------------------
+	macro putBank number?, filename?
+@__putBank_number = number?
+		lua allpass
+			_pl("putBank"..tostring(_c('__putBank_number')))
+		endlua
+
+		tapout OUTPUT,0
+			db	3 ;; BYTES
+		lua allpass
+			_pc("db 'bank"..tostring(_c('__putBank_number')).."    '")
+		endlua
+
+			dw	.filelength
+			dw	RUNZONE ;; block start address
+			dw	0x8000
+		tapend
+
+		tapout OUTPUT
+			org #C000,(__putBank_number & 7)
+.filedata		incbin filename?
+.filelength = $-.filedata
+
+	if .filelength > (#C000 - RUNZONE)
+		display "Packed bank ",/D,(__putBank_number & 7)," is too long!"
+	endif
+		tapend
+	endm
+;;-----------------------------------------------------------------------------
+		display "Storing banks into output tape"
+
+		putBank #11,"../bank1.pak"
+		putBank #13,"../bank3.pak"
+		putBank #14,"../bank4.pak"
+		putBank #16,"../bank6.pak"
+		putBank #17,"../bank7.pak"
+
 
 		export page128
 		export act128page
