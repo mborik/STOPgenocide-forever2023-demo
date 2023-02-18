@@ -1,0 +1,286 @@
+		device	zxspectrum128
+
+numberOfBanks = 5
+		include "pg1fx.inc"
+		include "pg3fx.inc"
+		include "pg4fx.inc"
+		include "pg6fx.inc"
+		include "pg7fx.inc"
+
+		emptytap OUTPUT
+
+
+page128		equ	#7FFD
+act128page	equ	#5B5C
+actborder	equ	#5C48
+FRAMES		equ	23672
+
+
+	module loader
+		org	#8000 - introscr.len
+
+introscr.dat:	incbin "loading.pak"
+introscr.len = $ - introscr.dat
+
+@introscr:	ld	hl,introscr.dat
+		ld	de,#4000
+		jr	depack
+
+@unpackpage:	ld	hl,#51A1
+		ld	bc,((30 / numberOfBanks) << 8) | #FF
+.pgprog:	ld	(hl),c	; draw progress
+		inc	l
+		djnz	.pgprog
+		ld	(unpackpage+1),hl
+		di
+		ld	hl,#8000
+		ld	de,#C000
+		jr	depack
+
+@fadeoutandrun:	ld	a,25
+.loop:		ei
+		halt
+		halt
+		ex	af,af'
+		call	attrhide
+		ex	af,af'
+		dec	a
+		jr	nz,.loop
+		jp	kernel
+
+@xchg.vram:	ld	a,#1D
+		xor	#0A
+		ld	(xchg.vram+1),a
+@xchg.bnk:	ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+@depack:	module zx0
+		include "dzx0_fast.a80"
+		endmodule
+
+	if $ > #8181
+		display "Too long! ",/D,($-#8181)," bytes out!"
+	else
+		display /D,(#8181-$)," bytes free..."
+	endif
+
+		block	(#8181-$),0
+
+;;- INTERRUPT -----------------------------------------------------------------
+;		org	#8181
+
+interrupt:	push	af		; zakladne osetrenie prerusenia
+		ld	a,(actborder)	; s volanim hudobneho hradla
+		out	(254),a
+		push	bc
+		push	de
+		push	hl
+		exx
+		ex	af,af'
+		push	ix
+		push	iy
+		push	af
+		push	bc
+		push	de
+		push	hl
+
+@IMCALL		db	0,0,0
+
+		ld	a,(act128page)
+		push	af
+		and	$F8		; ponechame nastavenu vram
+		or	MUSIC.page	; a prestrankujeme na banku s muzikou
+		ld	bc,page128
+		out	(c),a
+		call	MUSIC.play
+		pop	af
+		ld	bc,page128
+		out	(c),a
+
+		ld	hl,(FRAMES)
+		inc	hl
+		ld	(FRAMES),hl
+
+		pop	hl
+		pop	de
+		pop	bc
+		pop	af
+		pop	iy
+		pop	ix
+		ex	af,af'
+		exx
+		pop	hl
+		pop	de
+		pop	bc
+		pop	af
+		ei
+		ret
+
+
+;;-----------------------------------------------------------------------------
+; Every part is defined with this effect descriptor:
+;
+;     db  fx_demopart.pg   ; current fx 128k page
+;                          ; (set bit.7 to ldir given length, not decompress)
+;     dw  fx_demopart      ; place where fx data lives
+;     dw  fx_demopart.sync ; number of halts from start of demo to sync with
+;     ... or ...
+;     dw  fx_demopart.length
+
+fxtable:
+
+		db	0
+
+;;-----------------------------------------------------------------------------
+		align	256
+
+im2vector:	block	257, 0
+
+	outend
+
+		org	im2vector
+		block	256 - (attrhide.end - attrhide), 0
+
+attrhide:	ld	hl,22528
+		ld	c,24
+.atthd2:	ld	b,32
+		push	bc
+.atthd3:	ld	a,(hl)
+		and	7
+		jr	z,.atthd4
+		dec	a
+.atthd4:	push	af
+		ld	a,(hl)
+		and	56
+		jr	z,.atthd5
+		ld	c,8
+		sub	c
+		ld	c,a
+		pop	af
+		or	c
+		jr	.atthd6
+.atthd5:	ld	a,(hl)
+		and	248
+		ld	c,a
+		pop	af
+		or	c
+.atthd6:	ld	(hl),a
+		inc	hl
+		djnz	.atthd3
+		pop	bc
+		dec	c
+		jr	nz,.atthd2
+		ret
+.end = $
+
+;;-----------------------------------------------------------------------------
+		align	256
+
+		nop
+@kernel:	di
+		ld	sp,basesp
+		ld	hl,im2vector
+		ld	a,h
+		ld	i,a
+		im	2
+		ld	a,high interrupt
+.mkim2:		ld	(hl),a
+		inc	l
+		jr	nz,.mkim2
+		inc	h
+		ld	(hl),a
+; init music
+		ld	a,MUSIC.page | #10
+		call	xchg.bnk
+		call	MUSIC.init
+; clear both vrams
+		ld	a,#17
+		call	xchg.bnk
+		ld	hl,#4000
+		ld	de,#4001
+		ld	bc,6911
+		ld	(hl),l
+		ldir
+		ld	hl,#4000
+		ld	d,#C0
+		ld	b,high 6912
+		ldir
+		ld	(FRAMES),bc
+		ld	a,#10
+		call	xchg.bnk
+
+.run:		ld	hl,fxtable
+		ld	a,(hl)
+		or	a
+		jr	z,.end
+		inc	l
+		ld	e,(hl)
+		inc	l
+		ld	d,(hl)
+		push	hl
+		ex	de,hl
+		ld	e,a
+		and	#17
+		ld	b,a
+		ld	a,(act128page)
+		and	#F8
+		push	af
+		or	b
+		call	xchg.bnk
+		bit	7,e
+		jr	nz,.ldir
+		ld	de,RUNZONE
+		call	depack
+		pop	af
+		call	xchg.bnk
+		pop	hl
+		inc	l
+		ld	e,(hl)
+		inc	l
+		ld	d,(hl)
+		inc	l
+		ld	(.run+1),hl
+		call	RUNZONE
+		jr	.run
+
+.ldir:		pop	af
+		ex	de,hl
+		pop	hl
+		inc	l
+		ld	c,(hl)
+		inc	l
+		ld	b,(hl)
+		inc	l
+		ld	(.run+1),hl
+		ex	de,hl
+		ld	de,RUNZONE
+		ldir
+		call	xchg.bnk
+		call	RUNZONE
+		jr	.run
+
+.end		ei
+		halt
+		jr	.end
+@kernend
+
+		align	256
+@RUNZONE	equ	$
+basesp
+	endmodule
+
+		export page128
+		export act128page
+		export actborder
+		export FRAMES
+		export MUSIC.page
+		export MUSIC.init
+		export MUSIC.play
+		export kernel
+		export IMCALL
+		export RUNZONE
+		export depack
+		export xchg.vram
+		export xchg.bnk

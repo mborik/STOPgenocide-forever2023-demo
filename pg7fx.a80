@@ -1,0 +1,34 @@
+		device	zxspectrum128
+		org	#C000
+		define isFX 7
+		display "Composing bank ",/D,isFX
+
+@_fxpage = #17
+@_fxpage_start
+
+VRAM2		block	#1800,0
+		block	#0300,0
+
+;;-----------------------------------------------------------------------------
+		include "music/sqt.a80"
+
+MUSIC.page = _fxpage
+MUSIC.init = sq_init
+MUSIC.play = sq_play
+
+;;-----------------------------------------------------------------------------
+	if $ > #10000
+		display "Too long! ",/D,($-#10000)," bytes out!"
+		end
+	else
+		display /D,(#10000-$)," bytes free..."
+	endif
+
+		align	16384,0
+		savebin "bank7",(_fxpage_start),$-(_fxpage_start)
+
+;;-----------------------------------------------------------------------------
+
+		export	MUSIC.page
+		export	MUSIC.init
+		export	MUSIC.play

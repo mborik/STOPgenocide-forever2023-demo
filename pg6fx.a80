@@ -1,0 +1,34 @@
+		device	zxspectrum128
+		org	#C000
+		define isFX 6
+		display "Composing bank ",/D,isFX
+
+@_fxpage = #16
+@_fxpage_start
+
+;;-----------------------------------------------------------------------------
+; Every part is defined with this descriptor:
+;
+; fx_demopart: incbin "demo-part-folder/final.pak"
+; .pg = _fxpage     ; current fx 128k page
+;                   ; (set bit.7 to just ldir given length, not decompress)
+; .sync = 1234      ; number of halts from start of demo to sync with
+; .length           ; optional when data transfer (ldir) needed
+
+;;-----------------------------------------------------------------------------
+	if $ > #10000
+		display "Too long! ",/D,($-#10000)," bytes out!"
+		end
+	else
+		display /D,(#10000-$)," bytes free..."
+	endif
+
+		align	16384,0
+		savebin "bank6",(_fxpage_start),$-(_fxpage_start)
+
+;;-----------------------------------------------------------------------------
+; Every part descriptor values should be exported:
+;
+;		export fx_demopart
+;		export fx_demopart.pg
+;		export fx_demopart.sync
