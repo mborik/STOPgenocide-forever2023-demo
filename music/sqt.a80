@@ -1,29 +1,6 @@
 ; SQ-Tracker compiled song player © 1993 George K./Proxima Software
 ; - disassmbled & modified © 2009-2023 mborik/SinDiKat.
 
-	ifndef isFX
-		device zxspectrum128
-
-		org	#C000
-
-demoplay	di
-		ld	sp,demoplay
-		call	sq_init
-.loop		ei
-		halt
-		ld	b,-1
-.wait		ex	(sp),ix
-		ex	(sp),ix
-		djnz	.wait
-		ld	a,1
-		out	(254),a
-		call	sq_play
-		ld	a,7
-		out	(254),a
-		jr	.loop
-	endif
-
-		org	#DE00
 sq_init:
 		xor	a
 	if 0	; RELOC IS NOT NEEDED FOR THIS PRERELOCATED DEMO MUSIC
@@ -718,8 +695,3 @@ reloc_endptr:	ds	2		; pointer to first sample definition
 		org	buffer
 
 		incbin "piggy.sqt"
-
-
-	ifndef isFX
-		savesna "!test.sna",demoplay
-	endif

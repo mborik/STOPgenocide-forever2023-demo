@@ -18,6 +18,10 @@
 				}
 			},
 			"isBackground": false,
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"presentation": {
 				"echo": false,
 				"reveal": "silent",
@@ -49,10 +53,6 @@
 						"args": [ "/d", "/c" ]
 					}
 				}
-			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
 			},
 			"isBackground": false,
 			"presentation": {

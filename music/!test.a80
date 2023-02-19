@@ -1,0 +1,27 @@
+		device zxspectrum128
+
+		org	#C000
+
+demoplay	di
+		ld	sp,demoplay
+		call	sq_init
+.loop		ei
+		halt
+		ld	b,-1
+.wait		ex	(sp),ix
+		ex	(sp),ix
+		djnz	.wait
+		ld	a,1
+		out	(254),a
+		call	sq_play
+		ld	a,7
+		out	(254),a
+		jr	.loop
+
+
+		org	#DE00
+
+		include "sqt.a80"
+
+
+		savesna "!test.sna",demoplay

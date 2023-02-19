@@ -195,8 +195,8 @@ im2vector = ((high $) + 1) << 8
 		call	xchg.bnk
 		call	MUSIC.init
 ; clear both vrams
-		ld	a,#17
-		call	xchg.bnk
+;		ld	a,#17
+;		call	xchg.bnk
 		ld	hl,#4000
 		ld	de,#4001
 		ld	bc,6911

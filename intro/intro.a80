@@ -25,8 +25,7 @@ SCREEN = #4000
 ;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
-start		di
-		ld	hl,introscreen
+start		ld	hl,introscreen
 		ld	de,SCREEN
 		ld	bc,#1B00
 		ldir
@@ -343,3 +342,9 @@ ayval_buffer:	block	10,0
 tabbod
 introscreen:	incbin "base.scr"
 		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+		include "../kernel/kernel.micro.inc"
+		savesna "intro.sna",microkernel
+	endif
