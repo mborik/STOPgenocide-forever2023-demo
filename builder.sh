@@ -16,7 +16,7 @@ function ASM() {
 }
 function PAK() {
 	rm -f $2
-	zx0 -f $1
+	zx0 -f $1 > /dev/null
 	mv -f "$1.zx0" $2
 }
 
@@ -28,6 +28,10 @@ rm -f ${OUTPUT}
 #> cd ../demopart
 #> ASM demopart.a80 -DisFX --lst=demopart.lst
 #> PAK final.bin final.pak
+
+cd ../intro
+ASM intro.a80 -DisFX --lst=intro.lst
+PAK final.bin final.pak
 
 cd ..
 rm -f bank*

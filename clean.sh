@@ -11,6 +11,7 @@ popd
 
 subdirs=(
 	kernel
+	intro
 	music
 )
 

@@ -1,0 +1,345 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'intro'"
+	endif
+
+@DEBUG = 1
+
+		include "../kernel/constants.inc"
+
+SCREEN = #4000
+
+;;-----------------------------------------------------------------------------
+	macro border n
+	  if DEBUG
+	    if n > 0
+		ld	a,n
+	    else
+		xor	a
+	    endif
+		out	(254),a
+	  endif
+	endm
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start		di
+		ld	hl,introscreen
+		ld	de,SCREEN
+		ld	bc,#1B00
+		ldir
+		call	maketable
+
+		ld	b,0
+.loop:		push	bc
+		ei
+		halt
+		border	1
+		call	analyzethat
+		border	0
+		pop	bc
+		; djnz	.loop
+		jr	.loop
+		ret
+
+analyzethat:	ld	ix,ayval_buffer
+		ld	bc,#FFFD
+		ld	de,#0A0F	; d = register AY, e = max value
+.chnC:		out	(c),d
+		in	a,(c)
+		cp	e
+		jr	c,.chnC_noenv
+		ld	a,e
+.chnC_noenv:	ld	h,a
+
+.chnB:		dec	d
+		out	(c),d
+		in	a,(c)
+		cp	e
+		jr	c,.chnB_noenv
+		ld	a,e
+.chnB_noenv:	ld	l,a
+		add	a,h
+		ld	(ix+2),a
+		rlca
+		ld	(ix+1),a
+		sub	l
+		ld	(ix+0),a
+		ld	a,h
+		ld	(ix+3),a
+		srl	a
+		ld	(ix+4),a
+
+.chnA:		dec	d
+		out	(c),d
+		in	a,(c)
+		cp	e
+		jr	c,.chnA_noenv
+		ld	a,e
+.chnA_noenv:	ld	l,a
+		add	a,h
+		ld	(ix+7),a
+		rlca
+		ld	(ix+8),a
+		sub	l
+		ld	(ix+9),a
+		ld	a,h
+		ld	(ix+6),a
+		srl	a
+		ld	(ix+5),a
+
+		ld	hl,metersXY
+		ld	a,10
+.drawln_loop	ex	af,af'
+		ld	a,#86 ; add a,(ix+N)
+		ld	bc,.addsubAY+1
+		bit	0,(hl)
+		jr	z,.switchmode
+		xor	#10
+.switchmode	ld	(bc),a
+		ld	c,(hl)
+		inc	hl
+		ld	b,(hl)
+		inc	hl
+		ld	e,(hl)
+		inc	hl
+		ld	d,(hl)
+		inc	hl
+		call	clearbar
+		ld	a,c
+.addsubAY	add	a,(ix+0)
+		ld	e,a
+		call	drawline
+		inc	b
+		call	drawline
+		inc	b
+		call	drawline
+		inc	b
+		call	drawline
+		inc	ix
+		ex	af,af'
+		dec	a
+		jr	nz,.drawln_loop
+		ret
+
+;; Horizontal line
+;; Input: B=Y C=X1 E=X2
+drawline:	push	hl
+		push	de
+		push	bc
+		ld	a,e
+		cp	c
+		jr	nc,.swap
+		ld	e,c
+		ld	c,a
+
+.swap		ld	h,high tabbod
+		ld	l,b
+		ld	d,(hl)
+		inc	h
+		ld	a,(hl)
+		inc	h
+		ld	l,c
+		or	(hl)
+		ld	b,a
+		inc	h
+
+		ld	a,e
+		or	$07
+		sub	c
+		and	$F8
+		jr	nz,.phase2
+
+		ld	a,(hl)
+		inc	h
+		ld	l,e
+		and	(hl)
+		ld	h,d
+		ld	l,b
+		or	(hl)
+		ld	(hl),a
+		pop	bc
+		pop	de
+		pop	hl
+		ret
+
+.phase2		sub	$08
+		jr	nz,.phase3
+		ld	a,(hl)
+		inc	h
+		ld	l,e
+		ld	c,(hl)
+		ld	h,d
+		ld	l,b
+		or	(hl)
+		ld	(hl),a
+		inc	l
+		ld	a,c
+		or	(hl)
+		ld	(hl),a
+		pop	bc
+		pop	de
+		pop	hl
+		ret
+
+.phase3		rrca
+		rrca
+		cpl
+		and	$3E
+		ld	(.reljump+1),a
+		ld	a,(hl)
+		inc	h
+		ld	l,e
+		ld	c,(hl)
+		ld	h,d
+		ld	l,b
+		or	(hl)
+		ld	(hl),a
+		inc	l
+		ld	a,$FF
+.reljump	jr	$+2
+	dup	31
+		ld	(hl),a
+		inc	l
+	edup
+		ld	a,c
+		or	(hl)
+		ld	(hl),a
+		pop	bc
+		pop	de
+		pop	hl
+		ret
+
+clearbar:	xor	a
+	dup 2
+	dup 7
+		ld	(de),a
+		inc	e
+	edup
+		ld	(de),a
+		inc	d
+	dup 7
+		ld	(de),a
+		dec	e
+	edup
+		ld	(de),a
+		inc	d
+	edup
+		org	$-1
+		ret
+
+
+maketable:	ld	de,SCREEN	;; Vytvorenie tabulky adries bodov a skokov
+		ld	l,e		;; pre rychly prepocet suradnic pre interpolator
+.loop		ld	h,high tabbod
+		ld	(hl),d		;; Vyssi bajt adresy pre Y
+		inc	h
+		ld	(hl),e		;; Nizsi bajt adresy pre Y
+		inc	h
+		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#1F
+		ld	(hl),a
+		inc	h
+		inc	d
+		ld	a,d
+		and	7
+		jr	nz,.cont1
+		ld	a,#20
+		add	a,e
+		ld	e,a
+		jr	c,.cont1
+		ld	a,#F8
+		add	a,d
+		ld	d,a
+.cont1		ld	a,l
+		and	7
+		jr	nz,.cont2
+		ld	c,#FF
+.cont2		ld	(hl),c		;; Maska pre X1 zaciatok ciary vlavo
+		inc	h
+		srl	c
+		ld	a,c
+		cpl
+		ld	(hl),a		;; Maska pre X2 koniec ciary vpravo
+		inc	l
+		jr	nz,.loop
+		ret
+
+metersXY:	db	144,66
+		dw	#4A12
+		db	144,74
+		dw	#4A32
+		db	144,82
+		dw	#4A52
+		db	144,90
+		dw	#4A72
+		db	144,98
+		dw	#4A92
+		db	127,98
+		dw	#4A88
+		db	127,106
+		dw	#4AA8
+		db	127,114
+		dw	#4AC8
+		db	127,122
+		dw	#4AE8
+		db	127,130
+		dw	#5208
+
+;; dw SYNC
+;; loop {
+;;   dw attraddr             \__
+;;   db color, width, height /   => region x, y, w, h, color
+;; }
+;; db 0
+
+	macro region x, y, w, h, color
+		dw	(SCREEN + #1800) + (32 * y) + x
+		db	w, h
+		db	color
+	endm
+
+scenario:
+		dw	48
+		region	 1,  8, 14,  1, 0q007
+		db	0
+
+		dw	55
+		region	 1,  8, 14,  1, 0q005
+		region	 1,  9, 14,  1, 0q007
+		db	0
+
+		dw	60
+		region	 1,  8, 14,  1, 0q004
+		region	 1,  9, 14,  1, 0q005
+		region	 1, 10, 14,  1, 0q007
+		db	0
+
+		dw	60
+		region	 1,  8, 14,  1, 0q000
+		region	 1,  9, 14,  1, 0q004
+		region	 1, 10, 14,  1, 0q005
+		db	0
+
+		dw	72
+		region	 1,  9, 14,  1, 0q000
+		region	 1, 10, 14,  1, 0q004
+		db	0
+
+		db	79
+		region	 1, 10, 14,  1, 0q000
+		db	0
+
+ayval_buffer:	block	10,0
+
+;;-----------------------------------------------------------------------------
+		align	256
+
+tabbod
+introscreen:	incbin "base.scr"
+		savebin "final.bin",start,$-start

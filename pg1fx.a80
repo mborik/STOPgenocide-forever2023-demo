@@ -15,6 +15,10 @@
 ; .sync = 1234      ; number of halts from start of demo to sync with
 ; .length           ; optional when data transfer (ldir) needed
 
+fx_intro:	incbin "intro/final.pak"
+.pg = _fxpage
+.sync = 0
+
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
@@ -32,3 +36,7 @@
 ;		export fx_demopart
 ;		export fx_demopart.pg
 ;		export fx_demopart.sync
+
+		export fx_intro
+		export fx_intro.pg
+		export fx_intro.sync

@@ -10,6 +10,9 @@
 		"editor.colorDecorators": false,
 		"editor.rulers": [80],
 	},
+	"color-highlight.languages": [
+		"!z80-macroasm"
+	],
 	"colorize.languages": [
 		"!z80-macroasm"
 	]
