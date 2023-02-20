@@ -4,7 +4,7 @@
 		display "Compiling 'intro'"
 	endif
 
-@DEBUG = 1
+@DEBUG = 0
 
 		include "../kernel/constants.inc"
 
@@ -31,16 +31,18 @@ start		ld	hl,introscreen
 		ldir
 		call	maketable
 
-		ld	b,0
-.loop:		push	bc
+.loop:		border	0
 		ei
 		halt
+		border	2
+		call	followscene
+		push	af
 		border	1
 		call	analyzethat
-		border	0
-		pop	bc
-		; djnz	.loop
-		jr	.loop
+		pop	af
+		jr	nz,.loop
+		ld	a,1
+		ld	(actborder),a
 		ret
 
 analyzethat:	ld	ix,ayval_buffer
@@ -61,14 +63,24 @@ analyzethat:	ld	ix,ayval_buffer
 		ld	a,e
 .chnB_noenv:	ld	l,a
 		add	a,h
+		cp	(ix+2)
+		jr	c,.chnB_ovr1
 		ld	(ix+2),a
-		rlca
+.chnB_ovr1:	rlca
+		cp	(ix+1)
+		jr	c,.chnB_ovr2
 		ld	(ix+1),a
-		sub	l
-		ld	(ix+0),a
-		ld	a,h
+.chnB_ovr2:	sub	l
+		cp	(ix)
+		jr	c,.chnB_ovr3
+		ld	(ix),a
+.chnB_ovr3:	ld	a,h
+		cp	(ix+3)
+		jr	c,.chnB_ovr4
 		ld	(ix+3),a
-		srl	a
+.chnB_ovr4:	srl	a
+		cp	(ix+4)
+		jr	c,.chnA
 		ld	(ix+4),a
 
 .chnA:		dec	d
@@ -79,19 +91,29 @@ analyzethat:	ld	ix,ayval_buffer
 		ld	a,e
 .chnA_noenv:	ld	l,a
 		add	a,h
+		cp	(ix+7)
+		jr	c,.chnA_ovr1
 		ld	(ix+7),a
-		rlca
+.chnA_ovr1:	rlca
+		cp	(ix+8)
+		jr	c,.chnA_ovr2
 		ld	(ix+8),a
-		sub	l
+.chnA_ovr2:	sub	l
+		cp	(ix+9)
+		jr	c,.chnA_ovr3
 		ld	(ix+9),a
-		ld	a,h
+.chnA_ovr3:	ld	a,h
+		cp	(ix+6)
+		jr	c,.chnA_ovr4
 		ld	(ix+6),a
-		srl	a
+.chnA_ovr4:	srl	a
+		cp	(ix+5)
+		jr	c,drawln
 		ld	(ix+5),a
 
-		ld	hl,metersXY
+drawln:		ld	hl,metersXY
 		ld	a,10
-.drawln_loop	ex	af,af'
+.loop		ex	af,af'
 		ld	a,#86 ; add a,(ix+N)
 		ld	bc,.addsubAY+1
 		bit	0,(hl)
@@ -108,7 +130,7 @@ analyzethat:	ld	ix,ayval_buffer
 		inc	hl
 		call	clearbar
 		ld	a,c
-.addsubAY	add	a,(ix+0)
+.addsubAY	add	a,(ix)
 		ld	e,a
 		call	drawline
 		inc	b
@@ -120,7 +142,17 @@ analyzethat:	ld	ix,ayval_buffer
 		inc	ix
 		ex	af,af'
 		dec	a
-		jr	nz,.drawln_loop
+		jr	nz,.loop
+		ld	hl,reducto
+		ld	b,10
+reductor:	dec	ix
+		ld	a,(ix)
+		sub	(hl)
+		inc	hl
+		jr	nc,.nonzero
+		xor	a
+.nonzero:	ld	(ix),a
+		djnz	reductor
 		ret
 
 ;; Horizontal line
@@ -290,6 +322,56 @@ metersXY:	db	144,66
 		db	127,130
 		dw	#5208
 
+reducto:	db	3,4,2,1,1,1,1,2,4,3
+
+
+followscene:	ld	ix,scenario
+		ld	a,(ix)
+		or	(ix+1)
+		ret	z
+		ld	c,a
+		ld	b,(ix+1)
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		ret	c
+		inc	ix
+		inc	ix
+.readpatts	ld	a,(ix)
+		inc	ix
+		or	a
+		jr	z,.finish
+		ld	h,a
+		ld	l,(ix)
+		inc	ix
+		ld	a,(ix)
+		ld	e,a
+		inc	ix
+		ex	af,af'
+		ld	a,32
+		sub	e
+		ld	e,a
+		ld	d,0
+		ld	b,(ix)
+		inc	ix
+		ld	a,(ix)
+		inc	ix
+
+.fillcolumn	ex	af,af'
+		ld	c,a
+		ex	af,af'
+.fillrow	ld	(hl),a
+		inc	hl
+		dec	c
+		jr	nz,.fillrow
+		add	hl,de
+		djnz	.fillcolumn
+		jr	.readpatts
+
+.finish:	ld	(followscene+2),ix
+		dec	a
+		ret
+
 ;; dw SYNC
 ;; loop {
 ;;   dw attraddr             \__
@@ -298,41 +380,489 @@ metersXY:	db	144,66
 ;; db 0
 
 	macro region x, y, w, h, color
-		dw	(SCREEN + #1800) + (32 * y) + x
+.attraddr = (SCREEN + #1800) + (32 * y) + x
+		db	high .attraddr
+		db	low .attraddr
 		db	w, h
 		db	color
 	endm
 
 scenario:
-		dw	48
-		region	 1,  8, 14,  1, 0q007
+;; gemba
+		dw	240
+		region	 1,  8, 15,  1, 0q007
 		db	0
 
-		dw	55
-		region	 1,  8, 14,  1, 0q005
-		region	 1,  9, 14,  1, 0q007
+		dw	244
+		region	 1,  9, 15,  1, 0q007
+		region	 1,  8, 15,  1, 0q005
 		db	0
 
-		dw	60
-		region	 1,  8, 14,  1, 0q004
-		region	 1,  9, 14,  1, 0q005
-		region	 1, 10, 14,  1, 0q007
+		dw	248
+		region	 1, 10, 15,  1, 0q007
+		region	 1,  9, 15,  1, 0q005
+		region	 1,  8, 15,  1, 0q004
 		db	0
 
-		dw	60
-		region	 1,  8, 14,  1, 0q000
-		region	 1,  9, 14,  1, 0q004
-		region	 1, 10, 14,  1, 0q005
+		dw	252
+		region	 1, 10, 15,  1, 0q005
+		region	 1,  9, 15,  1, 0q004
+		region	 1,  8, 15,  1, 0q000
 		db	0
 
-		dw	72
-		region	 1,  9, 14,  1, 0q000
-		region	 1, 10, 14,  1, 0q004
+		dw	256
+		region	 1, 10, 15,  1, 0q004
+		region	 1,  9, 15,  1, 0q000
 		db	0
 
-		db	79
-		region	 1, 10, 14,  1, 0q000
+		dw	260
+		region	 1, 10, 15,  1, 0q000
 		db	0
+
+		dw	288
+		region	18, 14, 12,  3, 0q001
+		db	0
+
+		dw	300
+		region	18, 14, 12,  1, 0q107
+		db	0
+
+		dw	307
+		region	18, 14, 12,  1, 0q001
+		region	18, 15, 12,  2, 0q000
+		db	0
+
+		dw	310
+		region	18, 14, 12,  1, 0q001
+		region	18, 15, 12,  1, 0q106
+		db	0
+
+		dw	313
+		region	18, 14, 12,  1, 0q107
+		region	18, 15, 12,  1, 0q001
+		region	18, 16, 12,  1, 0q002
+		db	0
+
+		dw	316
+		region	18, 15, 12,  1, 0q106
+		region	18, 16, 12,  1, 0q000
+		db	0
+
+		dw	319
+		region	18, 16, 12,  1, 0q102
+		region	 1,  8, 15,  3, 0q005
+		db	0
+
+		dw	322
+		region	 1,  8, 15,  3, 0q004
+		db	0
+
+		dw	325
+		region	 1,  8, 15,  3, 0q002
+		region	18, 14, 12,  1, 0q000
+		region	18, 15, 12,  1, 0q107
+		region	18, 16, 12,  1, 0q106
+		db	0
+
+		dw	328
+		region	 1,  8, 15,  3, 0q001
+		region	18, 15, 12,  1, 0q000
+		region	18, 16, 12,  1, 0q107
+		db	0
+
+		dw	331
+		region	 1,  8, 15,  3, 0q000
+		region	18, 16, 12,  1, 0q000
+		db	0
+
+		dw	348
+		region	18, 14, 12,  1, 0q102
+		db	0
+
+		dw	350
+		region	18, 15, 12,  1, 0q102
+		region	18, 14, 12,  1, 0q106
+		db	0
+
+		dw	352
+		region	18, 16, 12,  1, 0q102
+		region	18, 15, 12,  1, 0q106
+		region	18, 14, 12,  1, 0q107
+		db	0
+
+		dw	355
+		region	 1,  8, 15,  1, 0q007
+		db	0
+
+		dw	357
+		region	 1,  9, 15,  1, 0q007
+		region	 1,  8, 15,  1, 0q005
+		db	0
+
+		dw	359
+		region	 1, 10, 15,  1, 0q007
+		region	 1,  9, 15,  1, 0q005
+		region	 1,  8, 15,  1, 0q004
+		db	0
+
+		dw	367
+		region	 1, 10, 15,  1, 0q107
+		region	 1,  9, 15,  1, 0q105
+		region	 1,  8, 15,  1, 0q104
+		region	16,  8,  2,  9, 0q107
+		db	0
+
+		dw	370
+		region	16,  8,  2,  9, 0q105
+		db	0
+
+		dw	379
+		region	 1, 10, 15,  1, 0q007
+		region	 1,  9, 15,  1, 0q005
+		region	 1,  8, 15,  1, 0q004
+		region	18, 16, 12,  1, 0q102
+		region	18, 15, 12,  1, 0q106
+		region	18, 14, 12,  1, 0q107
+		region	16,  8,  2,  9, 0q101
+		db	0
+
+;; sindikat
+		; s
+		dw	384
+		region	 0,  1,  5,  3, 0q107
+		db	0
+		dw	386
+		region	 0,  1,  5,  3, 0q002
+		db	0
+		dw	389
+		region	 0,  1,  5,  3, 0q000
+		db	0
+
+		; t
+		dw	408
+		region	27,  1,  5,  3, 0q107
+		db	0
+		dw	410
+		region	27,  1,  5,  3, 0q002
+		db	0
+		dw	413
+		region	27,  1,  5,  3, 0q000
+		db	0
+
+		; d
+		dw	427
+		region	11,  0,  5,  4, 0q107
+		db	0
+		dw	429
+		region	11,  0,  5,  4, 0q002
+		db	0
+		dw	432
+		region	11,  0,  5,  4, 0q000
+		db	0
+
+		; a
+		dw	439
+		region	22,  1,  5,  3, 0q107
+		db	0
+		dw	441
+		region	22,  1,  5,  3, 0q002
+		db	0
+		dw	444
+		region	22,  1,  5,  3, 0q000
+		db	0
+
+		; n
+		dw	451
+		region	 6,  1,  5,  3, 0q107
+		db	0
+		dw	453
+		region	 6,  1,  5,  3, 0q002
+		db	0
+		dw	456
+		region	 6,  1,  5,  3, 0q000
+		db	0
+
+		; i
+		dw	456
+		region	 5,  0,  1,  4, 0q107
+		db	0
+		dw	458
+		region	 5,  0,  1,  4, 0q002
+		db	0
+		dw	461
+		region	 5,  0,  1,  4, 0q000
+		db	0
+
+		; i
+		dw	463
+		region	16,  0,  1,  4, 0q107
+		db	0
+		dw	465
+		region	16,  0,  1,  4, 0q002
+		db	0
+		dw	468
+		region	16,  0,  1,  4, 0q000
+		db	0
+
+		; K - flashing
+		dw	470
+		region	17,  0,  5,  4, 0q107
+		db	0
+		dw	471
+		region	17,  0,  5,  4, 0q000
+		db	0
+		dw	472
+		region	17,  0,  5,  4, 0q107
+		db	0
+		dw	474
+		region	17,  0,  5,  4, 0q000
+		db	0
+		dw	475
+		region	17,  0,  5,  4, 0q107
+		db	0
+		dw	477
+		region	17,  0,  5,  4, 0q000
+		db	0
+
+		; s
+		dw	480
+		region	17,  0,  5,  4, 0q107
+		region	 0,  1,  5,  3, 0q107
+		db	0
+		dw	483
+		region	 0,  1,  5,  3, 0q002
+		db	0
+
+		; t
+		dw	504
+		region	27,  1,  5,  3, 0q107
+		db	0
+		dw	507
+		region	27,  1,  5,  3, 0q002
+		db	0
+
+		; d
+		dw	523
+		region	11,  0,  5,  4, 0q107
+		db	0
+		dw	526
+		region	11,  0,  5,  4, 0q002
+		db	0
+
+		; a
+		dw	535
+		region	22,  1,  5,  3, 0q107
+		db	0
+		dw	538
+		region	22,  1,  5,  3, 0q002
+		db	0
+
+		; n
+		dw	547
+		region	 6,  1,  5,  3, 0q107
+		db	0
+		dw	550
+		region	 6,  1,  5,  3, 0q002
+		db	0
+
+		; i
+		dw	552
+		region	 5,  0,  1,  4, 0q107
+		db	0
+		dw	555
+		region	 5,  0,  1,  4, 0q002
+		db	0
+
+		; i
+		dw	559
+		region	16,  0,  1,  4, 0q107
+		db	0
+		dw	562
+		region	16,  0,  1,  4, 0q002
+		db	0
+
+		; hideout
+		dw	564
+		region	 0,  0, 17,  4, 0q001
+		region	22,  1, 10,  3, 0q001
+		region	17,  0,  5,  4, 0q102
+		db	0
+		dw	566
+		region	 0,  0, 17,  4, 0q000
+		region	22,  1, 10,  3, 0q000
+		region	17,  0,  5,  4, 0q001
+		db	0
+		dw	568
+		region	17,  0,  5,  4, 0q000
+		db	0
+		dw	571
+		region	 0,  0, 17,  4, 0q007
+		region	22,  1, 10,  3, 0q007
+		db	0
+		dw	572
+		region	 0,  0, 17,  4, 0q000
+		region	22,  1, 10,  3, 0q000
+		db	0
+		dw	573
+		region	17,  0,  5,  4, 0q107
+		db	0
+		dw	575
+		region	17,  0,  5,  4, 0q000
+		db	0
+		dw	576
+		region	 0,  0, 17,  4, 0q102
+		region	22,  1, 10,  3, 0q102
+		region	17,  0,  5,  4, 0q107
+		region	15, 19,  4,  2, 0q107
+		db	0
+
+		; are
+		dw	578
+		region	15, 19,  4,  2, 0q106
+		db	0
+		dw	580
+		region	15, 19,  4,  2, 0q105
+		db	0
+		dw	581
+		region	15, 19,  4,  2, 0q103
+		db	0
+		dw	583
+		region	15, 19,  4,  2, 0q102
+		db	0
+
+		dw	600
+		region	 4, 21, 24,  3, 0q103
+		db	0
+		dw	603
+		region	 4, 21, 24,  3, 0q102
+		db	0
+		dw	606
+		region	 4, 21, 24,  3, 0q101
+		db	0
+;		dw	609
+;		region	 4, 21, 24,  3, 0q000
+;		db	0
+
+		; kit
+		dw	619
+		region	 4, 21,  4,  3, 0q102
+		db	0
+		dw	621
+		region	 4, 21,  4,  3, 0q103
+		db	0
+		dw	623
+		region	 4, 21,  4,  3, 0q107
+		region	 6, 21,  1,  1, 0q103
+		db	0
+
+		; ten
+		dw	631
+		region	 8, 21,  5,  3, 0q102
+		region	 6, 21,  1,  1, 0q000
+		db	0
+		dw	633
+		region	 8, 21,  5,  3, 0q103
+		db	0
+		dw	635
+		region	 8, 21,  5,  3, 0q107
+		db	0
+
+		; res
+		dw	643
+		region	14, 21,  5,  3, 0q102
+		region	 6, 21,  1,  1, 0q103
+		db	0
+		dw	645
+		region	14, 21,  5,  3, 0q103
+		db	0
+		dw	647
+		region	14, 21,  5,  3, 0q107
+		db	0
+
+		; cuers
+		dw	648
+		region	19, 21,  9,  3, 0q102
+		db	0
+		dw	650
+		region	19, 21,  9,  3, 0q103
+		db	0
+		dw	652
+		region	19, 21,  9,  3, 0q107
+		db	0
+
+		dw	660
+		region	 6, 21,  1,  1, 0q000
+		db	0
+
+		dw	672
+		region	16,  6,  8,  6, 0q111
+		region	 6, 21,  1,  1, 0q103
+		db	0
+
+		dw	678
+		region	 0, 12,  8,  6, 0q111
+		db	0
+
+		dw	684
+		region	 8,  0,  8,  6, 0q111
+		db	0
+
+		dw	690
+		region	24, 12,  8,  6, 0q111
+		region	 6, 21,  1,  1, 0q000
+		db	0
+
+		dw	696
+		region	 8,  6,  8,  6, 0q111
+		region	 6, 21,  1,  1, 0q103
+		db	0
+
+		dw	702
+		region	24,  0,  8,  6, 0q111
+		db	0
+
+		dw	708
+		region	 8, 12,  8,  6, 0q111
+		db	0
+
+		dw	714
+		region	16,  0,  8,  6, 0q111
+		db	0
+
+		dw	720
+		region	16, 12,  8,  6, 0q111
+		db	0
+
+		dw	726
+		region	 0,  0,  8,  6, 0q111
+		db	0
+
+		dw	732
+		region	24,  6,  8,  6, 0q111
+		db	0
+
+		dw	738
+		region	 0, 18,  8,  6, 0q111
+		db	0
+
+		dw	744
+		region	16, 18,  8,  6, 0q111
+		db	0
+
+		dw	750
+		region	 0,  6,  8,  6, 0q111
+		db	0
+
+		dw	756
+		region	24, 18,  8,  6, 0q111
+		db	0
+
+		dw	762
+		region	 8, 18,  8,  6, 0q111
+		db	0
+
+	; end of session
+		dw	0
 
 ayval_buffer:	block	10,0
 
