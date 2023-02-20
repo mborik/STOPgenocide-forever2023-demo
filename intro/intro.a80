@@ -301,26 +301,26 @@ maketable:	ld	de,SCREEN	;; Vytvorenie tabulky adries bodov a skokov
 		jr	nz,.loop
 		ret
 
-metersXY:	db	144,66
-		dw	#4A12
-		db	144,74
-		dw	#4A32
-		db	144,82
-		dw	#4A52
-		db	144,90
-		dw	#4A72
-		db	144,98
-		dw	#4A92
-		db	127,98
-		dw	#4A88
-		db	127,106
-		dw	#4AA8
-		db	127,114
-		dw	#4AC8
-		db	127,122
-		dw	#4AE8
-		db	127,130
-		dw	#5208
+metersXY:	db	136,66
+		dw	#4A11
+		db	136,74
+		dw	#4A31
+		db	136,82
+		dw	#4A51
+		db	136,90
+		dw	#4A71
+		db	136,98
+		dw	#4A91
+		db	119,66
+		dw	#4A07
+		db	119,74
+		dw	#4A27
+		db	119,82
+		dw	#4A47
+		db	119,90
+		dw	#4A67
+		db	119,98
+		dw	#4A87
 
 reducto:	db	3,4,2,1,1,1,1,2,4,3
 
@@ -388,415 +388,409 @@ followscene:	ld	ix,scenario
 	endm
 
 scenario:
-;; gemba
+;; kittens stripes 1
 		dw	240
-		region	 1,  8, 15,  1, 0q007
+		region	 2, 16, 29,  1, 0q007
+		region	 4, 16,  1,  1, 0q000
+		db	0
+
+		dw	242
+		region	 2, 17, 29,  1, 0q007
+		region	 2, 16, 29,  1, 0q002
+		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	244
-		region	 1,  9, 15,  1, 0q007
-		region	 1,  8, 15,  1, 0q005
+		region	 2, 18, 29,  1, 0q007
+		region	 2, 17, 29,  1, 0q002
+		region	 2, 16, 29,  1, 0q001
+		region	 4, 16,  1,  1, 0q000
+		db	0
+
+		dw	246
+		region	 2, 18, 29,  1, 0q002
+		region	 2, 17, 29,  1, 0q001
+		region	 2, 16, 29,  1, 0q000
 		db	0
 
 		dw	248
-		region	 1, 10, 15,  1, 0q007
-		region	 1,  9, 15,  1, 0q005
-		region	 1,  8, 15,  1, 0q004
+		region	 2, 18, 29,  1, 0q001
+		region	 2, 17, 29,  1, 0q000
 		db	0
 
-		dw	252
-		region	 1, 10, 15,  1, 0q005
-		region	 1,  9, 15,  1, 0q004
-		region	 1,  8, 15,  1, 0q000
+		dw	250
+		region	 2, 18, 29,  1, 0q000
 		db	0
 
-		dw	256
-		region	 1, 10, 15,  1, 0q004
-		region	 1,  9, 15,  1, 0q000
-		db	0
-
-		dw	260
-		region	 1, 10, 15,  1, 0q000
-		db	0
-
+;; kittens stripes 2
 		dw	288
-		region	18, 14, 12,  3, 0q001
+		region	 2, 16, 29,  3, 0q101
+		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	300
-		region	18, 14, 12,  1, 0q107
+		region	 2, 16, 29,  1, 0q107
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
 		dw	307
-		region	18, 14, 12,  1, 0q001
-		region	18, 15, 12,  2, 0q000
+		region	 2, 16, 29,  1, 0q101
+		region	 2, 17, 29,  2, 0q000
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
 		dw	310
-		region	18, 14, 12,  1, 0q001
-		region	18, 15, 12,  1, 0q106
+		region	 2, 17, 29,  1, 0q102
 		db	0
 
-		dw	313
-		region	18, 14, 12,  1, 0q107
-		region	18, 15, 12,  1, 0q001
-		region	18, 16, 12,  1, 0q002
+		dw	312
+		region	 2, 16, 29,  1, 0q107
+		region	 2, 17, 29,  1, 0q101
+		region	 2, 18, 29,  1, 0q102
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
-		dw	316
-		region	18, 15, 12,  1, 0q106
-		region	18, 16, 12,  1, 0q000
+		dw	314
+		region	 2, 17, 29,  1, 0q102
+		region	 2, 18, 29,  1, 0q000
+		db	0
+
+		dw	314
+		region	 2, 16, 29,  1, 0q101
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
 		dw	319
-		region	18, 16, 12,  1, 0q102
-		region	 1,  8, 15,  3, 0q005
-		db	0
-
-		dw	322
-		region	 1,  8, 15,  3, 0q004
+		region	 2, 18, 29,  1, 0q102
+		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	325
-		region	 1,  8, 15,  3, 0q002
-		region	18, 14, 12,  1, 0q000
-		region	18, 15, 12,  1, 0q107
-		region	18, 16, 12,  1, 0q106
+		region	 2, 16, 29,  1, 0q001
+		region	 2, 17, 29,  1, 0q107
+		region	 2, 18, 29,  1, 0q102
+		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	328
-		region	 1,  8, 15,  3, 0q001
-		region	18, 15, 12,  1, 0q000
-		region	18, 16, 12,  1, 0q107
+		region	 2, 17, 29,  1, 0q001
+		region	 2, 18, 29,  1, 0q107
 		db	0
 
 		dw	331
-		region	 1,  8, 15,  3, 0q000
-		region	18, 16, 12,  1, 0q000
+		region	 2, 18, 29,  1, 0q001
 		db	0
 
+		; kit
 		dw	348
-		region	18, 14, 12,  1, 0q102
+		region	 2, 16,  5,  3, 0q102
 		db	0
-
 		dw	350
-		region	18, 15, 12,  1, 0q102
-		region	18, 14, 12,  1, 0q106
+		region	 2, 16,  5,  3, 0q103
 		db	0
-
 		dw	352
-		region	18, 16, 12,  1, 0q102
-		region	18, 15, 12,  1, 0q106
-		region	18, 14, 12,  1, 0q107
+		region	 2, 16,  5,  3, 0q107
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
+		; ten
 		dw	355
-		region	 1,  8, 15,  1, 0q007
+		region	 7, 16,  6,  3, 0q102
+		region	 4, 16,  1,  1, 0q000
 		db	0
-
 		dw	357
-		region	 1,  9, 15,  1, 0q007
-		region	 1,  8, 15,  1, 0q005
+		region	 7, 16,  6,  3, 0q103
 		db	0
-
 		dw	359
-		region	 1, 10, 15,  1, 0q007
-		region	 1,  9, 15,  1, 0q005
-		region	 1,  8, 15,  1, 0q004
+		region	 7, 16,  6,  3, 0q107
 		db	0
 
+		; res
 		dw	367
-		region	 1, 10, 15,  1, 0q107
-		region	 1,  9, 15,  1, 0q105
-		region	 1,  8, 15,  1, 0q104
-		region	16,  8,  2,  9, 0q107
+		region	13, 16,  7,  3, 0q102
+		region	 4, 16,  1,  1, 0q103
+		db	0
+		dw	369
+		region	13, 16,  7,  3, 0q103
+		db	0
+		dw	371
+		region	13, 16,  7,  3, 0q107
 		db	0
 
-		dw	370
-		region	16,  8,  2,  9, 0q105
+		; cue->rs
+		dw	373
+		region	20, 16,  6,  3, 0q102
+		region	 4, 16,  1,  1, 0q000
+		db	0
+		dw	375
+		region	20, 16,  6,  3, 0q103
+		db	0
+		dw	377
+		region	20, 16,  6,  3, 0q107
+		region	26, 16,  5,  3, 0q102
 		db	0
 
+		; rs
 		dw	379
-		region	 1, 10, 15,  1, 0q007
-		region	 1,  9, 15,  1, 0q005
-		region	 1,  8, 15,  1, 0q004
-		region	18, 16, 12,  1, 0q102
-		region	18, 15, 12,  1, 0q106
-		region	18, 14, 12,  1, 0q107
-		region	16,  8,  2,  9, 0q101
+		region	26, 16,  5,  3, 0q103
+		region	 4, 16,  1,  1, 0q103
+		db	0
+		dw	381
+		region	26, 16,  5,  3, 0q107
 		db	0
 
 ;; sindikat
 		; s
 		dw	384
-		region	 0,  1,  5,  3, 0q107
+		region	 0,  2,  5,  3, 0q107
 		db	0
 		dw	386
-		region	 0,  1,  5,  3, 0q002
+		region	 0,  2,  5,  3, 0q002
 		db	0
 		dw	389
-		region	 0,  1,  5,  3, 0q000
+		region	 0,  2,  5,  3, 0q000
 		db	0
 
 		; t
 		dw	408
-		region	27,  1,  5,  3, 0q107
+		region	27,  2,  5,  3, 0q107
 		db	0
 		dw	410
-		region	27,  1,  5,  3, 0q002
+		region	27,  2,  5,  3, 0q002
 		db	0
 		dw	413
-		region	27,  1,  5,  3, 0q000
+		region	27,  2,  5,  3, 0q000
 		db	0
 
 		; d
 		dw	427
-		region	11,  0,  5,  4, 0q107
+		region	11,  1,  5,  4, 0q107
 		db	0
 		dw	429
-		region	11,  0,  5,  4, 0q002
+		region	11,  1,  5,  4, 0q002
 		db	0
 		dw	432
-		region	11,  0,  5,  4, 0q000
+		region	11,  1,  5,  4, 0q000
 		db	0
 
 		; a
 		dw	439
-		region	22,  1,  5,  3, 0q107
+		region	22,  2,  5,  3, 0q107
 		db	0
 		dw	441
-		region	22,  1,  5,  3, 0q002
+		region	22,  2,  5,  3, 0q002
 		db	0
 		dw	444
-		region	22,  1,  5,  3, 0q000
+		region	22,  2,  5,  3, 0q000
 		db	0
 
 		; n
 		dw	451
-		region	 6,  1,  5,  3, 0q107
+		region	 6,  2,  5,  3, 0q107
 		db	0
 		dw	453
-		region	 6,  1,  5,  3, 0q002
+		region	 6,  2,  5,  3, 0q002
 		db	0
 		dw	456
-		region	 6,  1,  5,  3, 0q000
+		region	 6,  2,  5,  3, 0q000
 		db	0
 
 		; i
 		dw	456
-		region	 5,  0,  1,  4, 0q107
+		region	 5,  1,  1,  4, 0q107
 		db	0
 		dw	458
-		region	 5,  0,  1,  4, 0q002
+		region	 5,  1,  1,  4, 0q002
 		db	0
 		dw	461
-		region	 5,  0,  1,  4, 0q000
+		region	 5,  1,  1,  4, 0q000
 		db	0
 
 		; i
 		dw	463
-		region	16,  0,  1,  4, 0q107
+		region	16,  1,  1,  4, 0q107
 		db	0
 		dw	465
-		region	16,  0,  1,  4, 0q002
+		region	16,  1,  1,  4, 0q002
 		db	0
 		dw	468
-		region	16,  0,  1,  4, 0q000
+		region	16,  1,  1,  4, 0q000
 		db	0
 
 		; K - flashing
 		dw	470
-		region	17,  0,  5,  4, 0q107
+		region	17,  1,  5,  4, 0q107
 		db	0
 		dw	471
-		region	17,  0,  5,  4, 0q000
+		region	17,  1,  5,  4, 0q000
 		db	0
 		dw	472
-		region	17,  0,  5,  4, 0q107
+		region	17,  1,  5,  4, 0q107
 		db	0
 		dw	474
-		region	17,  0,  5,  4, 0q000
+		region	17,  1,  5,  4, 0q000
 		db	0
 		dw	475
-		region	17,  0,  5,  4, 0q107
+		region	17,  1,  5,  4, 0q107
 		db	0
 		dw	477
-		region	17,  0,  5,  4, 0q000
+		region	17,  1,  5,  4, 0q000
 		db	0
 
 		; s
 		dw	480
-		region	17,  0,  5,  4, 0q107
-		region	 0,  1,  5,  3, 0q107
+		region	17,  1,  5,  4, 0q107
+		region	 0,  2,  5,  3, 0q107
 		db	0
 		dw	483
-		region	 0,  1,  5,  3, 0q002
+		region	 0,  2,  5,  3, 0q002
 		db	0
 
 		; t
 		dw	504
-		region	27,  1,  5,  3, 0q107
+		region	27,  2,  5,  3, 0q107
 		db	0
 		dw	507
-		region	27,  1,  5,  3, 0q002
+		region	27,  2,  5,  3, 0q002
 		db	0
 
 		; d
 		dw	523
-		region	11,  0,  5,  4, 0q107
+		region	11,  1,  5,  4, 0q107
 		db	0
 		dw	526
-		region	11,  0,  5,  4, 0q002
+		region	11,  1,  5,  4, 0q002
 		db	0
 
 		; a
 		dw	535
-		region	22,  1,  5,  3, 0q107
+		region	22,  2,  5,  3, 0q107
 		db	0
 		dw	538
-		region	22,  1,  5,  3, 0q002
+		region	22,  2,  5,  3, 0q002
 		db	0
 
 		; n
 		dw	547
-		region	 6,  1,  5,  3, 0q107
+		region	 6,  2,  5,  3, 0q107
 		db	0
 		dw	550
-		region	 6,  1,  5,  3, 0q002
+		region	 6,  2,  5,  3, 0q002
 		db	0
 
 		; i
 		dw	552
-		region	 5,  0,  1,  4, 0q107
+		region	 5,  1,  1,  4, 0q107
 		db	0
 		dw	555
-		region	 5,  0,  1,  4, 0q002
+		region	 5,  1,  1,  4, 0q002
 		db	0
 
 		; i
 		dw	559
-		region	16,  0,  1,  4, 0q107
+		region	16,  1,  1,  4, 0q107
 		db	0
 		dw	562
-		region	16,  0,  1,  4, 0q002
+		region	16,  1,  1,  4, 0q002
 		db	0
 
-		; hideout
+;; sindikat flash
 		dw	564
-		region	 0,  0, 17,  4, 0q001
-		region	22,  1, 10,  3, 0q001
-		region	17,  0,  5,  4, 0q102
+		region	 0,  1, 17,  4, 0q001
+		region	22,  2, 10,  3, 0q001
+		region	17,  1,  5,  4, 0q102
 		db	0
 		dw	566
-		region	 0,  0, 17,  4, 0q000
-		region	22,  1, 10,  3, 0q000
-		region	17,  0,  5,  4, 0q001
+		region	 0,  1, 17,  4, 0q000
+		region	22,  2, 10,  3, 0q000
+		region	17,  1,  5,  4, 0q001
 		db	0
 		dw	568
-		region	17,  0,  5,  4, 0q000
+		region	17,  1,  5,  4, 0q000
 		db	0
 		dw	571
-		region	 0,  0, 17,  4, 0q007
-		region	22,  1, 10,  3, 0q007
+		region	 0,  1, 17,  4, 0q007
+		region	22,  2, 10,  3, 0q007
 		db	0
 		dw	572
-		region	 0,  0, 17,  4, 0q000
-		region	22,  1, 10,  3, 0q000
+		region	 0,  1, 17,  4, 0q000
+		region	22,  2, 10,  3, 0q000
 		db	0
 		dw	573
-		region	17,  0,  5,  4, 0q107
+		region	17,  1,  5,  4, 0q107
 		db	0
 		dw	575
-		region	17,  0,  5,  4, 0q000
+		region	17,  1,  5,  4, 0q000
 		db	0
 		dw	576
-		region	 0,  0, 17,  4, 0q102
-		region	22,  1, 10,  3, 0q102
-		region	17,  0,  5,  4, 0q107
-		region	15, 19,  4,  2, 0q107
+		region	 0,  1, 17,  4, 0q102
+		region	22,  2, 10,  3, 0q102
+		region	17,  1,  5,  4, 0q107
+		region	11, 21, 10,  2, 0q107
+		region	 4, 16,  1,  1, 0q107
 		db	0
 
-		; are
+;; presents
 		dw	578
-		region	15, 19,  4,  2, 0q106
-		db	0
-		dw	580
-		region	15, 19,  4,  2, 0q105
+		region	11, 21, 10,  2, 0q106
+		region	 4, 16,  1,  1, 0q103
 		db	0
 		dw	581
-		region	15, 19,  4,  2, 0q103
+		region	11, 21, 10,  2, 0q105
 		db	0
-		dw	583
-		region	15, 19,  4,  2, 0q102
+		dw	584
+		region	11, 21, 10,  2, 0q103
+		db	0
+		dw	586
+		region	11, 21, 10,  2, 0q102
+		db	0
+		dw	588
+		region	11, 21, 10,  2, 0q101
+		region	 4, 16,  1,  1, 0q002
 		db	0
 
+;; heart beating
 		dw	600
-		region	 4, 21, 24,  3, 0q103
+		region	 4, 16,  1,  1, 0q107
 		db	0
-		dw	603
-		region	 4, 21, 24,  3, 0q102
+		dw	602
+		region	 4, 16,  1,  1, 0q103
 		db	0
-		dw	606
-		region	 4, 21, 24,  3, 0q101
+		dw	612
+		region	 4, 16,  1,  1, 0q002
 		db	0
-;		dw	609
-;		region	 4, 21, 24,  3, 0q000
-;		db	0
 
-		; kit
 		dw	619
-		region	 4, 21,  4,  3, 0q102
+		region	 4, 16,  1,  1, 0q107
 		db	0
 		dw	621
-		region	 4, 21,  4,  3, 0q103
-		db	0
-		dw	623
-		region	 4, 21,  4,  3, 0q107
-		region	 6, 21,  1,  1, 0q103
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
-		; ten
 		dw	631
-		region	 8, 21,  5,  3, 0q102
-		region	 6, 21,  1,  1, 0q000
+		region	 4, 16,  1,  1, 0q107
 		db	0
 		dw	633
-		region	 8, 21,  5,  3, 0q103
-		db	0
-		dw	635
-		region	 8, 21,  5,  3, 0q107
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
-		; res
 		dw	643
-		region	14, 21,  5,  3, 0q102
-		region	 6, 21,  1,  1, 0q103
+		region	 4, 16,  1,  1, 0q107
 		db	0
 		dw	645
-		region	14, 21,  5,  3, 0q103
-		db	0
-		dw	647
-		region	14, 21,  5,  3, 0q107
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
-		; cuers
 		dw	648
-		region	19, 21,  9,  3, 0q102
+		region	 4, 16,  1,  1, 0q107
 		db	0
 		dw	650
-		region	19, 21,  9,  3, 0q103
-		db	0
-		dw	652
-		region	19, 21,  9,  3, 0q107
+		region	 4, 16,  1,  1, 0q103
 		db	0
 
-		dw	660
-		region	 6, 21,  1,  1, 0q000
-		db	0
-
+;; squares
 		dw	672
 		region	16,  6,  8,  6, 0q111
-		region	 6, 21,  1,  1, 0q103
 		db	0
 
 		dw	678
@@ -809,12 +803,10 @@ scenario:
 
 		dw	690
 		region	24, 12,  8,  6, 0q111
-		region	 6, 21,  1,  1, 0q000
 		db	0
 
 		dw	696
 		region	 8,  6,  8,  6, 0q111
-		region	 6, 21,  1,  1, 0q103
 		db	0
 
 		dw	702
@@ -861,7 +853,7 @@ scenario:
 		region	 8, 18,  8,  6, 0q111
 		db	0
 
-	; end of session
+; end of session
 		dw	0
 
 ayval_buffer:	block	10,0
