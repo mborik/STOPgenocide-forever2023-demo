@@ -33,6 +33,12 @@ cd ../intro
 ASM intro.a80 -DisFX --lst=intro.lst
 PAK final.bin final.pak
 
+cd ../priskocmicka
+. preparegfx.sh > /dev/null
+ASM priskocmicka.a80 -DisFX --lst=priskocmicka.lst
+PAK final.bin final.pak
+
+# banks composition
 cd ..
 rm -f bank*
 ASM pg1fx.a80 --lst=kernel/pg1fx.lst --exp=kernel/pg1fx.inc

@@ -19,6 +19,10 @@ fx_intro:	incbin "intro/final.pak"
 .pg = _fxpage
 .sync = 0
 
+fx_micka:	incbin "priskocmicka/final.pak"
+.pg = _fxpage
+.sync = 766
+
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
@@ -40,3 +44,7 @@ fx_intro:	incbin "intro/final.pak"
 		export fx_intro
 		export fx_intro.pg
 		export fx_intro.sync
+
+		export fx_micka
+		export fx_micka.pg
+		export fx_micka.sync

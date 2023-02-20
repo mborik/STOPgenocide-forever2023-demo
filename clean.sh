@@ -12,6 +12,7 @@ popd
 subdirs=(
 	kernel
 	intro
+	priskocmicka
 	music
 )
 

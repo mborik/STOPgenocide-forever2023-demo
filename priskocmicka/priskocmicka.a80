@@ -1,0 +1,200 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'priskocmicka'"
+	endif
+
+@DEBUG = 1
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+	macro border n
+	  if DEBUG
+	    if n > 0
+		ld	a,n
+	    else
+		xor	a
+	    endif
+		out	(254),a
+	  endif
+	endm
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start
+	ifndef isFX
+		ld	a,1
+		ld	(actborder),a
+		out	(254),a
+		ld	hl,#5800
+		ld	de,#5801
+		ld	bc,#2ff
+		ld	(hl),0q111
+		ldir
+	endif
+		ei
+		halt
+		ld	a,#1D
+		call	xchg.vram + 2
+
+		ld	hl,gfx.jump.full1
+		ld	de,#C000
+		call	depack
+
+		ld	b,3
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.jump.full2
+		ld	de,#C000
+		call	depack
+
+		ld	b,3
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.jump.full3
+		ld	de,#C000
+		call	depack
+
+		ld	b,3
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.jump.full4
+		ld	de,#C000
+		call	depack
+
+		ei
+		halt
+		call	xchg.vram
+		ld	hl,gfx.jump.full4
+		ld	de,#C000
+		call	depack
+
+		ei
+		halt
+		call	xchg.vram
+		ld	hl,gfx.jump.part5
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.jump.part6
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.jump.part7
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.stand.part8
+		ld	de,#D000
+		call	depack
+
+		ld	b,6
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.stand.part9
+		ld	de,#D000
+		call	depack
+
+		ld	b,28
+.standloop	push	bc
+		ld	b,12
+		call	waitf
+		call	xchg.vram
+		pop	bc
+		djnz	.standloop
+
+		ld	bc,1296
+.waitfordead	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitfordead
+
+		ld	hl,gfx.dead.part1
+		ld	de,#D000
+		call	depack
+		call	xchg.vram
+
+		ld	hl,gfx.dead.part2
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.dead.part3
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.dead.part4
+		ld	de,#D000
+		call	depack
+
+		ld	b,5
+		call	waitf
+
+		call	xchg.vram
+		ld	hl,gfx.dead.part5
+		ld	de,#D000
+		call	depack
+
+		ret
+
+waitf:		ei
+		halt
+		djnz	waitf
+		ret
+
+	module gfx
+jump
+.full1		incbin "gfx/01.pak"
+.full2		incbin "gfx/02.pak"
+.full3		incbin "gfx/03.pak"
+.full4		incbin "gfx/04.pak"
+.part5		incbin "gfx/05.pak"
+.part6		incbin "gfx/06.pak"
+.part7		incbin "gfx/07.pak"
+stand
+.part8		incbin "gfx/08.pak"
+.part9		incbin "gfx/09.pak"
+dead
+.part1		incbin "gfx/11.pak"
+.part2		incbin "gfx/12.pak"
+.part3		incbin "gfx/13.pak"
+.part4		incbin "gfx/14.pak"
+.part5		incbin "gfx/15.pak"
+
+	endmodule
+
+		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+		define	PRESET.waitfor 766
+		include "../kernel/kernel.micro.inc"
+		savesna "priskocmicka.sna",microkernel
+	endif

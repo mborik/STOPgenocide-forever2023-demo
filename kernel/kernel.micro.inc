@@ -135,7 +135,7 @@ baseloop:	ld	a,MUSIC.page | #10
 		call	xchg.bnk
 		call	MUSIC.init
 	ifdef PRESET.waitfor
-		ld	bc,MUSIC.waitfor
+		ld	bc,PRESET.waitfor
 		ld	(FRAMES),bc
 .muswaiter:	push	bc
 		call	MUSIC.play

@@ -170,6 +170,10 @@ fxtable:
 		dw	fx_intro
 		dw	fx_intro.sync
 
+		db	fx_micka.pg
+		dw	fx_micka
+		dw	fx_micka.sync
+
 		db	0
 
 im2vector = ((high $) + 1) << 8
