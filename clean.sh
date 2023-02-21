@@ -6,7 +6,7 @@
 rm -f bank*
 
 pushd build
-rm -f stopgeno*
+rm -f *.tap
 popd
 
 subdirs=(

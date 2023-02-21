@@ -7,7 +7,7 @@
 # `zx0` from https://github.com/einar-saukas/ZX0
 
 ASM="sjasmplus"
-OUTPUT="stopgeno.tap"
+OUTPUT="STOPgenocide.tap"
 
 function ASM() {
 	FULLPATH=$(realpath $1)
@@ -16,7 +16,7 @@ function ASM() {
 }
 function PAK() {
 	rm -f $2
-	zx0 -f $1 > /dev/null
+	zx0 -f $1 &> /dev/null
 	mv -f "$1.zx0" $2
 }
 
@@ -34,7 +34,7 @@ ASM intro.a80 -DisFX --lst=intro.lst
 PAK final.bin final.pak
 
 cd ../priskocmicka
-. preparegfx.sh > /dev/null
+. preparegfx.sh &> /dev/null
 ASM priskocmicka.a80 -DisFX --lst=priskocmicka.lst
 PAK final.bin final.pak
 
