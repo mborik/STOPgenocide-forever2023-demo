@@ -122,11 +122,11 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
-@IMCALL		db	0,0,0
+@IMCALL		ld	bc,#0101
 
 		ld	a,(act128page)
 		push	af
-		and	$F8		; ponechame nastavenu vram
+		and	#F8		; ponechame nastavenu vram
 		or	MUSIC.page	; a prestrankujeme na banku s muzikou
 		ld	bc,page128
 		out	(c),a
@@ -173,6 +173,10 @@ fxtable:
 		db	fx_micka.pg
 		dw	fx_micka
 		dw	fx_micka.sync
+
+		db	fx_grinder.pg
+		dw	fx_grinder
+		dw	fx_grinder.sync
 
 		db	0
 

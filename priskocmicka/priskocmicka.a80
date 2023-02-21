@@ -162,6 +162,13 @@ start
 		ld	de,#D000
 		call	depack
 
+		ld	bc,1339
+.waitforend	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforend
 		ret
 
 waitf:		ei

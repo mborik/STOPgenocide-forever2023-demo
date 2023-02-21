@@ -45,7 +45,7 @@ int:		push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
-		db	0,0,0
+		ld	bc,#0101
 
 		ld	a,(act128page)
 		push	af

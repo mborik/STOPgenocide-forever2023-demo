@@ -38,6 +38,11 @@ cd ../priskocmicka
 ASM priskocmicka.a80 -DisFX --lst=priskocmicka.lst
 PAK final.bin final.pak
 
+cd ../grinder
+PAK background.scr background.pak
+ASM grinder.a80 -DisFX --lst=grinder.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*

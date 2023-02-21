@@ -13,6 +13,7 @@ subdirs=(
 	kernel
 	intro
 	priskocmicka
+	grinder
 	music
 )
 

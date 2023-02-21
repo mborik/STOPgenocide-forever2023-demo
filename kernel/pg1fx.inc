@@ -4,3 +4,6 @@ fx_intro.sync: EQU 0x00000000
 fx_micka: EQU 0x0000C655
 fx_micka.pg: EQU 0x00000011
 fx_micka.sync: EQU 0x000002FE
+fx_grinder: EQU 0x0000CD13
+fx_grinder.pg: EQU 0x00000011
+fx_grinder.sync: EQU 0x0000053C
