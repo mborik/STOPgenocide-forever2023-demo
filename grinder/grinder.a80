@@ -25,23 +25,37 @@
 ;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
-start		ld	hl,#5800
-		ld	de,#5801
+start		ld	hl,#4000
+		ld	de,#4001
+		ld	bc,#1800
+		ld	(hl),-1
+		ldir
 		ld	bc,#02FF
 		ld	(hl),0q077
 		ldir
+		ld	a,7
+		ld	(actborder),a
+		out	(254),a
 		ld	a,#10
 		call	xchg.bnk
 		ld	hl,lookupTables
 		ld	de,LOOKUPS
 		ld	bc,lookupTables.length
 		ldir
-		ld	hl,bgImage
-		ld	de,#4000
-		call	depack
-		ld	a,7
-		ld	(actborder),a
-		out	(254),a
+		ld	hl,bgImage+#1800
+		ld	de,#5800
+		ld	bc,#0300
+		ldir
+
+		ld	b,128
+shadeloop	push	bc
+		ei
+		halt
+		call	shadeLines	;vykonna rutina
+		call	rndLine		;zapina riadky v LINE_SHADES tabulke na zobrazenie/zmazanie
+		pop	bc
+		djnz	shadeloop
+
 		ld	hl,displayList
 		ld	de,displayList+1
 		ld	bc,192 * 4
@@ -50,7 +64,7 @@ start		ld	hl,#5800
 
 mainloop	ei
 		halt
-		ld	(restoreSP + 1),sp
+		ld	(restoreSP+1),sp
 
 		border	1
 
@@ -189,19 +203,281 @@ fnSlideDown	ld	h,(high vramTabs) + 3
 		xor	a
 		sbc	hl,bc
 		jp	c,mainloop
-
 		ret
 
+shadeLines	ld	ix,lineShades
+		xor	a
+		ld	de,#4000
+		ld	b,23
+.loop		ld	a,(ix+0)
+		or	a
+		jr	z,.noShade
+		push	af
+		push	de
+		push	bc
+		ld	a,(ix+1)
+		cp	16
+		jr	c,.maxWidth
+		ld	a,16
+.maxWidth	add	a,e
+		ld	e,a
+		ld	l,e
+		ld	h,d
+		ld	bc,bgImage-#4000
+		add	hl,bc
+		ld	c,l
+		ld	b,h
+		ld	h,fiftyShades/256
+		ld	a,(ix+1)
+		call	shadeLine
+		pop	bc
+		pop	de
+		pop	af
+.noShade	ld	a,e
+		add	a,32
+		ld	e,a
+		sbc	a,a
+		and	8
+		add	a,d
+		ld	d,a
+		inc	ix
+		inc	ix
+		djnz	.loop
+		ret
+
+shadeLine	ld	l,15*8
+		cp	16
+		jr	c,.loop
+		neg
+		add	a,31
+		ld	l,a
+		or	a
+		rl	l
+		rl	l
+		rl	l
+.loop		ex	af,af'
+	dup 8
+		ld	a,(bc)
+		or	(hl)
+		ld	(de),a
+		inc	b
+		dec	l
+		inc	d
+	edup
+
+		ld	a,b
+		sub	8
+		ld	b,a
+		ld	a,d
+		sub	8
+		ld	d,a
+		dec	bc
+		dec	e
+		ex	af,af'
+
+		dec	a
+		jp	p,.loop
+
+		ld	a,(ix+1)
+		inc	a
+		ld	(ix+1),a
+		cp	32
+		ret	nz
+		xor	a
+		ld	(ix+0),a
+		ret
+
+rndLine		ld	a,4
+		dec	a
+		ld	(rndLine+1),a
+		ret	nz
+		ld	a,4
+		ld	(rndLine+1),a
+		ld	a,(rndLinesPos)
+		cp	24
+		ret	z
+		ld	hl,rndLines
+		add	a,l
+		ld	l,a
+		ld	a,(hl)
+		add	a,a
+		ld	hl,lineShades
+		add	a,l
+		ld	l,a
+		ld	(hl),1
+		inc	hl
+		ld	(hl),1
+		ld	a,(rndLinesPos)
+		inc	a
+		ld	(rndLinesPos),a
+		ret
+
+rndLinesPos	db	0
+rndLines	db	1, 21, 17, 11, 16, 5, 13, 3
+		db	0, 22, 19, 4, 23, 6, 7, 10
+		db	12, 8, 15, 2, 18, 9, 20, 14
+
+slideDownAni	include "slide-down.a80"
 ;;-----------------------------------------------------------------------------
+
+
+		align	256
+
+bgImage		incbin "background.scr"
+
+fiftyShades	db	00000000b	;0
+		db	00000000b
+		db	00000000b
+		db	00000000b
+		db	00000000b
+		db	00000000b
+		db	00000000b
+		db	00000000b
+
+		db	10001000b	;1
+		db	00000000b
+		db	00000000b
+		db	00000000b
+		db	10001000b
+		db	00000000b
+		db	00000000b
+		db	00000000b
+
+		db	10101000b	;2
+		db	00000000b
+		db	00100010b
+		db	00000000b
+		db	10001000b
+		db	00000000b
+		db	00100010b
+		db	00000000b
+
+		db	10101010b	;3
+		db	00000000b
+		db	00100010b
+		db	00000000b
+		db	10101010b
+		db	00000000b
+		db	00100010b
+		db	00000000b
+
+		db	10101010b	;4
+		db	01000000b
+		db	10101010b
+		db	00000000b
+		db	10101010b
+		db	00000000b
+		db	10101010b
+		db	00000000b
+
+		db	10101010b	;5
+		db	01000100b
+		db	10101010b
+		db	00010000b
+		db	10101010b
+		db	01000100b
+		db	10101010b
+		db	00000000b
+
+		db	10101010b	;6
+		db	01010100b
+		db	10101010b
+		db	00010001b
+		db	10101010b
+		db	01000101b
+		db	10101010b
+		db	00010001b
+
+		db	10101010b	;7
+		db	01010101b
+		db	10101010b
+		db	01010001b
+		db	10101010b
+		db	01010101b
+		db	10101010b
+		db	00010001b
+
+		db	11101010b	;8
+		db	01010101b
+		db	10101010b
+		db	01010101b
+		db	10101110b
+		db	01010101b
+		db	10101010b
+		db	01010101b
+
+		db	11101110b	;9
+		db	01010101b
+		db	10111010b
+		db	01010101b
+		db	11101110b
+		db	01010101b
+		db	10101011b
+		db	01010101b
+
+		db	11111111b	;10
+		db	01010101b
+		db	10111011b
+		db	01010101b
+		db	11101111b
+		db	01010101b
+		db	10111011b
+		db	01010101b
+
+		db	11111111b	;11
+		db	01010101b
+		db	11111011b
+		db	01010101b
+		db	11111111b
+		db	01010101b
+		db	10111111b
+		db	01010101b
+
+		db	11111111b	;12
+		db	11011101b
+		db	11111111b
+		db	01010101b
+		db	11111111b
+		db	11011101b
+		db	10111111b
+		db	01010101b
+
+		db	11111111b	;13
+		db	11011101b
+		db	11111111b
+		db	01110111b
+		db	11111111b
+		db	11011101b
+		db	11111111b
+		db	01010111b
+
+		db	11111111b	;14
+		db	11111111b
+		db	11111111b
+		db	01110111b
+		db	11111111b
+		db	11111111b
+		db	11111111b
+		db	01110111b
+
+		db	11111111b	;15
+		db	11111111b
+		db	11111111b
+		db	11111111b
+		db	11111111b
+		db	11111111b
+		db	11111111b
+		db	11111111b
+
+lineShades	block	21,0
+		db	1
+		block	6,0
+		db	1
+		block	99,0
 
 		; Display list. Total 192 * 4 = 768 bytes (unaligned).
 		; Contains pairs { source address, destination VRAM address }.
 displayList
-
-bgImage		incbin "background.pak"
-
-slideDownAni	include "slide-down.a80"
-
 lookupTables
 		; LOOKUP TABLES.
 
@@ -209,7 +485,7 @@ lookupTables
 		; 5 * 256 bytes = VRAM pointer table (don't change the order of banks).
 		; 8192 bytes = Sprites. Aligned to 8192 bytes.
 
-X		equ	144			; Manipulating this constant moves the twister horizontally.
+X = 144		; Manipulating this constant moves the twister horizontally.
 
 	phase	LOOKUPS
 
