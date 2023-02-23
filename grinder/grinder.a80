@@ -47,13 +47,16 @@ start		ld	hl,#4000
 		ld	bc,#0300
 		ldir
 
-		ld	b,128
+		ld	bc,#8020
 shadeloop	push	bc
 		ei
 		halt
 		call	shadeLines	;vykonna rutina
 		call	rndLine		;zapina riadky v LINE_SHADES tabulke na zobrazenie/zmazanie
 		pop	bc
+		ld	a,c
+		cp	b
+		call	z,kiteyes.attrs
 		djnz	shadeloop
 
 		ld	hl,displayList
@@ -159,6 +162,7 @@ randomFn	jr	$+2
 
 		ld	a,low ((fnAddGrinder - randomFn) - 2)
 		ld	(randomFn+1),a
+		call	kiteyes1
 		jp	mainloop
 
 fnAddGrinder	ld	b,high finalTabs
@@ -170,7 +174,7 @@ fnAddGrinder	ld	b,high finalTabs
 
 		border	0
 
-		ld	bc,2700
+		ld	bc,2688
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
@@ -178,6 +182,7 @@ fnAddGrinder	ld	b,high finalTabs
 
 		ld	a,low ((fnSlideDown - randomFn) - 2)
 		ld	(randomFn+1),a
+		call	kiteyes2
 		jp	mainloop
 
 fnSlideDown	ld	h,(high vramTabs) + 3
@@ -310,6 +315,32 @@ rndLine		ld	a,4
 		ld	a,(rndLinesPos)
 		inc	a
 		ld	(rndLinesPos),a
+		ret
+
+kiteyes.attrs	ld	a,#46
+		ld	(#59AB),a
+		ld	(#59AC),a
+		ld	hl,#59CB
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		ld	hl,#59EB
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		inc	l
+		ld	(hl),a
+		ret
+
+kiteyes1	include "kiteyes1.inc"
+		ret
+kiteyes2	include "kiteyes2.inc"
 		ret
 
 rndLinesPos	db	0
