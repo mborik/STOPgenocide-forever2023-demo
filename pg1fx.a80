@@ -27,13 +27,18 @@ fx_grinder:	incbin "grinder/final.pak"
 .pg = _fxpage
 .sync = 1340
 
+lookupTables = #D800
 ;;-----------------------------------------------------------------------------
-	if $ > #10000
-		display "Too long! ",/D,($-#10000)," bytes out!"
+	if $ > lookupTables
+		display "Too long! ",/D,($-lookupTables)," bytes out!"
 		end
 	else
-		display /D,(#10000-$)," bytes free..."
+		display /D,(lookupTables-$)," bytes free..."
 	endif
+
+		org	lookupTables
+		include "grinder/lookups.a80"
+
 
 		align	16384,0
 		savebin "bank1",(_fxpage_start),$-(_fxpage_start)
@@ -56,3 +61,7 @@ fx_grinder:	incbin "grinder/final.pak"
 		export fx_grinder
 		export fx_grinder.pg
 		export fx_grinder.sync
+
+		export sinusTabs
+		export finalTabs
+		export vramTabs

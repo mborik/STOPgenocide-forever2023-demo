@@ -7,10 +7,10 @@
 		define STARTTIME 1340
 
 @DEBUG = 0
-@LOOKUPS = #D800
 @VOID = #57E0
 
 		include "../kernel/constants.inc"
+		include "../kernel/pg1fx.inc"
 
 ;;-----------------------------------------------------------------------------
 	macro border n
@@ -38,12 +38,8 @@ start		ld	hl,#4000
 		ld	a,7
 		ld	(actborder),a
 		out	(254),a
-		ld	a,#10
+		ld	a,#11
 		call	xchg.bnk
-		ld	hl,lookupTables
-		ld	de,LOOKUPS
-		ld	bc,lookupTables.length
-		ldir
 		ld	hl,bgImage+#1800
 		ld	de,#5800
 		ld	bc,#0300
@@ -574,41 +570,18 @@ lineShades	block	21,0
 		; Display list. Total 192 * 4 = 768 bytes (unaligned).
 		; Contains pairs { source address, destination VRAM address }.
 displayList
-lookupTables
-		; LOOKUP TABLES.
-
-		; 2 * 256 bytes aligned = Sinus table (don't change the order of banks).
-		; 5 * 256 bytes = VRAM pointer table (don't change the order of banks).
-		; 8192 bytes = Sprites. Aligned to 8192 bytes.
-
-X = 144		; Manipulating this constant moves the twister horizontally.
-
-	phase	LOOKUPS
-
-sinusTabs	include "sinus.inc"
-finalTabs	include "xor-segments.inc"
-		include "vram-hi.inc"
-
-		; Additional lookup table used for fade-in (initially points to ROM).
-
-vramTabs	block	256, 0
-		include "vram-lo.inc"
-		include "dither.inc"
-
-		; XOR 7 segments to be copied here
-		block	256,0
-
-		include "sprites.inc"
-
-	dephase
-
-lookupTables.length = $-lookupTables
 
 
 		savebin "final.bin",start,$-start
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
+		page 1
+		org sinusTabs
+	module lookupTables
+		include "lookups.a80"
+	endmodule
+
 		define PRESET.border 7
 		define PRESET.paper 0q117
 		define PRESET.waitfor STARTTIME

@@ -1,0 +1,22 @@
+; LOOKUP TABLES.
+
+; 2 * 256 bytes aligned = Sinus table (don't change the order of banks).
+; 5 * 256 bytes = VRAM pointer table (don't change the order of banks).
+; 8192 bytes = Sprites. Aligned to 8192 bytes.
+
+X = 144		; Manipulating this constant moves the twister horizontally.
+
+sinusTabs	include "sinus.inc"
+finalTabs	include "xor-segments.inc"
+		include "vram-hi.inc"
+
+; Additional lookup table used for fade-in (initially points to ROM).
+
+vramTabs	block	256, 0
+		include "vram-lo.inc"
+		include "dither.inc"
+
+		; XOR 7 segments to be copied here
+		block	256,0
+
+		include "sprites.inc"
