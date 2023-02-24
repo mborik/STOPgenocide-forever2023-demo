@@ -4,6 +4,8 @@
 		display "Compiling 'grinder'"
 	endif
 
+		define STARTTIME 1340
+
 @DEBUG = 0
 @LOOKUPS = #D800
 @VOID = #57E0
@@ -154,7 +156,7 @@ randomFn	jr	$+2
 
 		border	0
 
-		ld	bc,1920
+		ld	bc,STARTTIME + 580
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
@@ -174,7 +176,7 @@ fnAddGrinder	ld	b,high finalTabs
 
 		border	0
 
-		ld	bc,2688
+		ld	bc,STARTTIME + 1348
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
@@ -203,7 +205,7 @@ fnSlideDown	ld	h,(high vramTabs) + 3
 
 		border	0
 
-		ld	bc,2832
+		ld	bc,STARTTIME + 1492
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
@@ -594,7 +596,7 @@ lookupTables.length = $-lookupTables
 	ifndef isFX
 		define PRESET.border 7
 		define PRESET.paper 0q117
-		define PRESET.waitfor 1340
+		define PRESET.waitfor STARTTIME
 		include "../kernel/kernel.micro.inc"
 		savesna "grinder.sna",microkernel
 	endif
