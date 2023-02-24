@@ -208,7 +208,55 @@ fnSlideDown	ld	h,(high vramTabs) + 3
 		xor	a
 		sbc	hl,bc
 		jp	c,mainloop
-		ret
+
+fillAttrPtrs	ld	hl,vramTabs+(256-(192-8))
+		ld	de,#5800
+		ld	bc,#0020
+		ld	a,24
+.loop		ex	af,af'
+		ld	(hl),d
+		inc	h
+		ld	(hl),e
+		dec	h
+		dec	l
+		ex	de,hl
+		add	hl,bc
+		ex	de,hl
+		ex	af,af'
+		dec	a
+		jr	nz,.loop
+
+scrollScreenOut	dec	a
+		ex	af,af'
+		ld	a,12
+.loop2		ex	af,af'
+		ld	hl,vramTabs+(255-12)
+		ld	b,(192-8-12)+24
+.loop1		ld	c,a
+		ld	d,(hl)
+		inc	h
+		ld	e,(hl)
+		dec	h
+		dec	l
+		push	hl
+		ld	h,d
+		ld	l,e
+		inc	l
+.faster		nop
+	dup 17
+		ldi
+	edup
+		pop	hl
+		djnz	.loop1
+		ex	af,af'
+		dec	a
+		ret	z
+		cp	5
+		jr	nz,.loop2
+		ex	af,af'
+		ld	a,#2C ; inc l
+		ld	(.faster),a
+		jr	.loop2+1
 
 shadeLines	ld	ix,lineShades
 		xor	a
