@@ -1,3 +1,5 @@
+	opt push listoff
+
 ; https://arachnoid.com/polysolve/
 ; 0 0
 ; 40 0
@@ -137,3 +139,4 @@
 		slideDown 176
 
 		block	8,0
+	opt pop

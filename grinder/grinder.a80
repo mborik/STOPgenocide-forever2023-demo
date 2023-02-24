@@ -576,6 +576,7 @@ displayList
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
+	opt push listoff
 		page 1
 		org sinusTabs
 	module lookupTables
@@ -587,4 +588,5 @@ displayList
 		define PRESET.waitfor STARTTIME
 		include "../kernel/kernel.micro.inc"
 		savesna "grinder.sna",microkernel
+	opt pop
 	endif
