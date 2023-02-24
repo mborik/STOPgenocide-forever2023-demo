@@ -64,7 +64,7 @@ shadeloop	push	bc
 		ld	hl,displayList
 		ld	de,displayList+1
 		ld	bc,192 * 4
-		ld	(hl),0
+		ld	(hl),l
 		ldir
 
 mainloop	ei
@@ -252,13 +252,28 @@ scrollScreenOut	dec	a
 		djnz	.loop1
 		ex	af,af'
 		dec	a
-		ret	z
+		ld	de,#5AE0
+		jr	z,ldirOneAttrLine
 		cp	5
 		jr	nz,.loop2
 		ex	af,af'
 		ld	a,#2C ; inc l
 		ld	(.faster),a
+		ld	e,#C0
+		call	ldirOneAttrLine
 		jr	.loop2+1
+
+ldirOneAttrLine	push	de
+		exx
+		pop	de
+		ld	h,d
+		ld	l,e
+		inc	e
+		ld	bc,31
+		ld	(hl),0q177
+		ldir
+		exx
+		ret
 
 shadeLines	ld	ix,lineShades
 		xor	a
