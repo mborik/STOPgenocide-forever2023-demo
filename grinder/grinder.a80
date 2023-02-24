@@ -214,6 +214,8 @@ scrollScreenOut	dec	a
 		ex	af,af'
 		ld	a,12
 .loop2		ex	af,af'
+		ei
+		halt
 		ld	hl,vramTabs+(255-12)
 		ld	b,(192-8-12)+24
 .loop1		ld	c,a
