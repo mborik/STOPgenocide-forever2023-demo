@@ -1,0 +1,169 @@
+	; synchronization stamp
+	macro sync t
+		dw	STARTTIME + t
+	endm
+
+	; custom action
+	macro action ptr
+		db	0
+		db	high ptr
+		db	low ptr
+	endm
+
+	; action to draw attribute square
+	macro region x, y, w, h, color
+.attraddr = (#5800) + (32 * y) + x
+		db	high .attraddr
+		db	low .attraddr
+		db	w, h
+		db	color
+	endm
+
+	; supermacro to fillin a whole twister
+	macro fillin snc, c1, c2
+.sync = snc
+.i = 1
+		sync	.sync
+		region	18, .i, 12, 1, c1
+		dw	0
+	dup 20
+.sync = .sync + 2
+.i = .i + 1
+		sync	.sync
+		region	17, (.i - 1), 13, 1, c2
+		region	18, .i, 12, 1, c1
+		dw	0
+	edup
+		sync	.sync + 1
+		region	17, .i, 13, 1, c2
+		dw	0
+	endm
+
+;; SCENARIO
+		sync	215
+		region	22,  5, 3, 3, 0q162
+		region	23, 12, 4, 4, 0q156
+		region	21, 16, 4, 4, 0q135
+		dw	0
+
+		sync	239
+		region	22,  5, 3, 3, 0q107
+		region	23, 12, 4, 4, 0q107
+		region	21, 16, 4, 4, 0q107
+		dw	0
+
+		sync	263
+		region	23,  2, 3, 3, 0q053
+		region	22,  8, 3, 3, 0q135
+		region	19, 14, 4, 4, 0q151
+		dw	0
+
+		sync	287
+		region	23,  2, 3, 3, 0q107
+		region	22,  8, 3, 3, 0q107
+		region	19, 14, 4, 4, 0q107
+		dw	0
+
+		sync	311
+		region	25,  6, 3, 3, 0q162
+		region	21,  9, 4, 4, 0q035
+		region	23, 17, 3, 3, 0q053
+		dw	0
+
+		sync	335
+		region	25,  6, 3, 3, 0q107
+		region	21,  9, 4, 4, 0q107
+		region	23, 17, 3, 3, 0q107
+		dw	0
+
+		sync	359
+		region	24,  5, 2, 2, 0q051
+		region	22,  8, 3, 3, 0q163
+		region	23, 12, 3, 3, 0q136
+		dw	0
+
+		sync	383
+		region	24,  5, 2, 2, 0q107
+		region	22,  8, 3, 3, 0q107
+		region	23, 12, 3, 3, 0q107
+		dw	0
+
+		sync	407
+		region	20,  6, 4, 4, 0q031
+		region	25,  4, 3, 3, 0q163
+		region	23, 13, 3, 3, 0q116
+		dw	0
+
+		sync	431
+		region	20,  6, 4, 4, 0q107
+		region	25,  4, 3, 3, 0q107
+		region	23, 13, 3, 3, 0q107
+		dw	0
+
+		sync	455
+		region	22,  5, 3, 3, 0q162
+		region	23, 12, 4, 4, 0q156
+		region	24, 17, 3, 3, 0q135
+		dw	0
+
+		sync	479
+		region	22,  5, 3, 3, 0q107
+		region	23, 12, 4, 4, 0q107
+		region	24, 17, 3, 3, 0q107
+		dw	0
+
+		sync	503
+		region	23,  2, 3, 3, 0q053
+		region	23,  8, 3, 3, 0q135
+		region	19, 14, 4, 4, 0q151
+		dw	0
+
+		sync	527
+		region	23,  2, 3, 3, 0q107
+		region	23,  8, 3, 3, 0q107
+		region	19, 14, 4, 4, 0q107
+		dw	0
+
+		sync	544
+		region	18, 1, 12, 4, 0q127 ; red
+		dw	0
+
+		sync	551
+		region	18, 1, 12, 4, 0q177 ; clr
+		region	18, 5, 12, 4, 0q127 ; red
+		dw	0
+
+		sync	556
+		region	18, 5, 12, 4, 0q177 ; clr
+		dw	0
+
+		sync	563
+		region	18, 9, 12, 4, 0q177 ; clr
+		dw	0
+
+		sync	568
+		region	18, 13, 12, 4, 0q177 ; clr
+		dw	0
+
+		sync	575
+		region	18, 17, 12, 3, 0q177 ; clr
+		dw	0
+
+		sync	579
+		region	18, 20, 12, 2, 0q177 ; clr
+		dw	0
+
+		sync	580
+		action	action.addGrinder
+
+		fillin	581, 0q167, 0q127
+
+		sync	1348
+		action	action.slideDown
+
+		sync	1350
+		region	17, 1, 15, 21, 0q177 ; erasehead
+		dw	0
+
+
+		dw	0
