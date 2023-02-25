@@ -44,13 +44,26 @@ chn_init: 	ld	hl,(i_positions)
 		call	sq_i
 		call	sq_i
 
-sq_stop:	ld	de,#073F		; AY regs 7-12 set to silence
+sq_stop:	; AY regs 7-12 set to silence
+	ifdef OUT2BUFFER
+		ld	de,MUSIC.buffer+7
+		ld	bc,13
+		ld	a,#3F
+chn_iniloop:	ld	(de),a
+		inc	e
+		ld	a,c
+		cp	e
+		ld	a,b
+		jr	nz,chn_iniloop
+	else
+		ld	de,#073F
 chn_iniloop:	call	out1
 		ld	e,0
 		inc	d
 		ld	a,d
 		cp	12
 		jr	nz,chn_iniloop
+	endif
 		ret
 
 sq_play:	ld	hl,sq_sys
@@ -105,12 +118,17 @@ sq_n:		ld	bc,0			; configure mixer register
 		or	c			; complementing because
 		cpl				; mixer is active in zero
 sq_off: 	or	0			; and apply additional chn.off
+	ifdef OUT2BUFFER
+		ld	de,MUSIC.buffer+7
+		ld	(de),a
+	else
 		ld	e,a
 		ld	d,7			; out to mixer register 7
 out1:		ld	bc,#FFFD
 		out	(c),d
 		ld	b,#BF
 		out	(c),e
+	endif
 		ret
 
 sq_i:		ld	hl,0
@@ -301,6 +319,14 @@ y04:		dec	a
 y69:		cp	8
 		jr	c,z38
 		set	0,(ix+0)
+	ifdef OUT2BUFFER
+		ld	de,MUSIC.buffer+13
+		ld	(de),a
+		ld	a,c
+		ld	e,11
+		ld	(de),a
+		ret
+	else
 		ld	l,c
 		ld	e,a
 		ld	d,13
@@ -308,6 +334,7 @@ y69:		cp	8
 		ld	d,11
 		ld	e,l
 		jp	out1
+	endif
 
 z38:		cp	6			; channel volume set
 		jr	nc,z36
@@ -476,9 +503,16 @@ out2:		ld	hl,sq_n+1		; carry was projected into tone
 		rl	(hl)
 		ld	a,(ix+17)		; then get channel number
 		add	a,8			; add 8 (AY reg number)
+	ifdef OUT2BUFFER
+		ld	c,a
+		ld	b,high MUSIC.buffer
+		ld	a,e
+		ld	(bc),a
+	else
 		out	(c),a			; so we change volume regs
 		ld	b,#BF
 		out	(c),e			; and send value in E
+	endif
 		jp	sq_zch
 
 sq_r:		ld	l,(ix+3)
@@ -502,9 +536,16 @@ sq_r1:		sub	(ix+11) 		; subtract global attenuation
 
 sq_r2:		ld	a,(ix+17)		; then get channel number
 		add	a,8			; add 8 (AY reg number)
+	ifdef OUT2BUFFER
+		ld	c,a
+		ld	b,high MUSIC.buffer
+		ld	a,e
+		ld	(bc),a
+	else
 		out	(c),a			; so we change volume regs
 		ld	b,#BF
 		out	(c),e
+	endif
 		ld	a,(hl)
 		inc	hl
 		and	240			; extract noise data
@@ -517,10 +558,16 @@ sq_r2:		ld	a,(ix+17)		; then get channel number
 		bit	5,(hl)			; will be noise enabled?
 		jr	z,sq_znn
 		adc	a,0
+	ifdef OUT2BUFFER
+		ld	c,d
+		ld	b,high MUSIC.buffer
+		ld	(bc),a
+	else
 		ld	b,#FF
 		out	(c),d
 		ld	b,#BF
 		out	(c),a
+	endif
 sq_znn:		ld	a,e
 		rla
 		ex	de,hl
@@ -621,6 +668,10 @@ fq_9:		sbc	hl,de
 
 out9:		ld	a,(ix+17)		; get channel number
 		add	a,a			; multiply by two
+	ifdef OUT2BUFFER
+		ld	(out9chn2buffer),a
+out9chn2buffer	ld	(MUSIC.buffer),hl
+	else
 		ld	bc,#FFFD		; and set tone frequency
 		out	(c),a
 		ld	b,#BF
@@ -630,6 +681,7 @@ out9:		ld	a,(ix+17)		; get channel number
 		out	(c),a
 		ld	b,#BF
 		out	(c),h
+	endif
 sq_zch: 	ld	de,chzl 		; and skip to next channel
 		add	ix,de			; state params with IX...
 		ret

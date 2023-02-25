@@ -11,6 +11,8 @@ VRAM2		block	#1800,0
 
 ;;-----------------------------------------------------------------------------
 		ds	#0300 ; gap
+		define	OUT2BUFFER
+		include "kernel/constants.inc"
 		include "music/sqt.a80"
 
 MUSIC.page = _fxpage

@@ -64,6 +64,10 @@ fadeoutandrun:	ld	a,25
 		include "dzx0_fast.a80"
 		endmodule
 
+		org	#8100
+
+@MUSIC.buffer	block	16,0
+
 attrhide:	ld	hl,22528
 		ld	c,24
 .atthd2:	ld	b,32
@@ -437,3 +441,4 @@ total = $ - line1
 		export MUSIC.page
 		export MUSIC.init
 		export MUSIC.play
+		export MUSIC.buffer
