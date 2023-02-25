@@ -13,6 +13,7 @@ VRAM2		block	#1800,0
 		ds	#0300 ; gap
 
 MUSIC.buffer = #8100 ; into kernel
+		define OUT2BUFFER
 		include "music/sqt.a80"
 
 MUSIC.page = _fxpage

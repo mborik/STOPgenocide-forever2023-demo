@@ -66,8 +66,30 @@ fadeoutandrun:	ld	a,25
 
 		org	#8100
 
-@MUSIC.buffer	block	16,0
+@MUSIC.buffer	dw	0, 0, 0
+		db	0, #3F ; mixer
+		db	0, 0, 0
+		dw	0
+		db	-1
+		dw	0
 
+MUSIC.out	ld	hl,MUSIC.buffer
+		ld	de,#FFBF
+		ld	bc,#FFFD
+		ld	a,13
+.loop		out	(c),l
+		ld	b,e
+		outi
+		ld	b,d
+		dec	a
+		jr	nz,.loop
+		or	(hl)
+		ret	m
+		out	(c),l
+		ld	b,e
+		out	(c),a
+		ld	(hl),d
+		ret
 
 attrhide:	ld	hl,22528
 		ld	c,24
@@ -127,17 +149,7 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
-MUSIC.out	ld	hl,MUSIC.buffer
-		ld	de,#FFBF
-		ld	bc,#FFFD
-		ld	a,13
-.loop		out	(c),l
-		ld	b,e
-		outi
-		ld	b,d
-		dec	a
-		jr	nz,.loop
-
+		call	MUSIC.out
 @IMCALL		ld	bc,#0101
 
 		ld	a,(act128page)
