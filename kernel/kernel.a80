@@ -242,6 +242,8 @@ im2vector = ((high $) + 1) << 8
 		ld	d,#C0
 		ld	b,high 6912
 		ldir
+; outing of music to AY is delayed by one interrupt
+		dec	bc
 		ld	(FRAMES),bc
 		ld	a,#10
 		call	xchg.bnk
