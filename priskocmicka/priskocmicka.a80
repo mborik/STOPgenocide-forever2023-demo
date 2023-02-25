@@ -24,16 +24,6 @@
 		org	RUNZONE
 
 start
-	ifndef isFX
-		ld	a,1
-		ld	(actborder),a
-		out	(254),a
-		ld	hl,#5800
-		ld	de,#5801
-		ld	bc,#2ff
-		ld	(hl),0q111
-		ldir
-	endif
 		ei
 		halt
 		ld	a,#1D
@@ -102,22 +92,22 @@ start
 
 		call	xchg.vram
 		ld	hl,gfx.stand.part8
-		ld	de,#D000
+		ld	de,#C000
 		call	depack
 
 		ld	b,6
 		call	waitf
 
-		call	xchg.vram
+		call	xchg.vralign
 		ld	hl,gfx.stand.part9
-		ld	de,#D000
+		ld	de,#4000
 		call	depack
 
 		ld	b,28
 .standloop	push	bc
 		ld	b,12
 		call	waitf
-		call	xchg.vram
+		call	xchg.vramX
 		pop	bc
 		djnz	.standloop
 
@@ -157,9 +147,9 @@ start
 		ld	b,5
 		call	waitf
 
-		call	xchg.vram
+		call	xchg.vralign
 		ld	hl,gfx.dead.part5
-		ld	de,#D000
+		ld	de,#5000
 		call	depack
 
 		ld	bc,1339
@@ -173,8 +163,106 @@ start
 
 waitf:		ei
 		halt
+		call	followscene
 		djnz	waitf
 		ret
+
+xchg.vralign	ld	a,(xchg.vram+1)
+		or	7
+		jr	xchg.vramX+3
+xchg.vramX	ld	a,(act128page)
+		xor	8
+		ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+followscene:	ld	ix,scenario
+		ld	a,(ix)
+		or	(ix+1)
+		ret	z
+		ld	e,a
+		ld	d,(ix+1)
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,de
+		ret	c
+		inc	ix
+		inc	ix
+		exx
+.readpatts	ld	a,(ix)
+		inc	ix
+		or	a
+		jr	z,.finish
+		ld	h,a
+		ld	l,(ix)
+		inc	ix
+		ld	a,(ix)
+		ld	e,a
+		inc	ix
+		ex	af,af'
+		ld	a,32
+		sub	e
+		ld	e,a
+		ld	d,0
+		ld	b,(ix)
+		inc	ix
+		ld	a,(ix)
+		inc	ix
+
+.fillcolumn	ex	af,af'
+		ld	c,a
+		ex	af,af'
+.fillrow	ld	(hl),a
+		set	7,h
+		ld	(hl),a
+		res	7,h
+		inc	l
+		dec	c
+		jr	nz,.fillrow
+		add	hl,de
+		djnz	.fillcolumn
+		jr	.readpatts
+
+.finish:	ld	(followscene+2),ix
+		dec	a
+		exx
+		ret
+
+;; dw SYNC
+;; loop {
+;;   dw attraddr             \__
+;;   db color, width, height /   => region x, y, w, h, color
+;; }
+;; db 0
+
+	macro region x, y, w, h, color
+.attraddr = #5800 + (32 * y) + x
+		db	high .attraddr
+		db	low .attraddr
+		db	w, h
+		db	color
+	endm
+
+	macro hilite snc, x, y, w, h, color
+.sync = snc
+.c = color - 6
+	dup 6
+.sync = .sync + 2
+.c = .c + 1
+		dw	.sync
+		region	x, y, w, h, .c
+		db	0
+	edup
+	endm
+
+scenario:
+		hilite	 864, 2,  2, 19, 2, 0q117
+		hilite	 936, 3,  5, 26, 3, 0q117
+		hilite	 960, 2,  8, 28, 3, 0q117
+		hilite	1128, 2, 12, 28, 3, 0q117
+		dw	0
+
 
 	module gfx
 jump
@@ -201,6 +289,8 @@ dead
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
+		define	PRESET.border 1
+		define	PRESET.paper 0q111
 		define	PRESET.waitfor 766
 		include "../kernel/kernel.micro.inc"
 		savesna "priskocmicka.sna",microkernel

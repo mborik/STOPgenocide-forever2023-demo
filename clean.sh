@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# demo builder (c) 2019-2023 mborik/SinDiKat
+# demo cleaner (c) 2019-2023 mborik/SinDiKat
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 rm -f bank*
@@ -19,6 +19,7 @@ subdirs=(
 
 for D in "${subdirs[@]}"; do
 	pushd "${D}"
-	rm -f final.bin *.lst *.pak *.sna *.tap
+	rm -f final.bin *.lst *.sna *.tap
+	find . -name "*.pak" -type f -delete
 	popd
 done

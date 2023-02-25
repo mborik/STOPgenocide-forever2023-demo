@@ -12,8 +12,6 @@ justbottom=(
 	05
 	06
 	07
-	08
-	09
 	11
 	12
 	13
@@ -33,8 +31,8 @@ topack=(
 	05.part
 	06.part
 	07.part
-	08.part
-	09.part
+	08.scr
+	09.scr
 	11.part
 	12.part
 	13.part
