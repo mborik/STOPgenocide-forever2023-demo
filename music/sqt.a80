@@ -322,8 +322,8 @@ y69:		cp	8
 	ifdef OUT2BUFFER
 		ld	de,MUSIC.buffer+13
 		ld	(de),a
-		ld	a,c
 		ld	e,11
+		ld	a,c
 		ld	(de),a
 		ret
 	else
@@ -505,7 +505,6 @@ out2:		ld	hl,sq_n+1		; carry was projected into tone
 		add	a,8			; add 8 (AY reg number)
 	ifdef OUT2BUFFER
 		ld	c,a
-		ld	b,high MUSIC.buffer
 		ld	a,e
 		ld	(bc),a
 	else
@@ -517,7 +516,11 @@ out2:		ld	hl,sq_n+1		; carry was projected into tone
 
 sq_r:		ld	l,(ix+3)
 		ld	h,(ix+4)
+	ifdef OUT2BUFFER
+		ld	bc,MUSIC.buffer
+	else
 		ld	bc,#FFFD
+	endif
 		ld	d,(ix+0)
 		ld	e,0
 		bit	3,d			; if nothing to play, then mute
@@ -538,7 +541,6 @@ sq_r2:		ld	a,(ix+17)		; then get channel number
 		add	a,8			; add 8 (AY reg number)
 	ifdef OUT2BUFFER
 		ld	c,a
-		ld	b,high MUSIC.buffer
 		ld	a,e
 		ld	(bc),a
 	else
@@ -560,7 +562,6 @@ sq_r2:		ld	a,(ix+17)		; then get channel number
 		adc	a,0
 	ifdef OUT2BUFFER
 		ld	c,d
-		ld	b,high MUSIC.buffer
 		ld	(bc),a
 	else
 		ld	b,#FF
@@ -669,7 +670,7 @@ fq_9:		sbc	hl,de
 out9:		ld	a,(ix+17)		; get channel number
 		add	a,a			; multiply by two
 	ifdef OUT2BUFFER
-		ld	(out9chn2buffer),a
+		ld	(out9chn2buffer+1),a
 out9chn2buffer	ld	(MUSIC.buffer),hl
 	else
 		ld	bc,#FFFD		; and set tone frequency
