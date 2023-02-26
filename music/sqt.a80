@@ -55,6 +55,25 @@ chn_iniloop:	ld	(de),a
 		cp	e
 		ld	a,b
 		jr	nz,chn_iniloop
+		ret
+
+sq_send		ld	hl,MUSIC.buffer
+		ld	de,#FFBF
+		ld	bc,#FFFD
+		ld	a,13
+.loop		out	(c),l
+		ld	b,e
+		outi
+		ld	b,d
+		dec	a
+		jr	nz,.loop
+		or	(hl)
+		ret	m
+		out	(c),l
+		ld	b,e
+		out	(c),a
+		ld	(hl),d
+		ret
 	else
 		ld	de,#073F
 chn_iniloop:	call	out1
@@ -63,8 +82,8 @@ chn_iniloop:	call	out1
 		ld	a,d
 		cp	12
 		jr	nz,chn_iniloop
-	endif
 		ret
+	endif
 
 sq_play:	ld	hl,sq_sys
 		dec	(hl)
