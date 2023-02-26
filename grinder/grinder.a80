@@ -186,12 +186,14 @@ fnSlideDown	ld	h,(high vramTabs) + 3
 
 		border	0
 
-		ld	bc,STARTTIME + 1492
+		ld	bc,STARTTIME + 1490
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
 		jp	c,mainloop
 
+		ei
+		halt
 		call	followscene
 fillAttrPtrs	ld	hl,vramTabs+(256-(192-8))
 		ld	de,#5800
@@ -242,19 +244,17 @@ scrollScreenOut	dec	a
 		ex	af,af'
 		ld	a,#2C ; inc l
 		ld	(.faster),a
-		exx
-		ld	hl,#5AC0
-		ld	de,#5AC1
-		ld	bc,#001F
-		ld	(hl),0q177
-		ldir
-		exx
 		jr	.loop2+1
 
-.finish		ld	hl,#5800
+.finish		ei
+		halt
+		ld	hl,#5800
 		ld	de,#5801
-		ld	bc,#02FF
+		ld	bc,#02C0
 		ld	(hl),0q177
+		ldir
+		ld	bc,#003F
+		ld	(hl),0q077
 		ldir
 		ld	hl,#4000
 		ld	de,#4001

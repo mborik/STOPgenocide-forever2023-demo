@@ -12,65 +12,9 @@
 		db	255 - val
 	endm
 
+	dup 48
 		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
-		slideDown 0
+	edup
 		slideDown 1
 		slideDown 1
 		slideDown 1
@@ -138,5 +82,5 @@
 		slideDown 168
 		slideDown 176
 
-		block	8,0
+		block	40,0
 	opt pop

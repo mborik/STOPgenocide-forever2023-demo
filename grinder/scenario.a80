@@ -149,10 +149,10 @@
 
 		fillin	581, 0q167, 0q127
 
-		sync	1348
+		sync	1340
 		action	action.slideDown
 
-		sync	1492
+		sync	1490
 		region	17, 1, 15, 21, 0q177 ; erasehead
 		dw	0
 
