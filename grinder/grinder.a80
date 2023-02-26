@@ -370,59 +370,46 @@ rndLine		ld	a,4
 		ld	(rndLinesPos),a
 		ret
 
-followscene:	ld	ix,scenario
-		ld	a,(ix)
-		or	(ix+1)
-		ret	z
-		ld	c,a
-		ld	b,(ix+1)
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		ret	c
-		inc	ix
-		inc	ix
-.readpatts	ld	a,(ix)
-		inc	ix
-		or	a
-		jr	z,.actionitem
-		ld	h,a
-		ld	l,(ix)
-		inc	ix
-		ld	a,(ix)
-		ld	e,a
-		inc	ix
-		ex	af,af'
-		ld	a,32
-		sub	e
-		ld	e,a
-		ld	d,0
-		ld	b,(ix)
-		inc	ix
-		ld	a,(ix)
-		inc	ix
-
-.fillcolumn	ex	af,af'
-		ld	c,a
-		ex	af,af'
-.fillrow	ld	(hl),a
+followscene:	ld	hl,scenario
+		ld	a,(FRAMES)
+		add	a,(hl)
 		inc	hl
-		dec	c
-		jr	nz,.fillrow
-		add	hl,de
-		djnz	.fillcolumn
-		jr	.readpatts
+		ld	a,(FRAMES+1)
+		adc	a,(hl)
+		ret	nc		; (FRAMES) < sync
+		inc	hl		; A is zeroed by FRAMES test
+.readpatts
+		ldi	e,(hl)
+		ldi	d,(hl)
+		or	d
+		jr	z,.finishpatts	; high byte == 0 -> end of list
+		jp	m,.actionitem
 
-.actionitem:	or	(ix)
-		inc	ix
-		jr	z,.finish
-		ld	h,a
-		ld	l,(ix)
-		ld	(.finish-2),hl
-		inc	ix
-		call	82
-.finish		ld	(followscene+2),ix
-		ret
+		ldi	a,(hl)		; color
+		ex	af,af
+		ldi	c,(hl)		; C = 32-width
+		ld	a,32
+		sub	c
+		ld	ixl,a		; IXL = width
+		ldi	a,(hl)		; height
+		ex	de,hl		; HL = VRAM, DE = scenario ptr, C = 32-w, IXL = w, A = h, A' = color
+.fillrect
+		ex	af,af'		; A = color, A' = row counter
+		ld	b,ixl		; B = width
+.fillrow	ld	(hl),a
+		inc	l
+		djnz	.fillrow
+		add	hl,bc		; attr_addr += 32-width
+		ex	af,af'
+		dec	a
+		jr	nz,.fillrect
+		ex	de,hl		; HL = scenario ptr
+		jr	.readpatts	; A is zero from height counter
+
+.finishpatts	pop	de		; write new scenario pointer + return to caller by .actionitem code
+.actionitem	ld	(followscene+1),hl
+		ex	de,hl
+		jp	(hl)		; call action, return to caller of followscene
 
 kiteyes.attrs	ld	a,#46
 		ld	(#59AB),a
@@ -454,6 +441,8 @@ kiteyes1	include "kiteyes1.inc"
 @action.slideDown
 		ld	a,low ((fnSlideDown - randomFn) - 2)
 		ld	(randomFn+1),a
+		ld	a,#23 ; `inc hl` in fillrect will be needed now...
+		ld	(followscene.fillrow+1),a
 		call	kiteyes2
 kiteyes2	include "kiteyes2.inc"
 		ret

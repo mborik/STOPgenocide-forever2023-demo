@@ -1,41 +1,32 @@
 	; synchronization stamp
-	macro sync t
-		dw	STARTTIME + t
+	macro sync t?
+		dw	-((STARTTIME) + (t?))
 	endm
 
 	; custom action
-	macro action ptr
-		db	0
-		db	high ptr
-		db	low ptr
+	macro action ptr?
+		dw	ptr?
 	endm
 
 	; action to draw attribute square
-	macro region x, y, w, h, color
-.attraddr = (#5800) + (32 * y) + x
-		db	high .attraddr
-		db	low .attraddr
-		db	w, h
-		db	color
+	macro region x?, y?, w?, h?, color?
+		dw	#5800 + 32 * (y?) + (x?)
+		db	color?
+		db	32 - (w?), h?
 	endm
 
 	; supermacro to fillin a whole twister
-	macro fillin snc, c1, c2
-.sync = snc
-.i = 1
-		sync	.sync
-		region	18, .i, 12, 1, c1
-		dw	0
-	dup 20
-.sync = .sync + 2
-.i = .i + 1
-		sync	.sync
-		region	17, (.i - 1), 13, 1, c2
-		region	18, .i, 12, 1, c1
-		dw	0
-	edup
-		sync	.sync + 1
-		region	17, .i, 13, 1, c2
+	macro fillin snc?, c1?, c2?
+		dup 21, .fillin_i
+			sync	(snc?) + 2*.fillin_i
+			if .fillin_i
+				region	17, .fillin_i, 13, 1, c2?
+			endif
+			region	18, .fillin_i + 1, 12, 1, c1?
+			dw	0
+		edup
+		sync	(snc?) + 2*(.fillin_i + 1)
+		region	17, .fillin_i + 1, 13, 1, c2?
 		dw	0
 	endm
 
@@ -161,7 +152,7 @@
 		sync	1348
 		action	action.slideDown
 
-		sync	1350
+		sync	1492
 		region	17, 1, 15, 21, 0q177 ; erasehead
 		dw	0
 
