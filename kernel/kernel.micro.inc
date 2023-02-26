@@ -20,7 +20,7 @@
 		ld	a,PRESET.border
 		out	(254),a
 		ld	(actborder),a
-		ld	hl,0
+		ld	hl,-1
 		ld	(FRAMES),hl
 		ld	a,high vector
 		ld	i,a
@@ -28,9 +28,10 @@
 		jp	baseloop
 
 ;;- INTERRUPT -----------------------------------------------------------------
-		org	#8181
+		org	#8180
 
-int:		push	af		; zakladne osetrenie prerusenia
+semafor:	db	0
+interrupt:	push	af		; zakladne osetrenie prerusenia
 		ld	a,(actborder)	; s volanim hudobneho hradla
 		out	(254),a
 		push	bc
@@ -45,11 +46,33 @@ int:		push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
-		ld	bc,#0101
-
 		ld	a,(act128page)
 		push	af
-		and	$F8		; ponechame nastavenu vram
+		and	#F8		; ponechame nastavenu vram
+		or	MUSIC.page	; a prestrankujeme na banku s muzikou
+		ld	bc,page128
+		out	(c),a
+		call	MUSIC.out
+		pop	af
+		ld	bc,page128
+		out	(c),a
+
+.imcall		ld	bc,#0101
+
+		ld	hl,(FRAMES)
+		inc	hl
+		ld	(FRAMES),hl
+
+		ld	hl,semafor	; kazde zacate prerusenie semafor inkrementuje
+		inc	(hl)
+		ld	a,(hl)		;; Ak je toto uz druhe (vnorene) prerusenie,
+		cp	2		;; potom ihned koniec obsluhy tohto prerusenia
+		jr	nc,.end		;; (ale semafor je inkrementnuty aby sme vedeli ze nastalo)
+
+.underrun	ei
+		ld	a,(act128page)
+		push	af
+		and	#F8		; ponechame nastavenu vram
 		or	MUSIC.page	; a prestrankujeme na banku s muzikou
 		ld	bc,page128
 		out	(c),a
@@ -57,12 +80,11 @@ int:		push	af		; zakladne osetrenie prerusenia
 		pop	af
 		ld	bc,page128
 		out	(c),a
+		ld	hl,semafor
+		dec	(hl)
+		jr	nz,.underrun
 
-		ld	hl,(FRAMES)
-		inc	hl
-		ld	(FRAMES),hl
-
-		pop	hl
+.end		pop	hl
 		pop	de
 		pop	bc
 		pop	af
@@ -135,7 +157,7 @@ baseloop:	ld	a,MUSIC.page | #10
 		call	xchg.bnk
 		call	MUSIC.init
 	ifdef PRESET.waitfor
-		ld	bc,PRESET.waitfor
+		ld	bc,PRESET.waitfor - 1
 		ld	(FRAMES),bc
 .muswaiter:	push	bc
 		call	MUSIC.play
@@ -164,7 +186,17 @@ baseloop:	ld	a,MUSIC.page | #10
 		block	#1800, 0
 		block	#0300, PRESET.paper
 
-		ds	#0300 ; gap
+		ds	#0200 ; gap
+
+MUSIC.buffer	dw	0, 0, 0
+		db	0, #3F ; mixer
+		db	0, 0, 0
+		dw	0
+		db	-1
+		dw	0
+
+		align 256
+		define OUT2BUFFER
 		include "../music/sqt.a80"
 
 	endmodule

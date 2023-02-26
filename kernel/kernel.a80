@@ -455,6 +455,7 @@ total = $ - line1
 		export xchg.vram
 		export xchg.bnk
 		export MUSIC.page
+		export MUSIC.out
 		export MUSIC.init
 		export MUSIC.play
 		export MUSIC.buffer
