@@ -10,12 +10,23 @@ VRAM2		block	#1800,0
 		block	#0300,0
 
 ;;-----------------------------------------------------------------------------
-		ds	#0300 ; gap
+		ds	#0200 ; gap
+
+MUSIC.buffer	dw	0, 0, 0
+		db	0, #3F ; mixer
+		db	0, 0, 0
+		dw	0
+		db	-1
+		dw	0
+
+		align 256
+		define OUT2BUFFER
 		include "music/sqt.a80"
 
 MUSIC.page = _fxpage
 MUSIC.init = sq_init
 MUSIC.play = sq_play
+MUSIC.out  = sq_send
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -31,5 +42,7 @@ MUSIC.play = sq_play
 ;;-----------------------------------------------------------------------------
 
 		export	MUSIC.page
+		export	MUSIC.buffer
 		export	MUSIC.init
 		export	MUSIC.play
+		export	MUSIC.out

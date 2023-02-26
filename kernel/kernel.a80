@@ -96,17 +96,18 @@ attrhide:	ld	hl,22528
 		ret
 .end = $
 
-	if $ > #8181
-		display "Too long! ",/D,($-#8181)," bytes out of interrupt!"
+	if $ > #8180
+		display "Too long! ",/D,($-#8180)," bytes out of interrupt!"
 	else
-		display /D,(#8181-$)," bytes free before interrupt"
+		display /D,(#8180-$)," bytes free before interrupt"
 	endif
 
-		block	(#8181-$),0
+		block	(#8180-$),0
 
 ;;- INTERRUPT -----------------------------------------------------------------
-;		org	#8181
+;		org	#8180
 
+semafor:	db	0
 interrupt:	push	af		; zakladne osetrenie prerusenia
 		ld	a,(actborder)	; s volanim hudobneho hradla
 		out	(254),a
@@ -122,8 +123,30 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
+		ld	a,(act128page)
+		push	af
+		and	#F8		; ponechame nastavenu vram
+		or	MUSIC.page	; a prestrankujeme na banku s muzikou
+		ld	bc,page128
+		out	(c),a
+		call	MUSIC.out
+		pop	af
+		ld	bc,page128
+		out	(c),a
+
 @IMCALL		ld	bc,#0101
 
+		ld	hl,(FRAMES)
+		inc	hl
+		ld	(FRAMES),hl
+
+		ld	hl,semafor	; kazde zacate prerusenie semafor inkrementuje
+		inc	(hl)
+		ld	a,(hl)		;; Ak je toto uz druhe (vnorene) prerusenie,
+		cp	2		;; potom ihned koniec obsluhy tohto prerusenia
+		jr	nc,.end		;; (ale semafor je inkrementnuty aby sme vedeli ze nastalo)
+
+.underrun	ei
 		ld	a,(act128page)
 		push	af
 		and	#F8		; ponechame nastavenu vram
@@ -134,12 +157,11 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		pop	af
 		ld	bc,page128
 		out	(c),a
+		ld	hl,semafor
+		dec	(hl)
+		jr	nz,.underrun
 
-		ld	hl,(FRAMES)
-		inc	hl
-		ld	(FRAMES),hl
-
-		pop	hl
+.end		pop	hl
 		pop	de
 		pop	bc
 		pop	af
@@ -153,32 +175,6 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		pop	af
 		ei
 		ret
-
-
-fxtable:
-;;-----------------------------------------------------------------------------
-; Every part is defined with this effect descriptor:
-;
-;     db  fx_demopart.pg   ; current fx 128k page
-;                          ; (set bit.7 to ldir given length, not decompress)
-;     dw  fx_demopart      ; place where fx data lives
-;     dw  fx_demopart.sync ; number of halts from start of demo to sync with
-;     ... or ...
-;     dw  fx_demopart.length
-
-		db	fx_intro.pg
-		dw	fx_intro
-		dw	fx_intro.sync
-
-		db	fx_micka.pg
-		dw	fx_micka
-		dw	fx_micka.sync
-
-		db	fx_grinder.pg
-		dw	fx_grinder
-		dw	fx_grinder.sync
-
-		db	0
 
 im2vector = ((high $) + 1) << 8
 		display /D,(im2vector-$)," bytes free to IM2 vector"
@@ -202,18 +198,14 @@ im2vector = ((high $) + 1) << 8
 		ld	a,MUSIC.page | #10
 		call	xchg.bnk
 		call	MUSIC.init
-; clear both vrams
-;		ld	a,#17
-;		call	xchg.bnk
+; clear vram
 		ld	hl,#4000
 		ld	de,#4001
-		ld	bc,6911
+		ld	bc,#1AFF
 		ld	(hl),l
 		ldir
-		ld	hl,#4000
-		ld	d,#C0
-		ld	b,high 6912
-		ldir
+; outing of music to AY is delayed by one interrupt
+		dec	bc
 		ld	(FRAMES),bc
 		ld	a,#10
 		call	xchg.bnk
@@ -271,7 +263,35 @@ im2vector = ((high $) + 1) << 8
 .end		ei
 		halt
 		jr	.end
+
+;;-----------------------------------------------------------------------------
+; Every part is defined with this effect descriptor:
+;
+;     db  fx_demopart.pg   ; current fx 128k page
+;                          ; (set bit.7 to ldir given length, not decompress)
+;     dw  fx_demopart      ; place where fx data lives
+;     dw  fx_demopart.sync ; number of halts from start of demo to sync with
+;     ... or ...
+;     dw  fx_demopart.length
+
+fxtable:
+		db	fx_intro.pg
+		dw	fx_intro
+		dw	fx_intro.sync
+
+		db	fx_micka.pg
+		dw	fx_micka
+		dw	fx_micka.sync
+
+		db	fx_grinder.pg
+		dw	fx_grinder
+		dw	fx_grinder.sync
+
+		db	0
 total = $-begin
+
+
+		display /D,(RUNZONE-$)," bytes free after kernel"
 
 		align	256
 @RUNZONE	equ	$
@@ -437,3 +457,4 @@ total = $ - line1
 		export MUSIC.page
 		export MUSIC.init
 		export MUSIC.play
+		export MUSIC.buffer
