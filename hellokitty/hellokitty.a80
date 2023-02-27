@@ -21,6 +21,9 @@ length = #BC			;; Vyska efektu v pixeloch
 
 start		ld	a,#10 + PATTERN_BANK
 		call	xchg.bnk
+		call	makula		;; Vytvorenie PUSHovacej rutinky
+		call	makmat		;; Vytvorenie matematickej rutinky
+		call	cls
 		ei
 		halt
 		ld	a,#CD
@@ -316,8 +319,6 @@ pusher		ld	(pusret+1),sp
 		jp	ulaexe
 pusret		ld	sp,start
 
-		org	#8600
-
 ;; Matematika pre riadenie pohybu
 
 matika
@@ -379,6 +380,109 @@ mvpic2		ld	hl,#5555
 movret		ld	sp,#5555
 		ret
 
+makmat		ld	hl,matkus
+		ld	de,movexe
+		ld	bc,matlen
+		push	de
+		ldir
+		ex	(sp),hl
+		ld	bc,matlen * (length - 1)
+		ldir
+		pop	hl
+		ld	c,#03
+		ldir
+		ret
+
+matkus		ld	a,#F8
+		add	a,c
+		ld	c,a
+		ld	a,(de)
+		add	a,(hl)
+	if	ROTATE
+		add	a,xl
+	endif
+		inc	e
+		inc	l
+		or	#C0
+		ld	b,a
+		push	bc
+matjmp		jp	movret
+
+matlen = matjmp-matkus
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Vytvorenie zobrazovacej rutinky PUSH:PUSH:PUSH...
+
+makula		ld	xh,length
+		ld	hl,ulaexe
+		ld	de,locate + 32
+		ld	bc,tabstk
+mkulop		ld	(hl),#ED	;; LD SP,(...)
+		inc	hl
+		ld	(hl),#7B
+		inc	hl
+		ld	(hl),c
+		inc	hl
+		ld	(hl),b
+		inc	hl
+		ld	a,#C1		;; POP BC
+mkupop		ld	(hl),a
+		inc	hl
+		add	a,#10
+		jr	nc,mkupop
+
+		ld	(hl),#31
+		inc	hl
+		ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+
+		ld	xl,#04
+mkupus		ld	a,#F5		;; PUSH AF
+mkupsh		ld	(hl),a
+		inc	hl
+		sub	#10
+		cp	#C0
+		jr	nc,mkupsh
+		dec	xl
+		jr	nz,mkupus
+
+		ex	de,hl
+		dec	hl
+		call	downhl
+		inc	hl
+		ex	de,hl
+
+		inc	bc
+		inc	bc
+
+		dec	xh
+		jr	nz,mkulop
+
+		ld	(hl),#C3	;; JP ...
+		inc	hl
+		ld	(hl),low pusret
+		inc	hl
+		ld	(hl),high pusret
+		ret
+
+downhl		inc	h
+		ld	a,h
+		and	7
+		ret	nz
+		ld	a,32
+		add	a,l
+		ld	l,a
+		ret	c
+		ld	a,-8
+		add	a,h
+		ld	h,a
+		ret
+
+
+		savebin "final.bin",start,$-start
 
 ;;-----------------------------------------------------------------------------
 
@@ -393,13 +497,11 @@ tabstk		ds	#0200		;; Matematikou vypocitane polohy jednotlivych dielikov twister
 ulaexe		ds	#1500		;; Zobrazovani PUSH:PUSH:PUSH lopatovac do obrazovky
 movexe		ds	#0B00		;; Matematika pocitajuca polohy dielikov twisteru
 
+
 tabmap = #C000		;; 16kB picture remapped for twister in bank 1
 
 		org	tabsyn
 		incbin "sin-table.bin"
-
-		org	ulaexe
-		incbin "ula-math-generated.bin"
 
 
 		savebin "final.bin",start,$-start
