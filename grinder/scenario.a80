@@ -1,3 +1,7 @@
+	define end_region_list db 0
+
+	define end_scenario_list dw 0
+
 	; synchronization stamp
 	macro sync t?
 		dw	-((STARTTIME) + (t?))
@@ -5,12 +9,13 @@
 
 	; custom action
 	macro action ptr?
-		dw	ptr?
+		db	high(ptr?), low(ptr?)
 	endm
 
 	; action to draw attribute square
 	macro region x?, y?, w?, h?, color?
-		dw	#5800 + 32 * (y?) + (x?)
+.attr_addr = #5800 + 32 * (y?) + (x?)
+		db	high(.attr_addr), low(.attr_addr)
 		db	color?
 		db	32 - (w?), h?
 	endm
@@ -23,11 +28,11 @@
 				region	17, .fillin_i, 13, 1, c2?
 			endif
 			region	18, .fillin_i + 1, 12, 1, c1?
-			dw	0
+			end_region_list
 		edup
 		sync	(snc?) + 2*(.fillin_i + 1)
 		region	17, .fillin_i + 1, 13, 1, c2?
-		dw	0
+		end_region_list
 	endm
 
 ;; SCENARIO
@@ -35,114 +40,114 @@
 		region	22,  5, 3, 3, 0q162
 		region	23, 12, 4, 4, 0q156
 		region	21, 16, 4, 4, 0q135
-		dw	0
+		end_region_list
 
 		sync	239
 		region	22,  5, 3, 3, 0q107
 		region	23, 12, 4, 4, 0q107
 		region	21, 16, 4, 4, 0q107
-		dw	0
+		end_region_list
 
 		sync	263
 		region	23,  2, 3, 3, 0q053
 		region	22,  8, 3, 3, 0q135
 		region	19, 14, 4, 4, 0q151
-		dw	0
+		end_region_list
 
 		sync	287
 		region	23,  2, 3, 3, 0q107
 		region	22,  8, 3, 3, 0q107
 		region	19, 14, 4, 4, 0q107
-		dw	0
+		end_region_list
 
 		sync	311
 		region	25,  6, 3, 3, 0q162
 		region	21,  9, 4, 4, 0q035
 		region	23, 17, 3, 3, 0q053
-		dw	0
+		end_region_list
 
 		sync	335
 		region	25,  6, 3, 3, 0q107
 		region	21,  9, 4, 4, 0q107
 		region	23, 17, 3, 3, 0q107
-		dw	0
+		end_region_list
 
 		sync	359
 		region	24,  5, 2, 2, 0q051
 		region	22,  8, 3, 3, 0q163
 		region	23, 12, 3, 3, 0q136
-		dw	0
+		end_region_list
 
 		sync	383
 		region	24,  5, 2, 2, 0q107
 		region	22,  8, 3, 3, 0q107
 		region	23, 12, 3, 3, 0q107
-		dw	0
+		end_region_list
 
 		sync	407
 		region	20,  6, 4, 4, 0q031
 		region	25,  4, 3, 3, 0q163
 		region	23, 13, 3, 3, 0q116
-		dw	0
+		end_region_list
 
 		sync	431
 		region	20,  6, 4, 4, 0q107
 		region	25,  4, 3, 3, 0q107
 		region	23, 13, 3, 3, 0q107
-		dw	0
+		end_region_list
 
 		sync	455
 		region	22,  5, 3, 3, 0q162
 		region	23, 12, 4, 4, 0q156
 		region	24, 17, 3, 3, 0q135
-		dw	0
+		end_region_list
 
 		sync	479
 		region	22,  5, 3, 3, 0q107
 		region	23, 12, 4, 4, 0q107
 		region	24, 17, 3, 3, 0q107
-		dw	0
+		end_region_list
 
 		sync	503
 		region	23,  2, 3, 3, 0q053
 		region	23,  8, 3, 3, 0q135
 		region	19, 14, 4, 4, 0q151
-		dw	0
+		end_region_list
 
 		sync	527
 		region	23,  2, 3, 3, 0q107
 		region	23,  8, 3, 3, 0q107
 		region	19, 14, 4, 4, 0q107
-		dw	0
+		end_region_list
 
 		sync	544
 		region	18, 1, 12, 4, 0q127 ; red
-		dw	0
+		end_region_list
 
 		sync	551
 		region	18, 1, 12, 4, 0q177 ; clr
 		region	18, 5, 12, 4, 0q127 ; red
-		dw	0
+		end_region_list
 
 		sync	556
 		region	18, 5, 12, 4, 0q177 ; clr
-		dw	0
+		end_region_list
 
 		sync	563
 		region	18, 9, 12, 4, 0q177 ; clr
-		dw	0
+		end_region_list
 
 		sync	568
 		region	18, 13, 12, 4, 0q177 ; clr
-		dw	0
+		end_region_list
 
 		sync	575
 		region	18, 17, 12, 3, 0q177 ; clr
-		dw	0
+		end_region_list
 
 		sync	579
 		region	18, 20, 12, 2, 0q177 ; clr
-		dw	0
+		end_region_list
 
 		sync	580
 		action	action.addGrinder
@@ -154,7 +159,6 @@
 
 		sync	1490
 		region	17, 1, 15, 21, 0q177 ; erasehead
-		dw	0
+		end_region_list
 
-
-		dw	0
+		end_scenario_list
