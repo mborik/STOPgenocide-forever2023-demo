@@ -4,7 +4,7 @@
 		display "Compiling 'priskocmicka'"
 	endif
 
-@DEBUG = 1
+@DEBUG = 0
 
 		include "../kernel/constants.inc"
 
@@ -32,82 +32,82 @@ start
 		ld	hl,gfx.jump.full1
 		ld	de,#C000
 		call	depack
+		call	xchg.vram
 
 		ld	b,3
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.jump.full2
 		ld	de,#C000
 		call	depack
+		call	xchg.vram
 
 		ld	b,3
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.jump.full3
 		ld	de,#C000
 		call	depack
+		call	xchg.vram
 
 		ld	b,3
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.jump.full4
 		ld	de,#C000
 		call	depack
+		call	xchg.vram
 
 		ei
 		halt
-		call	xchg.vram
 		ld	hl,gfx.jump.full4
 		ld	de,#C000
 		call	depack
+		call	xchg.vram
 
 		ei
 		halt
-		call	xchg.vram
 		ld	hl,gfx.jump.part5
 		ld	de,#D000
 		call	depack
+		call	xchg.vram
 
 		ld	b,5
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.jump.part6
 		ld	de,#D000
 		call	depack
+		call	xchg.vram
 
 		ld	b,5
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.jump.part7
 		ld	de,#D000
 		call	depack
-
-		ld	b,5
-		call	waitf
-
 		call	xchg.vram
-		ld	hl,gfx.stand.part8
-		ld	de,#C000
-		call	depack
 
 		ld	b,6
 		call	waitf
 
+		ld	hl,gfx.stand.part8
+		ld	de,#C000
+		call	depack
 		call	xchg.vralign
+
+		ld	b,6
+		call	waitf
+
 		ld	hl,gfx.stand.part9
 		ld	de,#4000
 		call	depack
 
 		ld	b,28
 .standloop	push	bc
+		call	xchg.vramX
 		ld	b,12
 		call	waitf
-		call	xchg.vramX
 		pop	bc
 		djnz	.standloop
 
@@ -127,30 +127,39 @@ start
 		ld	hl,gfx.dead.part2
 		ld	de,#D000
 		call	depack
+		call	xchg.vram
 
 		ld	b,5
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.dead.part3
 		ld	de,#D000
 		call	depack
+		call	xchg.vram
 
 		ld	b,5
 		call	waitf
 
-		call	xchg.vram
 		ld	hl,gfx.dead.part4
 		ld	de,#D000
 		call	depack
+		call	xchg.vram
 
 		ld	b,5
 		call	waitf
 
-		call	xchg.vralign
 		ld	hl,gfx.dead.part5
-		ld	de,#5000
+		ld	de,#D000
 		call	depack
+
+		ld	a,(xchg.vram+1)
+		or	7
+		call	xchg.vramX+3
+
+		ld	hl,#C000
+		ld	de,#4000
+		ld	bc,#1B00
+		ldir
 
 		ld	bc,1339
 .waitforend	ei
