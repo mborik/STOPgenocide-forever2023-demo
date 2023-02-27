@@ -46,14 +46,11 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		push	de
 		push	hl
 
-		ld	a,(act128page)
-		push	af
-		and	#F8		; ponechame nastavenu vram
-		or	MUSIC.page	; a prestrankujeme na banku s muzikou
+		ld	a,MUSIC.page	; a prestrankujeme na banku s muzikou
 		ld	bc,page128
 		out	(c),a
 		call	MUSIC.out
-		pop	af
+		ld	a,(act128page)
 		ld	bc,page128
 		out	(c),a
 
@@ -69,20 +66,20 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		cp	2		;; potom ihned koniec obsluhy tohto prerusenia
 		jr	nc,.end		;; (ale semafor je inkrementnuty aby sme vedeli ze nastalo)
 
-.underrun	ei
+		ei
 		ld	a,(act128page)
 		push	af
 		and	#F8		; ponechame nastavenu vram
 		or	MUSIC.page	; a prestrankujeme na banku s muzikou
 		ld	bc,page128
 		out	(c),a
-		call	MUSIC.play
-		pop	af
-		ld	bc,page128
-		out	(c),a
+.underrun	call	MUSIC.play
 		ld	hl,semafor
 		dec	(hl)
 		jr	nz,.underrun
+		pop	af
+		ld	bc,page128
+		out	(c),a
 
 .end		pop	hl
 		pop	de
