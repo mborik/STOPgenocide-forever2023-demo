@@ -23,6 +23,14 @@ fx_recycle:	incbin "recycle/final.pak"
 .pg = _fxpage
 .sync = 2868
 
+fx_kitty_bank:	incbin "hellokitty/bank.bin"
+.pg = _fxpage ; data transfer part
+.length = $-fx_kitty_bank
+
+fx_kitty:	incbin "hellokitty/final.pak"
+.pg = _fxpage
+.sync = 3454
+
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
@@ -48,3 +56,11 @@ fx_recycle:	incbin "recycle/final.pak"
 		export fx_recycle
 		export fx_recycle.pg
 		export fx_recycle.sync
+
+		export fx_kitty_bank
+		export fx_kitty_bank.pg
+		export fx_kitty_bank.length
+
+		export fx_kitty
+		export fx_kitty.pg
+		export fx_kitty.sync
