@@ -1,0 +1,242 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'recycle'"
+	endif
+
+@DEBUG = 0
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+	macro border n
+	  if DEBUG
+	    if n > 0
+		ld	a,n
+	    else
+		xor	a
+	    endif
+		out	(254),a
+	  endif
+	endm
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start
+		ei
+		halt
+		ld	a,#1D
+		call	xchg.vram + 2
+
+		ld	hl,gfx.fall.p1
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p2
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p3
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p4
+		ld	de,#C000
+		call	depack
+		call	xchg.vralign
+
+		ld	hl,#4000
+		ld	de,#C000
+		ld	bc,#1B00
+		ldir
+		call	xchg.vram
+
+		ld	bc,2960
+.waitforlid	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforlid
+
+		ld	hl,gfx.lid.p1
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ld	b,2
+		call	waitf
+
+		ld	hl,gfx.lid.p2
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ld	b,2
+		call	waitf
+
+		ld	hl,gfx.lid.p3
+		ld	de,#C000
+		call	depack
+		call	xchg.vralign
+
+		ld	hl,#C000
+		ld	de,#4000
+		ld	bc,#1B00
+		ldir
+		ld	a,#10
+		call	xchg.bnk
+
+		ld	bc,3450
+.waitforend	ei
+		halt
+		call	followscene
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforend
+		ret
+
+waitf:		ei
+		halt
+		djnz	waitf
+		ret
+
+xchg.vralign	ld	a,(xchg.vram+1)
+		or	7
+xchg.vram2	xor	8
+		ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+followscene:	ld	ix,scenario
+		ld	a,(ix)
+		ld	e,a
+		or	(ix+1)
+		ret	z
+		ld	d,(ix+1)
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,de
+		ret	c
+		inc	ix
+		inc	ix
+		exx
+.readpatts	ld	a,(ix)
+		inc	ix
+		or	a
+		jr	z,.finish
+		ld	h,a
+		ld	l,(ix)
+		inc	ix
+		ld	a,(ix)
+		ld	e,a
+		inc	ix
+		ex	af,af'
+		ld	a,32
+		sub	e
+		ld	e,a
+		ld	d,0
+		ld	b,(ix)
+		inc	ix
+		ld	a,(ix)
+		inc	ix
+
+.fillcolumn	ex	af,af'
+		ld	c,a
+		ex	af,af'
+.fillrow	ld	(hl),a
+		inc	hl
+		dec	c
+		jr	nz,.fillrow
+		add	hl,de
+		djnz	.fillcolumn
+		jr	.readpatts
+
+.finish:	ld	(followscene+2),ix
+		dec	a
+		exx
+		ret
+
+
+	macro region x?, y?, w?, h?, color?
+.attraddr = #5800 + 32 * (y?) + (x?)
+		db	high .attraddr
+		db	low .attraddr
+		db	(w?), (h?)
+		db	color?
+	endm
+
+	macro hilite snc?, x?, y?, w?, h?, c1?, c2?
+.c = (c2? - 1)
+	dup (.c - (c1?) + 1), .hilite_i
+		dw	(snc?) + (2 * .hilite_i)
+		region	x?, y?, w?, h?, (.c - .hilite_i)
+		db	0
+	edup
+	endm
+
+scenario:
+		hilite	3072, 15,  4, 16, 2, 0q174, 0q177
+		hilite	3077, 15,  6,  1, 1, 0q174, 0q177
+
+		hilite	3165, 16,  6, 15, 3, 0q170, 0q177
+		hilite	3177, 15,  9, 16, 2, 0q170, 0q177
+		hilite	3201, 22, 11,  9, 3, 0q170, 0q177
+		hilite	3213, 16, 14, 15, 2, 0q170, 0q177
+
+		dw	3415
+		region	0,  0, 0, 1, 0q077 ; clr
+		db	0
+		dw	3427
+		region	0,  4, 0, 1, 0q077 ; clr
+		db	0
+		dw	3432
+		region	0,  8, 0, 1, 0q077 ; clr
+		db	0
+		dw	3439
+		region	0, 12, 0, 1, 0q077 ; clr
+		db	0
+		dw	3441
+		region	0, 16, 0, 1, 0q077 ; clr
+		db	0
+		dw	3450
+		region	0, 20, 0, 1, 0q077 ; clr
+		db	0
+
+		dw	0
+
+
+	module gfx
+fall
+.p1		incbin "gfx/01.pak"
+.p2		incbin "gfx/02.pak"
+.p3		incbin "gfx/03.pak"
+.p4		incbin "gfx/04.pak"
+lid
+.p1		incbin "gfx/11.pak"
+.p2		incbin "gfx/12.pak"
+.p3		incbin "gfx/13.pak"
+	endmodule
+
+		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+		define	PRESET.border 7
+		define	PRESET.paper 0q177
+		define	PRESET.waitfor 2868
+		include "../kernel/kernel.micro.inc"
+		savesna "recycle.sna",microkernel
+	endif
