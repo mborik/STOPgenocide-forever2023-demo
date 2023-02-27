@@ -377,12 +377,14 @@ followscene:	ld	hl,scenario
 		ld	a,(FRAMES+1)
 		adc	a,(hl)
 		ret	nc		; (FRAMES) < sync
-		inc	hl		; A is zeroed by FRAMES test
-.readpatts
-		ldi	e,(hl)
-		ldi	d,(hl)
-		or	d
+		inc	hl
+
+.readpatts	; A is zeroed by FRAMES test or by countdown of height
+		or	(hl)
+		inc	hl
 		jr	z,.finishpatts	; high byte == 0 -> end of list
+		ld	d,a
+		ldi	e,(hl)
 		jp	m,.actionitem
 
 		ldi	a,(hl)		; color
@@ -406,7 +408,9 @@ followscene:	ld	hl,scenario
 		ex	de,hl		; HL = scenario ptr
 		jr	.readpatts	; A is zero from height counter
 
-.finishpatts	pop	de		; write new scenario pointer + return to caller by .actionitem code
+.finishpatts	ld	(followscene+1),hl
+		ret
+
 .actionitem	ld	(followscene+1),hl
 		ex	de,hl
 		jp	(hl)		; call action, return to caller of followscene
