@@ -1,0 +1,420 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'hellokitty'"
+	endif
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+;; Busy soft ;; 18.02.2023 - 26.02.2022 ;; Kitty twister
+
+
+	define	ROTATE	1	;; Celkove otacanie twisteru jednym smerom
+	define	PATTERN_BANK 1
+
+locate = #4200			;; Zaciatok efektu na obrazovke (lavy horny roh)
+length = #BC			;; Vyska efektu v pixeloch
+
+
+		org	RUNZONE
+
+start		ld	a,#10 + PATTERN_BANK
+		call	xchg.bnk
+		ei
+		halt
+		ld	a,#CD
+		ld	hl,rutint
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+
+;; Nasleduje scenar efektu:
+;; Postupne objavovanie sa a miznutie twisterov
+
+colnot = 0q077	;; Atribut ked nic nie je vidno
+col000 = 0q070	;; Cierna
+col111 = 0q071	;; Modra
+col222 = 0q072	;; Cervena
+col333 = 0q073	;; Ruzova
+
+efekt1		ld	xh,col000
+
+		ld	b,50
+		call	wait
+
+		ld	hl,#58C8
+		ld	a,#06
+		call	ukaz
+
+		ld	b,200
+		call	wait
+
+		ld	de,#5808
+		ld	hl,#5988
+		call	zmaz
+
+
+efekt2		ld	xh,col111
+
+		ld	b,50
+		call	wait
+
+		ld	hl,#59D0
+		ld	a,#06
+		call	ukaz
+
+		ld	b,200
+		call	wait
+
+		ld	de,#58F0
+		ld	hl,#5AD0
+		call	zmaz
+
+
+efekt3		ld	xh,col222
+
+		ld	b,50
+		call	wait
+
+		ld	hl,#5980
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,200
+		call	wait
+
+		ld	de,#5800
+		ld	hl,#5AE0
+		call	zmaz
+
+
+efekt4		ld	xh,col111
+
+		ld	b,50
+		call	wait
+
+		ld	hl,#5998
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,200
+		call	wait
+
+		ld	xh,col222
+
+		ld	hl,#58C8
+		ld	a,#06
+		call	ukaz
+
+		ld	b,50
+		call	wait
+
+		ld	de,#5808
+		ld	hl,#5988
+		call	zmaz
+
+		ld	de,#5818
+		ld	hl,#5AF8
+		call	zmaz
+
+
+efekt5		ld	xh,col333
+
+		ld	b,50
+		call	wait
+
+		ld	hl,#5990
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,50
+		call	wait
+
+		ld	xh,col222
+
+		ld	hl,#5980
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,50
+		call	wait
+
+		ld	xh,col111
+
+		ld	hl,#5988
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,50
+		call	wait
+
+		ld	xh,col000
+
+		ld	hl,#5998
+		ld	a,#0C
+		call	ukaz
+
+		ld	b,200
+		call	wait
+
+
+		ld	de,#5800
+		ld	hl,#5AE0
+		call	zmaz
+		ld	de,#5808
+		ld	hl,#5AE8
+		call	zmaz
+		ld	de,#5810
+		ld	hl,#5AF0
+		call	zmaz
+		ld	de,#5818
+		ld	hl,#5AF8
+		call	zmaz
+
+		ld	xh,col000
+		ld	hl,#5980
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col111
+		ld	hl,#5988
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col222
+		ld	hl,#5990
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col333
+		ld	hl,#5998
+		ld	a,#0C
+		call	ukaz
+
+
+		ld	b,200
+		call	wait
+
+
+		ld	de,#5800
+		ld	hl,#5AE0
+		call	zmaz
+		ld	de,#5808
+		ld	hl,#5AE8
+		call	zmaz
+		ld	de,#5810
+		ld	hl,#5AF0
+		call	zmaz
+		ld	de,#5818
+		ld	hl,#5AF8
+		call	zmaz
+
+;; Ukoncenie efektu
+
+		ld	a,#01		;; Zrusenie volania rutint
+		ld	(IMCALL),a
+
+cls		ld	hl,#4000
+		ld	de,#4001
+		ld	bc,#1800
+		ld	(hl),l
+		ldir
+		ld	bc,#02FF
+		ld	(hl),colnot
+		ldir
+		ret
+
+wait		ei
+		halt
+		djnz	wait
+		ret
+
+;; Zmazanie jedneho stlpca
+;;
+;; HL = horny koniec
+;; DE = spodny koniec
+
+zmaz		push	hl
+		xor	a
+		sbc	hl,de
+		pop	hl
+		ret	c
+
+		halt
+
+		ld	a,colnot
+	dup 7
+		ld	(de),a
+		inc	e
+	edup
+		ld	(de),a
+		ld	bc,32 - 7
+		ex	de,hl
+		add	hl,bc
+		ex	de,hl
+
+		halt
+
+		ld	a,colnot
+	dup 7
+		ld	(hl),a
+		inc	l
+	edup
+		ld	(hl),a
+		ld	bc,-(32 + 7)
+		add	hl,bc
+
+		jr	zmaz
+
+;; Zobrazenie jedneho stlpca
+;;
+;; XH = Atribut pre zobrazenie
+;; HL = Adresa laveho prostredneho atributu
+;;  A = Vyska polovice slpca (zobrazi sa tolko atributov smerom hore aj dole)
+
+ukaz		ld	d,h
+		ld	e,l
+		ld	bc,32
+		add	hl,bc
+
+ukalop		push	af
+
+		ld	a,xh
+	dup 7
+		ld	(de),a
+		inc	e
+	edup
+		ld	(de),a
+		ld	bc,-(32 + 7)
+		ex	de,hl
+		add	hl,bc
+		ex	de,hl
+
+		halt
+
+	dup 7
+		ld	(hl),a
+		inc	l
+	edup
+		ld	(hl),a
+		ld	bc,32 - 7
+		add	hl,bc
+
+		halt
+
+		pop	af
+		dec	a
+		jr	nz,ukalop
+		ret
+
+;; Casovo kriticky kod volany z prerusenia IMCALL
+
+rutint
+;; Vykreslenie na obrazovku - volanie PUSH:PUSH:PUSH...
+
+pusher		ld	(pusret+1),sp
+		jp	ulaexe
+pusret		ld	sp,start
+
+		org	#8600
+
+;; Matematika pre riadenie pohybu
+
+matika
+	if	ROTATE
+		ld	de,#0177
+mvuho0		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho0+1),hl
+		ld	a,h
+		ld	xl,a
+	endif
+
+		ld	de,#0139
+mvuho1		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho1+1),hl
+		ld	b,h
+
+		ld	de,#01BB
+mvuho2		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho2+1),hl
+
+		ld	d,high tabsnh
+		ld	e,h		;; DE = Pointer 1 to sinus table
+		ld	l,b		;; HL = Pointer 2 to sinus table
+		ld	h,d
+
+		exx
+
+mvpic0		ld	a,#55
+		sub	#03
+		ld	(mvpic0+1),a
+
+		ld	de,#0133
+mvpic1		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic1+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+
+		ld	de,#0259
+mvpic2		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic2+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+		add	a,a
+		and	#F8
+
+		exx
+
+		ld	c,a		;; C = Sprite line index
+		ld	(movret+1),sp
+		ld	sp,tabstk + 2*length
+		jp	movexe
+movret		ld	sp,#5555
+		ret
+
+
+;;-----------------------------------------------------------------------------
+
+		align	256
+
+tabsyn		ds	#0100		;; Sinus tabulka: Dvojita presnost     0-255-0-255-0
+tabsin		ds	#0100		;; Sinus tabulka: Normalna znamienkova 128-255-128-0-128
+tabsnh		ds	#0100		;; Sinus tabulka: Polovicna zamienkova 64-127-64-0-64
+		ds	#0100		;; Rezerva pre istotu ak by pretiekol stack pri plneni tabstk
+tabstk		ds	#0200		;; Matematikou vypocitane polohy jednotlivych dielikov twisteru
+
+ulaexe		ds	#1500		;; Zobrazovani PUSH:PUSH:PUSH lopatovac do obrazovky
+movexe		ds	#0B00		;; Matematika pocitajuca polohy dielikov twisteru
+
+tabmap = #C000		;; 16kB picture remapped for twister in bank 1
+
+		org	tabsyn
+		incbin "sin-table.bin"
+
+		org	ulaexe
+		incbin "ula-math-generated.bin"
+
+
+		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		page PATTERN_BANK
+		org tabmap
+		incbin "pattern.bin"
+
+		define PRESET.border 7
+		define PRESET.paper 0q077
+		define PRESET.waitfor 3454
+		include "../kernel/kernel.micro.inc"
+		savesna "hellokitty.sna",microkernel
+	opt pop
+	endif

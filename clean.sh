@@ -15,6 +15,7 @@ subdirs=(
 	priskocmicka
 	grinder
 	recycle
+	hellokitty
 	music
 )
 

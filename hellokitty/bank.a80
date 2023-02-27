@@ -1,0 +1,19 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Preparation of 'hellokitty' pattern bank"
+	endif
+
+		include "../kernel/constants.inc"
+
+		org	RUNZONE
+
+start		ld	a,#11
+		call	xchg.bnk
+		ld	hl,packed
+		ld	de,#C000
+		jp	depack
+
+packed		incbin "pattern.pak"
+
+		savebin "bank.bin",start,$-start

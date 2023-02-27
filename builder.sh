@@ -47,6 +47,12 @@ cd ../recycle
 ASM recycle.a80 -DisFX --lst=recycle.lst
 PAK final.bin final.pak
 
+cd ../hellokitty
+PAK pattern.bin pattern.pak
+ASM bank.a80 -DisFX --lst=bank.lst
+ASM hellokitty.a80 -DisFX --lst=hellokitty.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*
