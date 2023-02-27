@@ -105,6 +105,20 @@ start
 		xor	a
 		sbc	hl,bc
 		jr	c,.waitforend
+		ld	a,#17
+		call	xchg.bnk
+		ld	hl,#C000
+		ld	de,#C001
+		ld	bc,#1800
+		ld	(hl),l
+		ldir
+		ld	bc,#02FF
+		ld	(hl),0q070
+		ldir
+		ld	hl,#C000
+		ld	de,#4000
+		ld	bc,#1B00
+		ldir
 		ret
 
 waitf:		ei

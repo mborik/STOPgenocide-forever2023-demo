@@ -14,6 +14,7 @@ subdirs=(
 	intro
 	priskocmicka
 	grinder
+	recycle
 	music
 )
 

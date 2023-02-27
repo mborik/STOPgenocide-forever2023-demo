@@ -287,6 +287,10 @@ fxtable:
 		dw	fx_grinder
 		dw	fx_grinder.sync
 
+		db	fx_recycle.pg
+		dw	fx_recycle
+		dw	fx_recycle.sync
+
 		db	0
 total = $-begin
 

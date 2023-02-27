@@ -42,6 +42,11 @@ cd ../grinder
 ASM grinder.a80 -DisFX --lst=grinder.lst
 PAK final.bin final.pak
 
+cd ../recycle
+. preparegfx.sh &> /dev/null
+ASM recycle.a80 -DisFX --lst=recycle.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*
