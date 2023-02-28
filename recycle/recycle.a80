@@ -100,7 +100,10 @@ start
 		ld	bc,3450
 .waitforend	ei
 		halt
+		push	bc
+		call	twister.exec
 		call	followscene
+		pop	bc
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
@@ -184,6 +187,140 @@ followscene:	ld	ix,scenario
 		ret
 
 
+	module twister
+exec
+status		ld	a,1
+		dec	a
+		call	z,action.growing
+		dec	a
+		call	z,action.noop
+		dec	a
+		call	z,action.falling
+		dec	a
+		ret	z
+
+angle1		ld	hl,0
+		inc	h
+		inc	h
+		inc	h
+		dec	l
+		dec	l
+		ld	(angle1+1),hl
+		ld	c,l
+		ld	b,h
+scrptr		ld	de,#4006
+		xor	a
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		dec	e
+		dec	e
+		call	downde
+
+height		ld	a,0
+.full		ex	af,af'
+		ld	hl,twisterData
+		call	drawLine
+		ex	af,af'
+		dec	a
+		ret	z
+		ex	af,af'
+		ld	hl,twisterData+96
+		call	drawLine
+		ex	af,af'
+		dec	a
+		jr	nz,.full
+		ret
+
+drawLine	push	hl
+		ld	h,sintab/256
+		ld	l,c
+		ld	a,(hl)
+		ld	l,b
+		add	a,(hl)
+		ld	l,a
+		add	a,a
+		add	a,l
+		pop	hl
+		add	a,l
+		ld	l,a
+		; ld	a,h
+		; adc	a,0
+		; ld	h,a
+
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		inc	bc
+		inc	bc
+		inc	bc
+		ld	e,a
+		call	downde
+		dec	b
+		dec	b
+		inc	c
+		inc	c
+		inc	c
+		inc	c
+		inc	c
+		ret
+
+downde		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+action.growing	ex	af,af'
+		ld	a,(height+1)
+		inc	a
+		ld	(height+1),a
+		cp	79
+		jr	nz,.exit
+		ld	hl,status+1
+		inc	(hl)
+.exit		ex	af,af'
+		ret
+
+action.noop	ex	af,af'
+		ld	a,128
+		dec	a
+		ld	(action.noop+2),a
+		jr	nz,.exit
+.next		ld	hl,status+1
+		inc	(hl)
+.exit		ex	af,af'
+		ret
+
+action.falling	ex	af,af'
+.every2ndT:	ld	a,0
+		xor	1
+		ld	(.every2ndT+1),a
+		jr	nz,action.noop.exit
+		ld	hl,(scrptr+1)
+		ex	de,hl
+		call	downde
+		ex	de,hl
+		ld	(scrptr+1),hl
+		ld	a,(height+1)
+		dec	a
+		jr	z,action.noop.next
+		ld	(height+1),a
+		ex	af,af'
+		ret
+	endmodule
+
+
 	macro region x?, y?, w?, h?, color?
 .attraddr = #5800 + 32 * (y?) + (x?)
 		db	high .attraddr
@@ -243,6 +380,18 @@ lid
 .p2		incbin "gfx/12.pak"
 .p3		incbin "gfx/13.pak"
 	endmodule
+
+		align	256
+
+sintab:  ; check listing file to see resulting table bytes
+	lua	allpass ; EVERY pass must emit the machine code to not affect following labels
+		for i = 0,255,1 do
+		sj.add_byte(math.floor(16.0 + math.sin(math.pi * i / 128.0) * 15.5))
+		end
+	endlua
+
+twisterData	incbin "gfx/twister.bin"
+
 
 		savebin "final.bin",start,$-start
 
