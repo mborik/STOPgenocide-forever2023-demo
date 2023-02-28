@@ -28,9 +28,8 @@
 		jp	baseloop
 
 ;;- INTERRUPT -----------------------------------------------------------------
-		org	#8180
+		org	#8181
 
-semafor:	db	0
 interrupt:	push	af		; zakladne osetrenie prerusenia
 		ld	a,(actborder)	; s volanim hudobneho hradla
 		out	(254),a
@@ -60,28 +59,18 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		inc	hl
 		ld	(FRAMES),hl
 
-		ld	hl,semafor	; kazde zacate prerusenie semafor inkrementuje
-		inc	(hl)
-		ld	a,(hl)		;; Ak je toto uz druhe (vnorene) prerusenie,
-		cp	2		;; potom ihned koniec obsluhy tohto prerusenia
-		jr	nc,.end		;; (ale semafor je inkrementnuty aby sme vedeli ze nastalo)
-
-		ei
 		ld	a,(act128page)
 		push	af
 		and	#F8		; ponechame nastavenu vram
 		or	MUSIC.page	; a prestrankujeme na banku s muzikou
 		ld	bc,page128
 		out	(c),a
-.underrun	call	MUSIC.play
-		ld	hl,semafor
-		dec	(hl)
-		jr	nz,.underrun
+		call	MUSIC.play
 		pop	af
 		ld	bc,page128
 		out	(c),a
 
-.end		pop	hl
+		pop	hl
 		pop	de
 		pop	bc
 		pop	af

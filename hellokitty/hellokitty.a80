@@ -13,8 +13,8 @@
 	define	ROTATE	1	;; Celkove otacanie twisteru jednym smerom
 	define	PATTERN_BANK 1
 
-locate = #4200			;; Zaciatok efektu na obrazovke (lavy horny roh)
-length = #BC			;; Vyska efektu v pixeloch
+locate = #4020			;; Zaciatok efektu na obrazovke (lavy horny roh)
+length = 176			;; Vyska efektu v pixeloch
 
 
 		org	RUNZONE
@@ -227,8 +227,7 @@ cls		ld	hl,#4000
 		ldir
 		ret
 
-wait		ei
-		halt
+wait		halt
 		djnz	wait
 		ret
 
@@ -322,7 +321,7 @@ pusret		ld	sp,start
 ;; Matematika pre riadenie pohybu
 
 matika
-	if	ROTATE
+	if ROTATE
 		ld	de,#0177
 mvuho0		ld	hl,#5555
 		add	hl,de
@@ -398,7 +397,7 @@ matkus		ld	a,#F8
 		ld	c,a
 		ld	a,(de)
 		add	a,(hl)
-	if	ROTATE
+	if ROTATE
 		add	a,xl
 	endif
 		inc	e
