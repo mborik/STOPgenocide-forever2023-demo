@@ -42,14 +42,11 @@ col333 = 0q073	;; Ruzova
 
 efekt1		ld	xh,col000
 
-		ld	b,50
-		call	wait
-
 		ld	hl,#58C8
 		ld	a,#06
 		call	ukaz
 
-		ld	b,200
+		ld	b,140
 		call	wait
 
 		ld	de,#5808
@@ -59,14 +56,14 @@ efekt1		ld	xh,col000
 
 efekt2		ld	xh,col111
 
-		ld	b,50
+		ld	b,28
 		call	wait
 
 		ld	hl,#59D0
 		ld	a,#06
 		call	ukaz
 
-		ld	b,200
+		ld	b,140
 		call	wait
 
 		ld	de,#58F0
@@ -76,14 +73,14 @@ efekt2		ld	xh,col111
 
 efekt3		ld	xh,col222
 
-		ld	b,50
+		ld	b,28
 		call	wait
 
 		ld	hl,#5980
 		ld	a,#0C
 		call	ukaz
 
-		ld	b,200
+		ld	b,140
 		call	wait
 
 		ld	de,#5800
@@ -93,14 +90,11 @@ efekt3		ld	xh,col222
 
 efekt4		ld	xh,col111
 
-		ld	b,50
-		call	wait
-
 		ld	hl,#5998
 		ld	a,#0C
 		call	ukaz
 
-		ld	b,200
+		ld	b,90
 		call	wait
 
 		ld	xh,col222
@@ -109,7 +103,7 @@ efekt4		ld	xh,col111
 		ld	a,#06
 		call	ukaz
 
-		ld	b,50
+		ld	b,16
 		call	wait
 
 		ld	de,#5808
@@ -123,14 +117,14 @@ efekt4		ld	xh,col111
 
 efekt5		ld	xh,col333
 
-		ld	b,50
+		ld	b,24
 		call	wait
 
 		ld	hl,#5990
 		ld	a,#0C
 		call	ukaz
 
-		ld	b,50
+		ld	b,24
 		call	wait
 
 		ld	xh,col222
@@ -139,7 +133,7 @@ efekt5		ld	xh,col333
 		ld	a,#0C
 		call	ukaz
 
-		ld	b,50
+		ld	b,24
 		call	wait
 
 		ld	xh,col111
@@ -148,7 +142,7 @@ efekt5		ld	xh,col333
 		ld	a,#0C
 		call	ukaz
 
-		ld	b,50
+		ld	b,24
 		call	wait
 
 		ld	xh,col000
@@ -210,6 +204,52 @@ efekt5		ld	xh,col333
 		call	zmaz
 		ld	de,#5818
 		ld	hl,#5AF8
+		call	zmaz
+
+
+		ld	xh,col000
+		ld	hl,#5980
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col333
+		ld	hl,#5988
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col222
+		ld	hl,#5990
+		ld	a,#0C
+		call	ukaz
+
+		ld	xh,col111
+		ld	hl,#5998
+		ld	a,#0C
+		call	ukaz
+
+
+		ld	b,180
+		call	wait
+
+		ld	de,#5818
+		ld	hl,#5AF8
+		call	zmaz
+
+		ld	b,140
+		call	wait
+
+		ld	de,#5800
+		ld	hl,#5AE0
+		call	zmaz
+
+		ld	b,140
+		call	wait
+
+		ld	de,#5808
+		ld	hl,#5AE8
+		call	zmaz
+		ld	de,#5810
+		ld	hl,#5AF0
 		call	zmaz
 
 ;; Ukoncenie efektu
