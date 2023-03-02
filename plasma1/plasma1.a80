@@ -1,0 +1,428 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'plasma1'"
+	endif
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+;; Busy soft ;; 06.02.2013 - 11.02.2013 ;; Atributova plazma s vela farbami * ;;
+
+sizexx = #20	;; X rozmer pracovneho okna (max #40)
+sizeyy = #18	;; Y rozmer pracovneho okna (max #30)
+bszoom = 7	;; Zoom pre plazmu: B=4,5,6,7,8
+
+
+		org	RUNZONE
+
+start		call	mkadsp	;; Vygenerovanie farebnej palety - atributy a pixely
+
+		xor	a
+		ld	(actborder),a
+		out	(254),a
+		call	clsexe
+		ei
+		halt
+
+;; Vygenerovanie jedneho plazmatickeho obrazca
+
+plazma		ld	a,#17
+		call	xchg.bnk
+
+		ld	a,high dspatt
+.fadein		ld	(plaatt+1),a
+		push	af
+		call	plaexe
+		pop	af
+		inc	a
+		cp	(high dspatt) + 8
+		jr	c,.fadein
+
+		ld	b,140
+.loop		push	bc
+		call	plaexe
+		pop	bc
+		djnz	.loop
+
+		ld	a,(high dspatt) + 7
+.fadeout	ld	(plaatt+1),a
+		push	af
+		call	plaexe
+		pop	af
+		dec	a
+		cp	high dspatt
+		jr	nc,.fadeout
+		jr	plaexe
+
+;; Vygenerovanie jedneho plazmatickeho obrazca
+plaexe		ei
+		halt
+		call	xchg.vram
+
+		call	matika
+		dw	#0133	;; Rychlost pohybu po osi X
+		dw	#5555
+		ld	xh,a
+		call	matika
+		dw	#0247	;; Rychlost zoomovania po osi X
+		dw	#5555
+		call	plazom
+		ld	hl,plaxxx+sizexx-1
+		call	plafnc
+
+		call	matika
+		dw	#0155	;; Rychlost pohybu po ose Y
+		dw	#5555
+		ld	xh,a
+		call	matika
+		dw	#0397	;; Rychlost zoomovania po osi Y
+		dw	#5555
+		call	plazom
+		ld	hl,playyy+sizeyy-1
+		call	plafnc
+
+		call	matika
+		dw	#00B5	;; Rychlost zmeny "palety"
+		dw	#5555
+		ld	xh,a
+		call	matika
+		dw	#0535	;; Pulzovanie "palety"
+		dw	#5555
+		srl	a
+		add	a,xh
+		ld	(pladdy+1),a
+
+		ld	hl,#C000
+		ld	de,#D800
+plaatt		ld	b,dspatt/256 + 7
+		exx
+		ld	xh,#18
+		ld	hl,playyy
+plalyy		push	hl
+pladdy		ld	a,#55
+		add	a,(hl)
+		ld	c,a
+		ld	b,sizexx
+		ld	hl,plaxxx
+plalxx		ld	a,(hl)
+		add	a,c
+		exx
+		ld	c,a
+		ld	a,(bc)
+		ld	(de),a
+		inc	e
+		ld	a,c
+		rrca
+		jr	c,pla1357
+pla0246		rrca
+		jr	c,plax26
+plax04		rrca
+		jr	c,plaxx4
+plaxx0
+planxt		inc	l
+		jr	z,plaiii
+plazzz		exx
+		inc	l
+		djnz	plalxx
+plaeee		pop	hl
+		inc	l
+		dec	xh
+		jr	nz,plalyy
+		ret
+
+plaiii		ld	a,8
+		add	a,h
+		ld	h,a
+		inc	d
+		jr	plazzz
+
+pla1357		rrca
+		jr	c,plax37
+plax15		rrca
+		jr	c,plaxx5
+
+plaxx7
+plaxx1		ld	a,h
+		ld	(hl),%00001000	;; 01/07 (8)
+		inc	h
+		ld	(hl),%00000001
+		inc	h
+		ld	(hl),%00100000
+		inc	h
+		ld	(hl),%00000100
+		inc	h
+		ld	(hl),%10000000
+		inc	h
+		ld	(hl),%00010000
+		inc	h
+		ld	(hl),%00000010
+		inc	h
+		ld	(hl),%01000000
+		ld	h,a
+		inc	l
+		jr	z,plaiii
+		exx
+		inc	l
+		djnz	plalxx
+		jr	plaeee
+
+plax37		rrca
+		jr	nc,plaxx7
+plaxx5
+plaxx3		ld	a,h
+		ld	(hl),%01000100	;; 03/05 (24)
+		inc	h
+		ld	(hl),%10101010
+		inc	h
+		ld	(hl),%00010001
+		inc	h
+		ld	(hl),%10101010
+		inc	h
+		ld	(hl),%01000100
+		inc	h
+		ld	(hl),%10101010
+		inc	h
+		ld	(hl),%00010001
+		inc	h
+		ld	(hl),%10101010
+		ld	h,a
+		inc	l
+		jr	z,plaiii
+		exx
+		inc	l
+		djnz	plalxx
+		jr	plaeee
+
+plax26
+plaxx6
+plaxx2		ld	a,%01000100	;; 02/06 (16)
+		ld	c,%00010001
+		jp	plax24
+
+plaxx4		ld	a,%01010101	;; 04/04 (32)
+		ld	c,%10101010
+plax24		ld	(hl),a
+		inc	h
+		ld	(hl),c
+		inc	h
+		ld	(hl),a
+		inc	h
+		ld	(hl),c
+		inc	h
+		ld	(hl),a
+		inc	h
+		ld	(hl),c
+		inc	h
+		ld	(hl),a
+		inc	h
+		ld	(hl),c
+		ld	a,#F9
+		add	a,h
+		ld	h,a
+		inc	l
+		jr	z,plaiii
+		exx
+		inc	l
+		dec	b
+		jp	nz,plalxx
+		jp	plaeee
+
+plafnc		ld	d,high plasin	;; Prepocet jednej suradnice pre plazmu
+plaf11		ld	e,xh
+		ld	a,(de)
+		ld	(hl),a
+		add	ix,bc
+		dec	l
+		jr	nz,plaf11
+		ld	e,xh
+		ld	a,(de)
+		ld	(hl),a
+		ret
+
+plazom		ld	e,1
+plaset		ld	bc,bszoom * 256
+pladiv		rrc	e
+		srl	a		;; 4 =  male plazmaticke oka
+		rr	c		;; 8 = velke plazmaticke oka
+		djnz	pladiv
+		add	a,e
+		ld	b,a
+		ret
+
+matika		pop	hl		;; Vezme prvy WORD
+		ld	c,(hl)		;; pripocita ho k druhemu WORDu
+		inc	hl		;; a vyssi bajt druheho WORDu
+		ld	b,(hl)		;; prezenie sinusovou tabulkou
+		inc	hl
+		ld	e,(hl)		;; Word2 = Word2+Word1
+		inc	hl		;; A = SIN(high(Word2))
+		ld	d,(hl)
+		ex	de,hl
+		add	hl,bc
+		ex	de,hl
+		dec	hl
+		ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+;;		bit	7,e		;; Zaokruhlenie
+;;		jr	nc,matiii	;; vysledku
+;;		inc	d		;; (netreba)
+matiii		ld	e,d
+		ld	d,high tabsin
+		ld	a,(de)
+		jp	(hl)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clsexe		ld	a,#1D
+		call	xchg.bnk
+		call	clssub
+clssub		xor	a
+		ld	hl,#DAFF
+clslop		ld	(hl),a
+		dec	hl
+		bit	6,h
+		jr	nz,clslop
+		jp	xchg.vram
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mkadsp		ld	ix,#0800	;; Vygenerovanie palety farieb
+		ld	de,dspatt+#700	;; Generuje atributy aj pixely
+mka222		ld	hl,colors
+mka111		ld	a,xl
+		rrca
+		rrca
+		rrca
+		or	xl
+		ld	(de),a
+		inc	e
+		inc	hl
+		ld	a,(hl)
+		add	a,xh
+		sub	8
+		jr	nc,mka333
+		xor	a
+mka333		add	a,a
+		add	a,a
+		add	a,a
+;;		and	#38
+		ld	c,xl
+		ld	xl,a
+		rrca
+		rrca
+		rrca
+		or	c
+		ld	b,3
+mka444		ld	(de),a
+		inc	e
+		djnz	mka444
+		ld	a,c
+		rrca
+		rrca
+		rrca
+		or	xl
+		ld	b,4
+mka555		ld	(de),a
+		inc	e
+		djnz	mka555
+		jr	nz,mka111
+		dec	d
+		dec	xh
+		jr	nz,mka222
+;		ld	e,0
+mka666		ld	hl,patern
+		ld	c,8
+mka777		ld	d,high dsppix
+		ld	b,8
+mka888		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		inc	d
+		djnz	mka888
+		inc	e
+		ret	z
+		ld	a,c
+		cp	5
+		jr	nc,mka999
+		ld	a,e
+		ld	de,-#0010
+		add	hl,de
+		ld	e,a
+mka999		dec	c
+		jr	nz,mka777
+		jr	mka666
+
+patern		dw	0,0		;; 00 (0)	;; Rastre pre simulaciu
+		dw	0,0				;; prechodov medzi farbami
+
+		db	%00001000	;; 01 (8)
+		db	%00000001
+		db	%00100000
+		db	%00000100
+		db	%10000000
+		db	%00010000
+		db	%00000010
+		db	%01000000
+
+		db	%01000100	;; 02 (16)
+		db	%00010001
+		db	%01000100
+		db	%00010001
+		db	%01000100
+		db	%00010001
+		db	%01000100
+		db	%00010001
+
+		db	%01000100	;; 03 (24)
+		db	%10101010
+		db	%00010001
+		db	%10101010
+		db	%01000100
+		db	%10101010
+		db	%00010001
+		db	%10101010
+
+		db	%01010101	;; 04 (32)
+		db	%10101010
+		db	%01010101
+		db	%10101010
+		db	%01010101
+		db	%10101010
+		db	%01010101
+		db	%10101010
+
+colors		db	0,1,5,4,6,2,0,2	;; Kostra farebnej palety pre 256 farieb
+		db	6,4,5,1,0,2,3,2	;; Cela paleta bude mat medzi farbami
+		db	0,1,5,4,6,2,0,2	;; este 7 medziodtienov simulovanych
+		db	6,4,5,1,0,2,3,2	;; rastrom
+		db	0
+
+
+;;-----------------------------------------------------------------------------
+
+		align	256
+
+tabsin		incbin "sintab.bin"
+plasin = tabsin + 256
+
+		savebin "final.bin",start,$-start
+
+plaxxx		ds	#0100	;; Vypocitane hodnoty funkcie X
+playyy		ds	#0100	;; Vypocitane hodnoty funkcie Y
+dsppix		ds	#0800	;; Predpocitane hodnoty pixelov pre farebne prechody
+dspatt		ds	#0800	;; Predpocitane hodnoty atributov pre paletu 256 farieb
+
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		define PRESET.border 7
+		define PRESET.paper 0q177
+		define PRESET.waitfor 2868
+		include "../kernel/kernel.micro.inc"
+		savesna "plasma1.sna",microkernel
+	opt pop
+	endif
