@@ -4,9 +4,12 @@ fx_intro.sync: EQU 0x00000000
 fx_recycle: EQU 0x0000C655
 fx_recycle.pg: EQU 0x00000013
 fx_recycle.sync: EQU 0x00000B34
-fx_kitty_bank: EQU 0x0000D6C0
+fx_plasma1: EQU 0x0000D6C0
+fx_plasma1.pg: EQU 0x00000013
+fx_plasma1.sync: EQU 0x00000B34
+fx_kitty_bank: EQU 0x0000DA20
 fx_kitty_bank.pg: EQU 0x00000013
 fx_kitty_bank.length: EQU 0x00001963
-fx_kitty: EQU 0x0000F023
+fx_kitty: EQU 0x0000F383
 fx_kitty.pg: EQU 0x00000013
 fx_kitty.sync: EQU 0x00000D7A

@@ -248,11 +248,14 @@ scrollScreenOut	dec	a
 
 .finish		ei
 		halt
+		ld	a,0q022
 		ld	hl,#5800
 		ld	de,#5801
 		ld	bc,#02FF
-		ld	(hl),0q177
+		ld	(hl),a
 		ldir
+		and	7
+		ld	(actborder),a
 		ld	hl,#4000
 		ld	de,#4001
 		ld	bc,#17FF

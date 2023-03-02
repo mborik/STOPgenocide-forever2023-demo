@@ -38,6 +38,7 @@ topack=(
 	13.part
 	14.part
 	15.part
+	title.scr
 )
 
 for FN in "${topack[@]}"; do

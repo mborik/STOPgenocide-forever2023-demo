@@ -161,6 +161,14 @@ start
 		ld	bc,#1B00
 		ldir
 
+		ei
+		halt
+		ld	a,#17
+		call	xchg.bnk
+		ld	hl,gfx.title
+		ld	de,#C000
+		call	depack
+
 		ld	bc,1339
 .waitforend	ei
 		halt
@@ -291,6 +299,7 @@ dead
 .part3		incbin "gfx/13.pak"
 .part4		incbin "gfx/14.pak"
 .part5		incbin "gfx/15.pak"
+title		incbin "gfx/title.pak"
 
 	endmodule
 

@@ -47,6 +47,10 @@ cd ../recycle
 ASM recycle.a80 -DisFX --lst=recycle.lst
 PAK final.bin final.pak
 
+cd ../plasma1
+ASM plasma1.a80 -DisFX --lst=plasma1.lst
+PAK final.bin final.pak
+
 cd ../hellokitty
 PAK pattern.bin pattern.pak
 ASM bank.a80 -DisFX --lst=bank.lst

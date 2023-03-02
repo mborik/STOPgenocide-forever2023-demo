@@ -277,9 +277,9 @@ fxtable:
 		dw	fx_kitty_bank
 		dw	fx_kitty_bank.length
 
-		db	fx_recycle.pg
-		dw	fx_recycle
-		dw	fx_recycle.sync
+		db	fx_plasma1.pg
+		dw	fx_plasma1
+		dw	fx_plasma1.sync
 
 		db	fx_kitty.pg
 		dw	fx_kitty

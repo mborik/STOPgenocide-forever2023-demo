@@ -23,6 +23,10 @@ fx_recycle:	incbin "recycle/final.pak"
 .pg = _fxpage
 .sync = 2868
 
+fx_plasma1:	incbin "plasma1/final.pak"
+.pg = _fxpage
+.sync = 2868
+
 fx_kitty_bank:	incbin "hellokitty/bank.bin"
 .pg = _fxpage ; data transfer part
 .length = $-fx_kitty_bank
@@ -56,6 +60,10 @@ fx_kitty:	incbin "hellokitty/final.pak"
 		export fx_recycle
 		export fx_recycle.pg
 		export fx_recycle.sync
+
+		export fx_plasma1
+		export fx_plasma1.pg
+		export fx_plasma1.sync
 
 		export fx_kitty_bank
 		export fx_kitty_bank.pg

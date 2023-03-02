@@ -16,7 +16,15 @@ bszoom = 7	;; Zoom pre plazmu: B=4,5,6,7,8
 
 		org	RUNZONE
 
-start		call	mkadsp	;; Vygenerovanie farebnej palety - atributy a pixely
+start		ld	a,#1F
+		call	xchg.bnk
+
+		call	mkadsp	;; Vygenerovanie farebnej palety - atributy a pixely
+
+		ld	b,25
+.redwait	ei
+		halt
+		djnz	.redwait
 
 		xor	a
 		ld	(actborder),a
@@ -27,9 +35,7 @@ start		call	mkadsp	;; Vygenerovanie farebnej palety - atributy a pixely
 
 ;; Vygenerovanie jedneho plazmatickeho obrazca
 
-plazma		ld	a,#17
-		call	xchg.bnk
-
+plazma
 		ld	a,high dspatt
 .fadein		ld	(plaatt+1),a
 		push	af
@@ -39,7 +45,7 @@ plazma		ld	a,#17
 		cp	(high dspatt) + 8
 		jr	c,.fadein
 
-		ld	b,140
+		ld	b,150
 .loop		push	bc
 		call	plaexe
 		pop	bc
@@ -276,15 +282,14 @@ matiii		ld	e,d
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-clsexe		ld	a,#1D
-		call	xchg.bnk
+clsexe		ld	a,#17
+		call	xchg.vram+2
 		call	clssub
 clssub		xor	a
-		ld	hl,#DAFF
-clslop		ld	(hl),a
-		dec	hl
-		bit	6,h
-		jr	nz,clslop
+		ld	hl,#C000
+		ld	de,#C001
+		ld	bc,#1AFF
+		ld	(hl),l
 		jp	xchg.vram
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -419,8 +424,8 @@ dspatt		ds	#0800	;; Predpocitane hodnoty atributov pre paletu 256 farieb
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
-		define PRESET.border 7
-		define PRESET.paper 0q177
+		define PRESET.border 2
+		define PRESET.paper 0q022
 		define PRESET.waitfor 2868
 		include "../kernel/kernel.micro.inc"
 		savesna "plasma1.sna",microkernel
