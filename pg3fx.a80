@@ -29,7 +29,7 @@ fx_kitty_bank:	incbin "hellokitty/bank.bin"
 
 fx_kitty:	incbin "hellokitty/final.pak"
 .pg = _fxpage
-.sync = 3454
+.sync = 3450
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000

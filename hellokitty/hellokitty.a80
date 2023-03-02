@@ -24,12 +24,18 @@ start		ld	a,#10 + PATTERN_BANK
 		call	makula		;; Vytvorenie PUSHovacej rutinky
 		call	makmat		;; Vytvorenie matematickej rutinky
 		call	cls
-		ei
-		halt
 		ld	a,#CD
 		ld	hl,rutint
 		ld	(IMCALL+1),hl
 		ld	(IMCALL),a
+
+		ld	bc,3455
+.waitforit	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforit
 
 ;; Nasleduje scenar efektu:
 ;; Postupne objavovanie sa a miznutie twisterov
@@ -554,7 +560,7 @@ tabmap = #C000		;; 16kB picture remapped for twister in bank 1
 
 		define PRESET.border 7
 		define PRESET.paper 0q077
-		define PRESET.waitfor 3454
+		define PRESET.waitfor 3452
 		include "../kernel/kernel.micro.inc"
 		savesna "hellokitty.sna",microkernel
 	opt pop
