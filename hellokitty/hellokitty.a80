@@ -13,8 +13,13 @@
 	define	ROTATE	1	;; Celkove otacanie twisteru jednym smerom
 	define	PATTERN_BANK 1
 
-locate = #4020			;; Zaciatok efektu na obrazovke (lavy horny roh)
-length = 176			;; Vyska efektu v pixeloch
+locate = #4020	;; Zaciatok efektu na obrazovke (lavy horny roh)
+length = 176	;; Vyska efektu v pixeloch
+colnot = 0q066	;; Atribut ked nic nie je vidno
+col000 = 0q060	;; Cierna
+col111 = 0q061	;; Modra
+col222 = 0q062	;; Cervena
+col333 = 0q063	;; Ruzova
 
 
 		org	RUNZONE
@@ -23,6 +28,8 @@ start		ld	a,#10 + PATTERN_BANK
 		call	xchg.bnk
 		call	makula		;; Vytvorenie PUSHovacej rutinky
 		call	makmat		;; Vytvorenie matematickej rutinky
+		ld	a,colnot & 7
+		ld	(actborder),a
 		call	cls
 		ld	a,#CD
 		ld	hl,rutint
@@ -37,14 +44,6 @@ start		ld	a,#10 + PATTERN_BANK
 		sbc	hl,bc
 		jr	c,.waitforit
 
-;; Nasleduje scenar efektu:
-;; Postupne objavovanie sa a miznutie twisterov
-
-colnot = 0q077	;; Atribut ked nic nie je vidno
-col000 = 0q070	;; Cierna
-col111 = 0q071	;; Modra
-col222 = 0q072	;; Cervena
-col333 = 0q073	;; Ruzova
 
 efekt1		ld	xh,col000
 
@@ -174,44 +173,41 @@ efekt5		ld	xh,col333
 		ld	hl,#5AF8
 		call	zmaz
 
-		ld	xh,col000
-		ld	hl,#5980
-		ld	a,#0C
-		call	ukaz
+;		ld	xh,col000
+;		ld	hl,#5980
+;		ld	a,#0C
+;		call	ukaz
 
-		ld	xh,col111
-		ld	hl,#5988
-		ld	a,#0C
-		call	ukaz
+;		ld	xh,col111
+;		ld	hl,#5988
+;		ld	a,#0C
+;		call	ukaz
 
-		ld	xh,col222
-		ld	hl,#5990
-		ld	a,#0C
-		call	ukaz
+;		ld	xh,col222
+;		ld	hl,#5990
+;		ld	a,#0C
+;		call	ukaz
 
-		ld	xh,col333
-		ld	hl,#5998
-		ld	a,#0C
-		call	ukaz
+;		ld	xh,col333
+;		ld	hl,#5998
+;		ld	a,#0C
+;		call	ukaz
 
+;		ld	b,200
+;		call	wait
 
-		ld	b,200
-		call	wait
-
-
-		ld	de,#5800
-		ld	hl,#5AE0
-		call	zmaz
-		ld	de,#5808
-		ld	hl,#5AE8
-		call	zmaz
-		ld	de,#5810
-		ld	hl,#5AF0
-		call	zmaz
-		ld	de,#5818
-		ld	hl,#5AF8
-		call	zmaz
-
+;		ld	de,#5800
+;		ld	hl,#5AE0
+;		call	zmaz
+;		ld	de,#5808
+;		ld	hl,#5AE8
+;		call	zmaz
+;		ld	de,#5810
+;		ld	hl,#5AF0
+;		call	zmaz
+;		ld	de,#5818
+;		ld	hl,#5AF8
+;		call	zmaz
 
 		ld	xh,col000
 		ld	hl,#5980
@@ -369,7 +365,7 @@ pusret		ld	sp,start
 matika
 	if ROTATE
 		ld	de,#0177
-mvuho0		ld	hl,#5555
+mvuho0		ld	hl,#1234
 		add	hl,de
 		ld	(mvuho0+1),hl
 		ld	a,h
@@ -377,13 +373,13 @@ mvuho0		ld	hl,#5555
 	endif
 
 		ld	de,#0139
-mvuho1		ld	hl,#5555
+mvuho1		ld	hl,#1234
 		add	hl,de
 		ld	(mvuho1+1),hl
 		ld	b,h
 
 		ld	de,#01BB
-mvuho2		ld	hl,#5555
+mvuho2		ld	hl,#1234
 		add	hl,de
 		ld	(mvuho2+1),hl
 
@@ -399,7 +395,7 @@ mvpic0		ld	a,#55
 		ld	(mvpic0+1),a
 
 		ld	de,#0133
-mvpic1		ld	hl,#5555
+mvpic1		ld	hl,#1234
 		add	hl,de
 		ld	(mvpic1+1),hl
 		ld	l,h
@@ -407,7 +403,7 @@ mvpic1		ld	hl,#5555
 		add	a,(hl)
 
 		ld	de,#0259
-mvpic2		ld	hl,#5555
+mvpic2		ld	hl,#1234
 		add	hl,de
 		ld	(mvpic2+1),hl
 		ld	l,h
@@ -422,7 +418,7 @@ mvpic2		ld	hl,#5555
 		ld	(movret+1),sp
 		ld	sp,tabstk + 2*length
 		jp	movexe
-movret		ld	sp,#5555
+movret		ld	sp,#1234
 		ret
 
 makmat		ld	hl,matkus
@@ -558,8 +554,8 @@ tabmap = #C000		;; 16kB picture remapped for twister in bank 1
 		org tabmap
 		incbin "pattern.bin"
 
-		define PRESET.border 7
-		define PRESET.paper 0q077
+		define PRESET.border 0
+		define PRESET.paper 0q000
 		define PRESET.waitfor 3452
 		include "../kernel/kernel.micro.inc"
 		savesna "hellokitty.sna",microkernel
