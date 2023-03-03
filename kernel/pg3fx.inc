@@ -13,3 +13,6 @@ fx_kitty_bank.length: EQU 0x00001963
 fx_kitty: EQU 0x0000F383
 fx_kitty.pg: EQU 0x00000013
 fx_kitty.sync: EQU 0x00000D7A
+fx_lucyshow: EQU 0x0000F792
+fx_lucyshow.pg: EQU 0x00000013
+fx_lucyshow.sync: EQU 0x00001500

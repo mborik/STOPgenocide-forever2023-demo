@@ -285,6 +285,10 @@ fxtable:
 		dw	fx_kitty
 		dw	fx_kitty.sync
 
+		db	fx_lucyshow.pg
+		dw	fx_lucyshow
+		dw	fx_lucyshow.sync
+
 		db	0
 total = $-begin
 

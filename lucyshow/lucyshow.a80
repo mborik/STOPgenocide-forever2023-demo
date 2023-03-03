@@ -1,0 +1,269 @@
+		device	zxspectrum128
+
+	ifdef	isFX
+		display	"Compiling 'lucyshow'"
+	endif
+
+		include	"../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+;; Busy soft ;; 03.03.2016 - 06.03.2016 ;; Sposoby objavenia a miznutia screenu
+
+;; "objav" potrebuje v pameti na adrese "screen"
+;; pripraveny klasicky 6912 bajtovy obrazok.
+;;
+;; Doba vykreslenia / zmiznutia celeho obrazku
+;; je dana vztahom:
+;;
+;;   T = 32 + max - min
+;;
+;; T..doba v 1/50 sec
+;; max..maximalna hodnota bajtov v predpise
+;; min..minimalna hodnota bajtov v predpise
+
+
+		org	RUNZONE
+
+start		ei
+		halt
+		ld	hl,#5800
+		ld	de,#5801
+		ld	bc,#02FF
+		ld	(hl),0q066
+		ldir
+		ld	hl,screen
+		ld	d,#40
+		ld	b,#18
+		ldir
+		ld	a,#10
+		call	xchg.bnk
+		call	init
+
+fx_start	ld	a,#3E
+fx_loop		call	frame
+		inc	a
+		cp	130
+		call	z,change_border
+fx_end		cp	#FE
+		jr	nz,fx_loop
+
+
+.x		ei
+		halt
+		jr .x
+		ret
+
+frame		ld	xh,a
+		push	af
+		halt
+		di			;; DI kvoli pristupu
+		ld	(backsp+1),sp	;; k datam cez zasobnik
+		ld	sp,vzoatt
+		ld	bc,#5800	;; Hlavny engine zaberie
+		ld	h,high tabsel	;; cca 40000 taktov
+		jp	rutexe		;; takze za prerusenie
+backsp		ld	sp,#5555	;; sa v pohode stiha
+		ei
+		pop	af
+		ret
+
+change_border	ex	af,af'
+		ld	a,1
+		ld	(actborder),a
+		ex	af,af'
+		ret
+
+init		ld	hl,shades
+		ld	de,tabmul
+		ld	bc,#0100
+		ldir
+
+		ld	hl,tabsel+#80
+		ld	de,tabsel+#7F
+		ld	bc,#0F10 + high tabpal
+		ld	a,high tabpal + #0F
+mksel1		ld	(hl),c
+		ld	(de),a
+		dec	a
+		dec	e
+		inc	l
+		inc	c
+		djnz	mksel1
+mksel2		ld	(hl),c
+		ld	(de),a
+		dec	e
+		inc	l
+		jr	nz,mksel2
+
+		ld	hl,tabpal
+		ld	d,high tabmul
+mkpal1		ld	a,h
+		sub	high tabpal
+		add	a,a
+		add	a,a
+		add	a,a
+		ld	e,a
+		ld	a,l
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		ld	c,a	;; INK
+		ld	a,e
+		and	#F8
+		ld	e,a
+		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		add	a,a
+		add	a,a
+		add	a,a
+		or	c
+		ld	(hl),a	;; PAPER
+		inc	l
+		bit	6,l
+		jr	z,mkpal1
+		ld	c,l
+		ld	b,h
+		ld	l,#00
+mkpal2		ld	a,c
+		and	#C0	;; BRIGHT FLASH
+		or	(hl)
+		ld	(bc),a
+		inc	l
+		inc	c
+		res	6,l
+		jr	nz,mkpal2
+		inc	h
+		ld	a,h
+		cp	high tabpal + #20
+		jr	c,mkpal1
+
+makvza		ld	hl,scratt
+		ld	de,pattern
+		ld	bc,vzoatt
+mkvzll		ld	a,(hl)
+		ld	(bc),a
+		inc	hl
+		inc	bc
+		ld	a,(de)
+		ld	(bc),a
+		inc	de
+		inc	bc
+		ld	a,h
+		cp	high scratt + #03
+		jr	c,mkvzll
+
+makrut		ld	hl,rutzac
+		ld	de,rutexe
+		ld	bc,rutlen
+		push	de
+		ldir
+		pop	hl
+		ld	bc,rutlen * #2FF
+		ldir
+		ex	de,hl
+		ld	(hl),#C3
+		inc	hl
+		ld	(hl),low backsp
+		inc	hl
+		ld	(hl),high backsp
+
+		ld	hl,pattern
+		ld	de,#00FF	;; D=max,E=min
+minmax		ld	a,(hl)
+		cp	d
+		jr	c,mmxx11
+		ld	d,a
+mmxx11		cp	e
+		jr	nc,mmxx22
+		ld	e,a
+mmxx22		inc	hl
+		ld	a,h
+		cp	high pattern + #03
+		jr	c,minmax
+		ld	a,#70
+		sub	d
+		ld	(fx_start+1),a
+		ld	a,#90
+		sub	e
+		ld	(fx_end+1),a
+
+		ret
+
+rutzac		pop	de		;; D=vzor, E=original
+		ld	a,xh
+		add	a,d		;; Faza
+		ld	l,a
+		ld	d,(hl)		;; tabsel
+		ld	a,(de)		;; tabpal
+		ld	(bc),a		;; Atributy na obrazovke
+		inc	bc		;; \ 51 T
+rutlen = $-rutzac
+
+		;;	0-1-2-3-4-5-6-7
+shades
+		db	6,6,6,6,6,6,6,6
+		db	6,6,6,6,6,6,6,6
+		db	7,6,6,6,6,6,6,6
+		db	7,6,6,6,6,6,6,6
+		db	7,5,6,6,6,6,6,6
+		db	6,5,6,6,6,6,6,6
+		db	6,5,5,6,6,6,6,6
+		db	5,5,5,6,6,6,6,6
+		db	5,4,5,5,5,6,6,6
+		db	5,4,5,5,5,6,6,6
+		db	5,4,5,5,5,6,6,6
+		db	5,4,5,5,5,6,6,6
+		db	4,4,4,5,5,6,6,6
+		db	4,4,4,5,5,6,6,6
+		db	4,3,4,5,5,6,6,6
+		db	4,3,4,5,5,6,6,6
+		db	4,3,4,4,5,5,6,7
+		db	3,3,4,4,5,5,6,7
+		db	3,3,3,4,5,5,6,7
+		db	3,2,3,4,5,5,6,7
+		db	3,2,3,4,5,5,6,7
+		db	3,2,3,4,5,5,6,7
+		db	2,2,3,4,5,5,6,7
+		db	2,2,3,4,5,5,6,7
+		db	2,2,3,3,4,5,6,7
+		db	2,1,2,3,4,5,6,7
+		db	1,1,2,3,4,5,6,7
+		db	1,1,2,3,4,5,6,7
+		db	1,1,2,3,4,5,6,7
+		db	1,1,2,3,4,5,6,7
+		db	0,1,2,3,4,5,6,7
+		db	0,1,2,3,4,5,6,7
+
+
+		align	256
+
+pattern		incbin "vzor-kruh.cod"
+screen		incbin "lucyshow.scr"
+scratt = screen + #1800
+
+
+		savebin "final.bin",start,$-start
+
+tabmul		ds	#0100	;; Tabulka pre proporcionalnu zmenu farieb
+tabsel		ds	#0100	;; Tabulka pre adresovanie paliet
+tabpal		ds	#2000	;; 32 paliet pre 32 urovni jasov obrazku
+vzoatt		ds	#0600	;; Skombinovane originalne atributy so vzorom
+rutexe		ds	#1B03	;; Zobrazovaci engine
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		define PRESET.border 6
+		define PRESET.paper 0q066
+		define PRESET.waitfor 5376
+		include "../kernel/kernel.micro.inc"
+		savesna "lucyshow.sna",microkernel
+	opt pop
+	endif

@@ -35,6 +35,10 @@ fx_kitty:	incbin "hellokitty/final.pak"
 .pg = _fxpage
 .sync = 3450
 
+fx_lucyshow:	incbin "lucyshow/final.pak"
+.pg = _fxpage
+.sync = 5376
+
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
@@ -72,3 +76,7 @@ fx_kitty:	incbin "hellokitty/final.pak"
 		export fx_kitty
 		export fx_kitty.pg
 		export fx_kitty.sync
+
+		export fx_lucyshow
+		export fx_lucyshow.pg
+		export fx_lucyshow.sync

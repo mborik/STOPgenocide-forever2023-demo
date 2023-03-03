@@ -57,6 +57,10 @@ ASM bank.a80 -DisFX --lst=bank.lst
 ASM hellokitty.a80 -DisFX --lst=hellokitty.lst
 PAK final.bin final.pak
 
+cd ../lucyshow
+ASM lucyshow.a80 -DisFX --lst=lucyshow.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*
