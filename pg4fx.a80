@@ -6,6 +6,10 @@
 @_fxpage = #14
 @_fxpage_start
 
+fx_lucy:	incbin "lucy/final.pak"
+.pg = _fxpage
+.sync = 5758
+
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
 ;
@@ -32,3 +36,7 @@
 ;		export fx_demopart
 ;		export fx_demopart.pg
 ;		export fx_demopart.sync
+
+		export fx_lucy
+		export fx_lucy.pg
+		export fx_lucy.sync

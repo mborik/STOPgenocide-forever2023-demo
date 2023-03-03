@@ -1,0 +1,585 @@
+		device	zxspectrum128
+
+	ifdef	isFX
+		display	"Compiling 'lucy'"
+	endif
+
+		include	"../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+
+SPEED		equ	8
+
+
+		org	RUNZONE
+
+
+start		xor	a
+		ld	(TWISTER+1),a
+		ld	a,#CD
+		ld	hl,TAPTAP
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+	ifndef isFX
+		ld	hl,LUCYSCR
+		ld	de,#4000
+		ld	bc,#1B00
+		ldir
+	endif
+
+TWISTER_UPDATE	ei
+		halt
+TIMER_POS	ld	hl,TIMER_TAB
+		ld	c,(hl)
+		inc	hl
+		ld	b,(hl)
+		inc	hl
+		ex	de,hl
+		ld	hl,(FRAMES)
+		or	a
+		sbc	hl,bc
+		jr	c,UPDATE_CALL
+		ex	de,hl
+		ld	e,(hl)
+		inc	hl
+		ld	d,(hl)
+		inc	hl
+		ld	(TIMER_POS+1),hl
+		ex	de,hl
+		ld	(UPDATE_CALL+1),hl
+UPDATE_CALL	call	NOOP
+		ld	a,(TWISTER+1)
+		or	a
+		call	nz,TWISTER
+		jr	TWISTER_UPDATE
+
+TAPTAP		ld	a,(TIK)
+		dec	a
+		ld	(TIK),a
+		ret	nz
+		ld	a,SPEED
+		ld	(TIK),a
+
+		ld	a,(TIK2)
+		inc	a
+		cp	24
+		jr	nz,TIK2OK
+		xor	a
+TIK2OK		ld	(TIK2),a
+
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,ANIMTAB
+		add	hl,de
+		ld	a,(hl)
+		exx
+
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,ONOFFTAB
+		add	hl,de
+		ld	a,(hl)
+		inc	hl
+		ld	h,(hl)
+		ld	l,a
+		ld	de,48EFh
+		call	VIEW_SPR3
+
+		exx
+		inc	hl
+		ld	a,(hl)
+		exx
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,ONOFFTAB+4
+		add	hl,de
+		ld	a,(hl)
+		inc	hl
+		ld	h,(hl)
+		ld	l,a
+		ld	de,48EFh+3
+		call	VIEW_SPR2
+		ret
+
+
+VIEW_SPR2	ld	a,16
+VIEW_SPR2_0	ex	af,af'
+		ld	a,e
+		ldi
+		ldi
+		ld	e,a
+		call	DOWNDE
+		ex	af,af'
+		dec	a
+		jr	nz,VIEW_SPR2_0
+		ret
+
+VIEW_SPR3	ld	a,16
+VIEW_SPR3_0	ex	af,af'
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		ld	e,a
+		call	DOWNDE
+		ex	af,af'
+		dec	a
+		jr	nz,VIEW_SPR3_0
+		ret
+
+
+DOWNDE		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+UPDE		dec	d
+		ld	a,d
+		inc	a
+		and	7
+		ret	nz
+		ld	a,e
+		sub	32
+		ld	e,a
+		ret	c
+		ld	a,d
+		add	a,8
+		ld	d,a
+		ret
+
+ENABLE_EFFECT	ld	hl,TWISTER+1
+		inc	(hl)
+		ld	hl,NOOP
+		ld	(UPDATE_CALL+1),hl
+NOOP		ret
+
+TWISTER		ld	a,0 ;flag, ktory urcuje stav twisteru
+		dec	a
+		call	z,TWISTER_STAT1
+		dec	a
+		dec	a
+		call	z,TWISTER_STAT3
+		dec	a
+		ret	z
+
+TWISTER_ANGLE	ld	hl,0
+		inc	h
+		inc	h
+		inc	h
+		dec	l
+		dec	l
+		ld	(TWISTER_ANGLE+1),hl
+		ld	c,l
+		ld	b,h
+TWISTER_VRAM	ld	de,4F56h
+		xor	a
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		dec	e
+		dec	e
+		call	UPDE
+
+TWISTER_HEIGHT	ld	a,1
+TWISTER_FULL	ex	af,af'
+		ld	hl,TWISTER_DATA
+		call	TWISTER_LINE
+		ex	af,af'
+		dec	a
+		ret	z
+		ex	af,af'
+		ld	hl,TWISTER_DATA+96
+		call	TWISTER_LINE
+		ex	af,af'
+		dec	a
+		jr	nz,TWISTER_FULL
+
+		ret
+
+TWISTER_LINE	push	hl
+		ld	h,SIN_TABLE/256
+		ld	l,c
+		ld	a,(hl)
+		ld	l,b
+		add	a,(hl)
+		ld	l,a
+		add	a,a
+		add	a,l
+		pop	hl
+		add	a,l
+		ld	l,a
+		;ld	a,h
+		;adc	a,0
+		;ld	h,a	;TODO: preteka to cez 256 align?
+
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		inc	bc
+		inc	bc
+		inc	bc
+		ld	e,a
+
+		call	UPDE
+
+		dec	b
+		dec	b
+		inc	c
+		inc	c
+		inc	c
+		inc	c
+		inc	c
+		ret
+
+;twister rastie
+TWISTER_STAT1	ex	af,af'
+		ld	a,(TWISTER_HEIGHT+1)
+		inc	a
+		ld	(TWISTER_HEIGHT+1),a
+		cp	16
+		jr	nc,TWISTER_STAT1P
+		ld	de,4800h+19
+		ld	c,a
+		ld	a,16
+		sub	c
+		ld	b,a
+		cp	8
+		ccf
+		sbc	a,a
+		and	32
+		add	a,e
+		ld	e,a
+		ld	a,b
+		and	7
+		add	a,d
+		ld	d,a
+		ld	hl,TWISTER_HAIR+15
+		ld	a,l
+		sub	c
+		ld	l,a
+		ld	a,(hl)
+		cpl
+		ld	(de),a
+		ld	a,c
+TWISTER_STAT1P	cp	87
+		jr	nz,TWISTER_STAT1R
+		ld	hl,TWISTER+1
+		inc	(hl)
+TWISTER_STAT1R	ex	af,af'
+		ret
+
+TWISTER_STAT3	ex	af,af'
+TWISTER_STAT3X	ld	a,0
+		xor	1
+		ld	(TWISTER_STAT3X+1),a
+		jr	nz,TWISTER_STAT3R
+		ld	hl,(TWISTER_VRAM+1)
+		ex	de,hl
+		call	UPDE
+		ex	de,hl
+		ld	(TWISTER_VRAM+1),hl
+		ld	a,(TWISTER_HEIGHT+1)
+		dec	a
+		jr	nz,TWISTER_STAT3R
+		ld	(TWISTER_HEIGHT+1),a
+		ld	hl,TWISTER+1
+		ld	(hl),a
+TWISTER_STAT3R	ex	af,af'
+		ret
+
+START_PLASMA
+
+PLASMA		ld	hl,PLASMA_FRAME
+		ld	(DEPAK_TOP),hl
+		ld	hl,PLASMA_ANIM
+		ld	de,PLASMA_FRAME
+		call	DEC40
+
+		jr	PLASMA
+
+VIEW_SPRITE
+
+		ei
+		halt
+		halt
+
+		exx
+
+		ld	hl,(DEPAK_TOP)
+		call	VIEW_SPRITE0
+
+		ld	hl,(DEPAK_TOP)
+		ld	de,432
+		add	hl,de
+		ld	(DEPAK_TOP),hl
+
+		ld	a,(DEPAK_TOP)
+		cp	PLASMA_FRAME/256+16+2
+		jr	c,VIEW_SPRITE_X
+		ld	hl,PLASMA_FRAME+432
+		ld	de,PLASMA_FRAME
+		ld	bc,(16+2)*256
+		ldir
+		ld	hl,(DEPAK_TOP)
+		ld	de,-432
+		add	hl,de
+		ld	(DEPAK_TOP),hl
+		exx
+		push	bc
+		ex	de,hl
+		ld	bc,-432
+		add	hl,bc
+		ex	de,hl
+		;add	hl,bc
+		pop	bc
+		ret
+VIEW_SPRITE_X
+		exx
+		ret
+
+
+VIEW_SPRITE0	ld	de,4720h+19
+
+		ld	a,3*8
+VIEW_SPRITE1	push	af
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ld	e,a
+		call	DOWNDE
+		pop	af
+		dec	a
+		jr	nz,VIEW_SPRITE1
+
+		inc	e
+
+		ld	a,3*8
+VIEW_SPRITE2	push	af
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ldi
+		ld	e,a
+		call	DOWNDE
+		pop	af
+		dec	a
+		jr	nz,VIEW_SPRITE2
+
+		inc	e
+
+		ld	a,3*8
+VIEW_SPRITE3	push	af
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		ldi
+		ld	e,a
+		call	DOWNDE
+		pop	af
+		dec	a
+		jr	nz,VIEW_SPRITE3
+		ret
+
+DEC40
+		ld	a,80h
+		ex	af,af'
+MS		ldi
+M0		ld	bc,2FFh
+M1		ex	af,af'
+M1X		add	a,a
+		jr	nz,M2
+		ld	a,(HL)
+		inc	hl
+		rla
+M2		rl	c
+		jr	nc,M1X
+		ex	af,af'
+		djnz	X2
+		ld	a,2
+		sra	c
+		jr	c,N1
+		inc	a
+		inc	c
+		jr	z,N2
+		ld	bc,33Fh
+		jr	M1
+
+X2		djnz	X3
+		srl	c
+		jr	c,MS
+		inc	b
+		jr	M1
+X6
+		add	a,c
+N2
+		ld	bc,4FFh
+		jr	M1
+N1
+		inc	c
+		jr	nz,M4
+		ex	af,af'
+		inc	b
+N5		rr	c
+		ret	c
+		rl	b
+		add	a,a
+		jr	nz,N6
+		ld	a,(HL)
+		inc	hl
+		rla
+N6		jr	nc,N5
+		ex	af,af'
+		add	a,b
+		ld	b,6
+		jr	M1
+X3
+		djnz	X4
+		ld	a,1
+		jr	M3
+X4		djnz	X5
+		inc	c
+		jr	nz,M4
+		ld	bc,51Fh
+		jr	M1
+X5
+		djnz	X6
+		ld	b,c
+M4		ld	c,(HL)
+		inc	hl
+M3		dec	b
+		push	hl
+		ld	l,c
+		ld	h,b
+		add	hl,de
+		ld	c,a
+		ld	b,0
+		ldir
+;------------------------------------
+		push	af
+		ld	a,(DEPAK_TOP+1)
+		inc	a
+		inc	a
+		cp	d
+		call	c,VIEW_SPRITE
+		pop	af
+
+;------------------------------------
+		pop	hl
+		jr	M0
+
+
+TIK		db	SPEED
+TIK2		db	0
+
+DEPAK_TOP	dw	PLASMA_FRAME
+
+ANIMTAB		db	1,0	; 1
+		db	0,0	; 2
+		db	0,0	; 3
+		db	0,0	; 4
+		db	0,0	; 5
+		db	0,1	; 6
+		db	0,0	; 7
+		db	1,1	; 8
+		db	0,0	; 9
+		db	1,0	;10
+		db	0,0	;11
+		db	0,1	;12
+		db	0,0	;13
+		db	0,1	;14
+		db	0,0	;15
+		db	1,0	;16
+		db	0,0	;17
+		db	1,1	;18
+		db	0,0	;19
+		db	0,1	;20
+		db	0,0	;21
+		db	0,0	;22
+		db	0,0	;23
+		db	1,1	;24
+
+TWISTER_HAIR	db	00011000b
+		db	00011100b
+		db	00001100b
+		db	00001110b
+		db	00000110b
+		db	00000110b
+		db	00000110b
+		db	00000110b
+
+		db	00000110b
+		db	00000110b
+		db	00001110b
+		db	00001100b
+		db	00011100b
+		db	00111000b
+		db	00110000b
+		db	00000000b
+
+
+TIMER_TAB	dw	5784, ENABLE_EFFECT
+		dw	5952, ENABLE_EFFECT
+		dw	6144, START_PLASMA
+		dw	0
+
+ONOFFTAB	dw	SPR, SPR+80
+		dw	SPR+48, SPR+48+80
+
+SPR		incbin "lucy.sprite.bin"
+PLASMA_ANIM	incbin "anim4.bin.mlz"
+PLASMA_HEIGHT	db	9*8-10
+
+		align	256
+SIN_TABLE:  ; check listing file to see resulting table bytes
+    lua allpass ; EVERY pass must emit the machine code to not affect following labels
+        for i = 0, 255, 1 do
+            sj.add_byte(math.floor(16.0 + math.sin(math.pi * i / 128.0) * 15.5))
+        end
+    endlua
+
+TWISTER_DATA	incbin "twistdata.bin"
+
+
+		savebin "final.bin",start,$-start
+
+
+		align	256
+
+PLASMA_FRAME	ds	(15 + 2) * 256
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+LUCYSCR		incbin "../lucyshow/lucyshow.scr"
+
+		define PRESET.border 1
+		define PRESET.paper 0q011
+		define PRESET.waitfor 5760
+		include "../kernel/kernel.micro.inc"
+		savesna "lucy.sna",microkernel
+	opt pop
+	endif

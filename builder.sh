@@ -61,6 +61,10 @@ cd ../lucyshow
 ASM lucyshow.a80 -DisFX --lst=lucyshow.lst
 PAK final.bin final.pak
 
+cd ../lucy
+ASM lucy.a80 -DisFX --lst=lucy.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*
