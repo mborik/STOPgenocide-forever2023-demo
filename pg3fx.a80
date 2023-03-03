@@ -19,10 +19,6 @@ fx_intro:	incbin "intro/final.pak"
 .pg = _fxpage
 .sync = 0
 
-fx_recycle:	incbin "recycle/final.pak"
-.pg = _fxpage
-.sync = 2868
-
 fx_plasma1:	incbin "plasma1/final.pak"
 .pg = _fxpage
 .sync = 2868
@@ -60,10 +56,6 @@ fx_lucyshow:	incbin "lucyshow/final.pak"
 		export fx_intro
 		export fx_intro.pg
 		export fx_intro.sync
-
-		export fx_recycle
-		export fx_recycle.pg
-		export fx_recycle.sync
 
 		export fx_plasma1
 		export fx_plasma1.pg

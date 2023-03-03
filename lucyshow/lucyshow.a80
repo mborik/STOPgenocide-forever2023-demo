@@ -9,18 +9,6 @@
 ;;-----------------------------------------------------------------------------
 ;; Busy soft ;; 03.03.2016 - 06.03.2016 ;; Sposoby objavenia a miznutia screenu
 
-;; "objav" potrebuje v pameti na adrese "screen"
-;; pripraveny klasicky 6912 bajtovy obrazok.
-;;
-;; Doba vykreslenia / zmiznutia celeho obrazku
-;; je dana vztahom:
-;;
-;;   T = 32 + max - min
-;;
-;; T..doba v 1/50 sec
-;; max..maximalna hodnota bajtov v predpise
-;; min..minimalna hodnota bajtov v predpise
-
 
 		org	RUNZONE
 
@@ -41,16 +29,47 @@ start		ei
 
 fx_start	ld	a,#3E
 fx_loop		call	frame
+		ex	af,af'
+		ld	a,(#5AFF)
+		rrca
+		rrca
+		rrca
+		and	7
+		ld	(actborder),a
+		ex	af,af'
 		inc	a
-		cp	130
-		call	z,change_border
 fx_end		cp	#FE
 		jr	nz,fx_loop
 
-
-.x		ei
+		ld	bc,5520
+.waitforit	ei
 		halt
-		jr .x
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforit
+
+		ld	b,24
+		call	action.flyin
+		ld	b,68
+		call	action.justasec
+		ld	b,48
+		call	action.flyin
+		ld	b,68
+		call	action.justasec
+		ld	b,24
+
+action.flyin	ei
+		halt
+		push	bc
+		call	renderbuffer
+		pop	bc
+		djnz	action.flyin
+		ret
+
+action.justasec	ei
+		halt
+		djnz	action.justasec
 		ret
 
 frame		ld	xh,a
@@ -67,11 +86,31 @@ backsp		ld	sp,#5555	;; sa v pohode stiha
 		pop	af
 		ret
 
-change_border	ex	af,af'
-		ld	a,1
-		ld	(actborder),a
-		ex	af,af'
-		ret
+renderbuffer	ld	hl,flyintab
+		ld	e,(hl)
+		inc	hl
+		ld	(renderbuffer+1),hl
+		ld	d,high subtitles
+		ld	hl,#4020
+.secondtime	push	hl
+		ld	a,8
+.eights		ex	de,hl
+		ld	bc,#0100
+	dup 32
+		ldi
+	edup
+		add	hl,bc
+		ex	de,hl
+		add	hl,bc
+		dec	a
+		jr	nz,.eights
+		pop	hl
+		bit	6,l
+		ret	nz
+		ld	a,32
+		add	a,l
+		ld	l,a
+		jr	.secondtime
 
 init		ld	hl,shades
 		ld	de,tabmul
@@ -242,11 +281,15 @@ shades
 		db	0,1,2,3,4,5,6,7
 
 
+flyintab	include "subtitles.flyin.inc"
+
+
 		align	256
 
 pattern		incbin "vzor-kruh.cod"
 screen		incbin "lucyshow.scr"
 scratt = screen + #1800
+subtitles	incbin "subtitles.intro.bin"
 
 
 		savebin "final.bin",start,$-start
@@ -255,7 +298,7 @@ tabmul		ds	#0100	;; Tabulka pre proporcionalnu zmenu farieb
 tabsel		ds	#0100	;; Tabulka pre adresovanie paliet
 tabpal		ds	#2000	;; 32 paliet pre 32 urovni jasov obrazku
 vzoatt		ds	#0600	;; Skombinovane originalne atributy so vzorom
-rutexe		ds	#1B03	;; Zobrazovaci engine
+rutexe		ds	#2000	;; Zobrazovaci engine
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
