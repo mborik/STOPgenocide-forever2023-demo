@@ -25,6 +25,16 @@ start		ei
 		ldir
 		ld	a,#10
 		call	xchg.bnk
+
+		ld	hl,taptap.start
+		ld	de,taptap
+		ld	bc,taptap.length
+		ldir
+		ld	a,#CD
+		ld	hl,taptap
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+
 		call	init
 
 fx_start	ld	a,#3E
@@ -41,7 +51,7 @@ fx_loop		call	frame
 fx_end		cp	#FE
 		jr	nz,fx_loop
 
-		ld	bc,5520
+fx_finish	ld	bc,5520
 .waitforit	ei
 		halt
 		ld	hl,(FRAMES)
@@ -51,13 +61,28 @@ fx_end		cp	#FE
 
 		ld	b,24
 		call	action.flyin
-		ld	b,68
+		ld	b,90
 		call	action.justasec
 		ld	b,48
 		call	action.flyin
-		ld	b,68
+		ld	b,96
 		call	action.justasec
-		ld	b,24
+		ld	b,12
+		call	action.flyin
+
+		ld	de,#4000 + 4 * 32 + 12
+.windowloop	push	de
+		call	fx_window
+		call	renderbuffer
+		pop	de
+		ei
+		halt
+		dec	e
+		ld	a,e
+		inc	a
+		and	31
+		jr	nz,.windowloop
+		ret
 
 action.flyin	ei
 		halt
@@ -112,10 +137,73 @@ renderbuffer	ld	hl,flyintab
 		ld	l,a
 		jr	.secondtime
 
+fx_window	ld	hl,window
+		ld	b,12
+.loop1		push	bc
+		push	de
+		ld	bc,12*256+255
+.loop2
+	dup 8
+		ldi
+		dec	e
+		inc	d
+	edup
+		ld	a,e
+		add	a,32
+		ld	e,a
+		jr	c,.continue
+		ld	a,d
+		sub	8
+		ld	d,a
+.continue	djnz	.loop2
+		pop	de
+		push	de
+		ld	a,d
+		rra
+		rra
+		rra
+		and	11b
+		or	58h
+		ld	d,a
+		ld	bc,12*256+255
+.loop3		ldi
+		ld	a,e
+		add	a,31
+		ld	e,a
+		ld	a,d
+		adc	a,0
+		ld	d,a
+		djnz	.loop3
+		pop	de
+		pop	bc
+		dec	e
+		ld	a,e
+		inc	a
+		and	31
+		ret	z
+		djnz	.loop1
+		ret
+
+;; initialization / generators
 init		ld	hl,shades
 		ld	de,tabmul
 		ld	bc,#0100
 		ldir
+
+makvza		ld	hl,scratt
+		ld	de,pattern
+		ld	bc,vzoatt
+mkvzll		ld	a,(hl)
+		ld	(bc),a
+		inc	hl
+		inc	bc
+		ld	a,(de)
+		ld	(bc),a
+		inc	de
+		inc	bc
+		ld	a,h
+		cp	high scratt + #03
+		jr	c,mkvzll
 
 		ld	hl,tabsel+#80
 		ld	de,tabsel+#7F
@@ -183,21 +271,6 @@ mkpal2		ld	a,c
 		cp	high tabpal + #20
 		jr	c,mkpal1
 
-makvza		ld	hl,scratt
-		ld	de,pattern
-		ld	bc,vzoatt
-mkvzll		ld	a,(hl)
-		ld	(bc),a
-		inc	hl
-		inc	bc
-		ld	a,(de)
-		ld	(bc),a
-		inc	de
-		inc	bc
-		ld	a,h
-		cp	high scratt + #03
-		jr	c,mkvzll
-
 makrut		ld	hl,rutzac
 		ld	de,rutexe
 		ld	bc,rutlen
@@ -245,6 +318,181 @@ rutzac		pop	de		;; D=vzor, E=original
 		inc	bc		;; \ 51 T
 rutlen = $-rutzac
 
+@taptap.start
+	phase #7E00
+
+SPEED = 8
+
+;; Lucy eyes and hands
+taptap		ld	a,(FRAMES)
+		and	127
+		cp	9
+		jr	nc,.end
+		ld	l,a
+		ld	h,0
+		ld	de,lucyeyes_table
+		add	hl,de
+		ld	l,(hl)
+		ld	h,0
+		ld	de,lucyeyes
+		add	hl,de
+		ld	de,4970h
+		ld	a,4
+.loop		ldi
+		inc	e
+		ldi
+		dec	e
+		dec	e
+		dec	e
+		inc	d
+		dec	a
+		jr	nz,.loop
+.end
+
+taptik		ld	a,SPEED
+		dec	a
+		ld	(taptik+1),a
+		ret	nz
+		ld	a,SPEED
+		ld	(taptik+1),a
+
+taptik2		ld	a,0
+		inc	a
+		cp	24
+		jr	nz,.ok
+		xor	a
+.ok		ld	(taptik2+1),a
+
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,lucyhands_anim
+		add	hl,de
+		ld	a,(hl)
+		exx
+
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,lucyhands_tab
+		add	hl,de
+		ld	a,(hl)
+		inc	hl
+		ld	h,(hl)
+		ld	l,a
+		ld	de,48EFh
+		call	view_spr3
+
+		exx
+		inc	hl
+		ld	a,(hl)
+		exx
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,lucyhands_tab+4
+		add	hl,de
+		ld	a,(hl)
+		inc	hl
+		ld	h,(hl)
+		ld	l,a
+		ld	de,48EFh+3
+
+view_spr2	ld	a,16
+.loop		ex	af,af'
+		ld	a,e
+		ldi
+		ldi
+		ld	e,a
+		call	downde
+		ex	af,af'
+		dec	a
+		jr	nz,.loop
+		ret
+
+view_spr3	ld	a,16
+.loop		ex	af,af'
+		ld	a,e
+		ldi
+		ldi
+		ldi
+		ld	e,a
+		call	downde
+		ex	af,af'
+		dec	a
+		jr	nz,.loop
+		ret
+
+downde		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+lucyeyes_table	db	0, 10, 10, 20, 20, 20, 10, 10, 0
+
+lucyeyes	db	00001100b, 01100000b
+		db	00011110b, 11110000b
+		db	00011110b, 11110000b
+		db	00011110b, 11110000b
+		db	00001100b, 01100000b
+
+		db	00000000b, 00000000b
+		db	00000000b, 00000000b
+		db	00001100b, 01100000b
+		db	00011110b, 11110000b
+		db	00001100b, 01100000b
+
+		db	00000000b, 00000000b
+		db	00000000b, 00000000b
+		db	00000000b, 00000000b
+		db	00000000b, 00000000b
+		db	00001100b, 01100000b
+
+lucyhands_anim	db	1,0	; 1
+		db	0,0	; 2
+		db	0,0	; 3
+		db	0,0	; 4
+		db	0,0	; 5
+		db	0,1	; 6
+		db	0,0	; 7
+		db	1,1	; 8
+		db	0,0	; 9
+		db	1,0	;10
+		db	0,0	;11
+		db	0,1	;12
+		db	0,0	;13
+		db	0,1	;14
+		db	0,0	;15
+		db	1,0	;16
+		db	0,0	;17
+		db	1,1	;18
+		db	0,0	;19
+		db	0,1	;20
+		db	0,0	;21
+		db	0,0	;22
+		db	0,0	;23
+		db	1,1	;24
+
+lucyhands_tab	dw	lucyhands_spr
+		dw	lucyhands_spr+80
+		dw	lucyhands_spr+48
+		dw	lucyhands_spr+48+80
+
+lucyhands_spr	incbin "lucyhands.bin"
+
+	dephase
+
+@taptap.length = $ - taptap.start
+
+
 		;;	0-1-2-3-4-5-6-7
 shades
 		db	6,6,6,6,6,6,6,6
@@ -282,23 +530,26 @@ shades
 
 
 flyintab	include "subtitles.flyin.inc"
+window		incbin "window.bin"
 
 
 		align	256
 
-pattern		incbin "vzor-kruh.cod"
+pattern		incbin "pattern.bin"
+subtitles	incbin "subtitles.intro.bin"
 screen		incbin "lucyshow.scr"
 scratt = screen + #1800
-subtitles	incbin "subtitles.intro.bin"
 
 
 		savebin "final.bin",start,$-start
 
-tabmul		ds	#0100	;; Tabulka pre proporcionalnu zmenu farieb
-tabsel		ds	#0100	;; Tabulka pre adresovanie paliet
-tabpal		ds	#2000	;; 32 paliet pre 32 urovni jasov obrazku
-vzoatt		ds	#0600	;; Skombinovane originalne atributy so vzorom
-rutexe		ds	#2000	;; Zobrazovaci engine
+tabmul = screen		;; Tabulka pre proporcionalnu zmenu farieb
+tabsel = tabmul + #0100	;; Tabulka pre adresovanie paliet
+tabpal = tabsel + #0100	;; 32 paliet pre 32 urovni jasov obrazku
+vzoatt = tabpal + #2000	;; Skombinovane originalne atributy so vzorom
+rutexe = vzoatt + #0600	;; Zobrazovaci engine
+
+		display /D,(rutexe + #2000)," is end"
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
