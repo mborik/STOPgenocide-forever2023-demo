@@ -8,18 +8,14 @@
 
 ;;-----------------------------------------------------------------------------
 
-SPEED		equ	8
+SYNC = 5760
 
 
 		org	RUNZONE
 
 
-start		xor	a
-		ld	(TWISTER+1),a
-		ld	a,#CD
-		ld	hl,TAPTAP
-		ld	(IMCALL+1),hl
-		ld	(IMCALL),a
+start		ei
+		halt
 	ifndef isFX
 		ld	hl,LUCYSCR
 		ld	de,#4000
@@ -27,8 +23,26 @@ start		xor	a
 		ldir
 	endif
 
-TWISTER_UPDATE	ei
+.mainloop	ei
 		halt
+		ld	b,0
+.latetiming	ex	(sp),iy
+		ex	(sp),iy
+		ex	(sp),iy
+		ex	(sp),iy
+		djnz	.latetiming
+		call	TWISTER_UPDATE
+		call	INTER_UPDATE
+		ld	a,(TWISTER+1)
+		cp	4
+		jr	nz,.mainloop
+
+		call	PLASMA
+		ld	a,#01		;; Zrusenie volania rutint
+		ld	(IMCALL),a
+		ret
+
+PART_SHEDULER
 TIMER_POS	ld	hl,TIMER_TAB
 		ld	c,(hl)
 		inc	hl
@@ -38,7 +52,7 @@ TIMER_POS	ld	hl,TIMER_TAB
 		ld	hl,(FRAMES)
 		or	a
 		sbc	hl,bc
-		jr	c,UPDATE_CALL
+		ret	c
 		ex	de,hl
 		ld	e,(hl)
 		inc	hl
@@ -47,115 +61,12 @@ TIMER_POS	ld	hl,TIMER_TAB
 		ld	(TIMER_POS+1),hl
 		ex	de,hl
 		ld	(UPDATE_CALL+1),hl
-UPDATE_CALL	call	NOOP
+UPDATE_CALL	jp	NOOP
+
+TWISTER_UPDATE	call	PART_SHEDULER
 		ld	a,(TWISTER+1)
 		or	a
 		call	nz,TWISTER
-		jr	TWISTER_UPDATE
-
-TAPTAP		ld	a,(TIK)
-		dec	a
-		ld	(TIK),a
-		ret	nz
-		ld	a,SPEED
-		ld	(TIK),a
-
-		ld	a,(TIK2)
-		inc	a
-		cp	24
-		jr	nz,TIK2OK
-		xor	a
-TIK2OK		ld	(TIK2),a
-
-		add	a,a
-		ld	e,a
-		ld	d,0
-		ld	hl,ANIMTAB
-		add	hl,de
-		ld	a,(hl)
-		exx
-
-		add	a,a
-		ld	e,a
-		ld	d,0
-		ld	hl,ONOFFTAB
-		add	hl,de
-		ld	a,(hl)
-		inc	hl
-		ld	h,(hl)
-		ld	l,a
-		ld	de,48EFh
-		call	VIEW_SPR3
-
-		exx
-		inc	hl
-		ld	a,(hl)
-		exx
-		add	a,a
-		ld	e,a
-		ld	d,0
-		ld	hl,ONOFFTAB+4
-		add	hl,de
-		ld	a,(hl)
-		inc	hl
-		ld	h,(hl)
-		ld	l,a
-		ld	de,48EFh+3
-		call	VIEW_SPR2
-		ret
-
-
-VIEW_SPR2	ld	a,16
-VIEW_SPR2_0	ex	af,af'
-		ld	a,e
-		ldi
-		ldi
-		ld	e,a
-		call	DOWNDE
-		ex	af,af'
-		dec	a
-		jr	nz,VIEW_SPR2_0
-		ret
-
-VIEW_SPR3	ld	a,16
-VIEW_SPR3_0	ex	af,af'
-		ld	a,e
-		ldi
-		ldi
-		ldi
-		ld	e,a
-		call	DOWNDE
-		ex	af,af'
-		dec	a
-		jr	nz,VIEW_SPR3_0
-		ret
-
-
-DOWNDE		inc	d
-		ld	a,d
-		and	7
-		ret	nz
-		ld	a,e
-		add	a,32
-		ld	e,a
-		ret	c
-		ld	a,d
-		sub	8
-		ld	d,a
-		ret
-
-UPDE		dec	d
-		ld	a,d
-		inc	a
-		and	7
-		ret	nz
-		ld	a,e
-		sub	32
-		ld	e,a
-		ret	c
-		ld	a,d
-		add	a,8
-		ld	d,a
 		ret
 
 ENABLE_EFFECT	ld	hl,TWISTER+1
@@ -163,6 +74,10 @@ ENABLE_EFFECT	ld	hl,TWISTER+1
 		ld	hl,NOOP
 		ld	(UPDATE_CALL+1),hl
 NOOP		ret
+
+END_TWISTER	ld	a,4
+		ld	(TWISTER+1),a
+		ret
 
 TWISTER		ld	a,0 ;flag, ktory urcuje stav twisteru
 		dec	a
@@ -223,7 +138,7 @@ TWISTER_LINE	push	hl
 		ld	l,a
 		;ld	a,h
 		;adc	a,0
-		;ld	h,a	;TODO: preteka to cez 256 align?
+		;ld	h,a
 
 		ld	a,e
 		ldi
@@ -267,7 +182,7 @@ TWISTER_STAT1	ex	af,af'
 		and	7
 		add	a,d
 		ld	d,a
-		ld	hl,TWISTER_HAIR+15
+		ld	hl,LUCY_HAIR+15
 		ld	a,l
 		sub	c
 		ld	l,a
@@ -283,10 +198,10 @@ TWISTER_STAT1R	ex	af,af'
 		ret
 
 TWISTER_STAT3	ex	af,af'
-TWISTER_STAT3X	ld	a,0
-		xor	1
-		ld	(TWISTER_STAT3X+1),a
-		jr	nz,TWISTER_STAT3R
+; TWISTER_STAT3X	ld	a,0
+; 		xor	1
+; 		ld	(TWISTER_STAT3X+1),a
+; 		jr	nz,TWISTER_STAT3R
 		ld	hl,(TWISTER_VRAM+1)
 		ex	de,hl
 		call	UPDE
@@ -298,23 +213,42 @@ TWISTER_STAT3X	ld	a,0
 		ld	(TWISTER_HEIGHT+1),a
 		ld	hl,TWISTER+1
 		ld	(hl),a
-TWISTER_STAT3R	ex	af,af'
+TWISTER_STAT3R	ld	c,a
+		ld	a,87
+		sub	c
+		cp	16
+		jr	nc,TWISTER_STAT3P
+		ld	de,4800h+19
+		ld	c,a
+		ld	a,16
+		sub	c
+		ld	c,a
+		cp	8
+		ccf
+		sbc	a,a
+		and	32
+		add	a,e
+		ld	e,a
+		ld	a,c
+		and	7
+		add	a,d
+		ld	d,a
+		ld	a,-1
+		ld	(de),a
+TWISTER_STAT3P	ex	af,af'
 		ret
 
 START_PLASMA
-
 PLASMA		ld	hl,PLASMA_FRAME
 		ld	(DEPAK_TOP),hl
 		ld	hl,PLASMA_ANIM
 		ld	de,PLASMA_FRAME
 		call	DEC40
-
 		jr	PLASMA
 
 VIEW_SPRITE
 
 		ei
-		halt
 		halt
 
 		exx
@@ -329,8 +263,11 @@ VIEW_SPRITE
 
 		ld	a,(DEPAK_TOP)
 		cp	PLASMA_FRAME/256+16+2
-		jr	c,VIEW_SPRITE_X
-		ld	hl,PLASMA_FRAME+432
+		jr	nc,VIEW_SPRITE_C
+		exx
+		ret
+
+VIEW_SPRITE_C	ld	hl,PLASMA_FRAME+432
 		ld	de,PLASMA_FRAME
 		ld	bc,(16+2)*256
 		ldir
@@ -338,7 +275,25 @@ VIEW_SPRITE
 		ld	de,-432
 		add	hl,de
 		ld	(DEPAK_TOP),hl
-		exx
+
+		call	PART_SHEDULER
+
+PLASMA_PHASE	ld	a,0
+		dec	a
+		call	z,PLASMA_GROW	;1
+		ld	a,(PLASMA_PHASE+1)
+		cp	2
+		call	z,PLASMA_SHRINK	;2
+		ld	a,(PLASMA_PHASE+1)
+		cp	3
+		jr	nz,NO_PLASMA_END
+		pop	bc
+		pop	bc
+		pop	bc
+		pop	bc
+		ret
+
+NO_PLASMA_END	exx
 		push	bc
 		ex	de,hl
 		ld	bc,-432
@@ -347,16 +302,179 @@ VIEW_SPRITE
 		;add	hl,bc
 		pop	bc
 		ret
-VIEW_SPRITE_X
-		exx
+
+PLASMA_GROW	ld	a,(PLASMA_SKIP+2)
+		or	a
+		ret	z
+		dec	a
+		dec	a
+		ld	(PLASMA_SKIP+2),a
+		sub	72-16
+		ret	c
+HAIR_GROW	ld	l,a
+		ld	de,4800h+19
+		add	a,d
+		ld	d,a
+		cp	50h
+		jr	c,PLASMA_GROW1
+		sub	8
+		ld	d,a
+		ld	a,e
+		add	a,32
+		ld	e,a
+PLASMA_GROW1	ld	bc,LUCY_HAIR
+		ld	h,0
+		add	hl,bc
+		ld	a,(hl)
+		cpl
+		ld	(de),a
+		inc	hl
+		inc	d
+		ld	a,(hl)
+		cpl
+		ld	(de),a
+		ret
+
+PLASMA_SHRINK	ld	a,(PLASMA_SKIP+2)
+		cp	72
+		ret	z
+		inc	a
+		inc	a
+		ld	(PLASMA_SKIP+2),a
+		sub	72-16
+		ret	c
+HAIR_SHRINK	ld	de,4800h+19
+		add	a,d
+		ld	d,a
+		cp	50h
+		jr	c,PLASMA_SHRINK1
+		sub	8
+		ld	d,a
+		ld	a,e
+		add	a,32
+		ld	e,a
+PLASMA_SHRINK1	ld	a,255
+		ld	(de),a
+		inc	hl
+		inc	d
+		ld	(de),a
+		ret
+
+ENABLE_P_GROW	ld	a,1
+		ld	(PLASMA_PHASE+1),a
+		ret
+ENABLE_P_SHRINK	ld	a,2
+		ld	(PLASMA_PHASE+1),a
+		ret
+END_PLASMA	ld	a,3
+		ld	(PLASMA_PHASE+1),a
+		ret
+
+ENABLE_HEART	ld	hl,4D56h
+		ld	(INTER_POS+1),hl
+		ld	a,1
+		ld	(INTER_PHASE+1),a
+		ret
+
+INTER_UPDATE	ld	a,0
+		xor	1
+		ld	(INTER_UPDATE+1),a
+		ret	nz
+
+INTER_PHASE	ld	a,0
+		or	a
+		ret	z
+
+		cp	56-20
+		jr	c,INTER_UPDATE0
+		ld	l,a
+		ld	a,56
+		sub	l
+INTER_UPDATE0	cp	20
+		jr	c,INTER_UPDATE00
+		ld	a,20
+INTER_UPDATE00
+
+INTER_GFX	ld	hl,INTER_HEART
+INTER_POS	ld	de,4D56h
+INTER_UPDATE1	ex	af,af'
+		ldi
+		ldi
+		ldi
+		dec	e
+		dec	e
+		dec	e
+		call	DOWNDE
+		ex	af,af'
+		dec	a
+		jr	nz,INTER_UPDATE1
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		call	DOWNDE
+		xor	a
+		ld	(de),a
+		dec	e
+		ld	(de),a
+		dec	e
+		ld	(de),a
+
+		ld	de,(INTER_POS+1)
+		call	UPDE
+		ld	(INTER_POS+1),de
+
+		ld	a,(INTER_PHASE+1)
+		inc	a
+		ld	(INTER_PHASE+1),a
+
+		cp	16
+		jr	nc,INTER_NOHAIR
+		ld	l,a
+		ld	a,16
+		sub	l
+		call	HAIR_GROW
+		jr	INTER_NOHAIR2
+INTER_NOHAIR
+		ld	a,(INTER_PHASE+1)
+		cp	40-16
+		jr	c,INTER_NOHAIR2
+		cp	40
+		jr	nc,INTER_NOHAIR2
+		ld	l,a
+		ld	a,40
+		sub	l
+		call	HAIR_SHRINK
+INTER_NOHAIR2
+
+		ld	a,(INTER_PHASE+1)
+		cp	56
+		ret	nz
+		xor	a
+		ld	(INTER_PHASE+1),a
+		ld	de,(INTER_POS+1)
+		call	DOWNDE
+		xor	a
+		ld	(de),a
+		inc	e
+		ld	(de),a
+		inc	e
+		ld	(de),a
 		ret
 
 
 VIEW_SPRITE0	ld	de,4720h+19
-
+PLASMA_SKIP	ld	xh,72
 		ld	a,3*8
 VIEW_SPRITE1	push	af
-		ld	a,e
+		push	hl
+		ld	a,xh
+		or	a
+		jr	z,VIEW_SPRITE10
+		ld	hl,PLASMA_ZERO
+		dec	xh
+VIEW_SPRITE10	ld	a,e
 		ldi
 		ldi
 		ldi
@@ -365,43 +483,87 @@ VIEW_SPRITE1	push	af
 		ldi
 		ldi
 		ldi
+		pop	hl
+		ld	bc,8
+		add	hl,bc
 		ld	e,a
 		call	DOWNDE
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE1
-
 		inc	e
-
-		ld	a,3*8
+VIEW_SPRITE1_0	ld	a,3*8
 VIEW_SPRITE2	push	af
-		ld	a,e
+		push	hl
+		ld	a,xh
+		or	a
+		jr	z,VIEW_SPRITE20
+		ld	hl,PLASMA_ZERO
+		dec	xh
+VIEW_SPRITE20	ld	a,e
 		ldi
 		ldi
 		ldi
 		ldi
 		ldi
 		ldi
+		pop	hl
+		ld	bc,6
+		add	hl,bc
 		ld	e,a
 		call	DOWNDE
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE2
-
 		inc	e
-
 		ld	a,3*8
 VIEW_SPRITE3	push	af
-		ld	a,e
+		push	hl
+		ld	a,xh
+		or	a
+		jr	z,VIEW_SPRITE30
+		ld	hl,PLASMA_ZERO
+		dec	xh
+VIEW_SPRITE30	ld	a,e
 		ldi
 		ldi
 		ldi
 		ldi
+		pop	hl
+		ld	bc,4
+		add	hl,bc
 		ld	e,a
 		call	DOWNDE
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE3
+		ret
+
+DOWNDE		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+UPDE		dec	d
+		ld	a,d
+		inc	a
+		and	7
+		ret	nz
+		ld	a,e
+		sub	32
+		ld	e,a
+		ret	c
+		ld	a,d
+		add	a,8
+		ld	d,a
 		ret
 
 DEC40
@@ -492,76 +654,69 @@ M3		dec	b
 		jr	M0
 
 
-TIK		db	SPEED
-TIK2		db	0
-
 DEPAK_TOP	dw	PLASMA_FRAME
 
-ANIMTAB		db	1,0	; 1
-		db	0,0	; 2
-		db	0,0	; 3
-		db	0,0	; 4
-		db	0,0	; 5
-		db	0,1	; 6
-		db	0,0	; 7
-		db	1,1	; 8
-		db	0,0	; 9
-		db	1,0	;10
-		db	0,0	;11
-		db	0,1	;12
-		db	0,0	;13
-		db	0,1	;14
-		db	0,0	;15
-		db	1,0	;16
-		db	0,0	;17
-		db	1,1	;18
-		db	0,0	;19
-		db	0,1	;20
-		db	0,0	;21
-		db	0,0	;22
-		db	0,0	;23
-		db	1,1	;24
-
-TWISTER_HAIR	db	00011000b
-		db	00011100b
-		db	00001100b
-		db	00001110b
-		db	00000110b
-		db	00000110b
-		db	00000110b
-		db	00000110b
-
-		db	00000110b
-		db	00000110b
-		db	00001110b
-		db	00001100b
-		db	00011100b
+LUCY_HAIR	db	00110000b
 		db	00111000b
-		db	00110000b
+		db	00011000b
+		db	00011100b
+		db	00001100b
+		db	00001100b
+		db	00001100b
+		db	00001100b
+
+		db	00001100b
+		db	00001100b
+		db	00011100b
+		db	00011000b
+		db	00111000b
+		db	01110000b
+		db	01100000b
 		db	00000000b
 
+INTER_HEART	db	00000111b, 10000011b, 11000000b
+		db	00011111b, 11000111b, 11110000b
+		db	00111111b, 11101111b, 11111000b
+		db	01111111b, 11101111b, 11111100b
+		db	01111111b, 11011111b, 11111100b
+		db	11111111b, 10111111b, 11111110b
+		db	11111111b, 11011111b, 11111110b
+		db	11111111b, 11101111b, 11111110b
+		db	11111111b, 11110111b, 11111110b
+		db	01111111b, 11111011b, 11111100b
+		db	01111111b, 11110111b, 11111100b
+		db	00111111b, 11101111b, 11111000b
+		db	00011111b, 11011111b, 11110000b
+		db	00001111b, 10111111b, 11100000b
+		db	00000111b, 01111111b, 11000000b
+		db	00000011b, 10111111b, 10000000b
+		db	00000001b, 11011111b, 00000000b
+		db	00000000b, 11101110b, 00000000b
+		db	00000000b, 01101100b, 00000000b
+		db	00000000b, 00101000b, 00000000b
+PLASMA_ZERO	block	8,0
 
-TIMER_TAB	dw	5784, ENABLE_EFFECT
-		dw	5952, ENABLE_EFFECT
-		dw	6144, START_PLASMA
+TIMER_TAB	dw	SYNC + 24, ENABLE_EFFECT
+		dw	SYNC + 300, ENABLE_EFFECT
+		dw	SYNC + 384, ENABLE_HEART
+		dw	SYNC + 512, END_TWISTER
+		dw	SYNC + 524, ENABLE_P_GROW
+		dw	SYNC + 760, ENABLE_P_SHRINK
+		dw	SYNC + 1024, END_PLASMA
 		dw	0
 
-ONOFFTAB	dw	SPR, SPR+80
-		dw	SPR+48, SPR+48+80
-
-SPR		incbin "lucy.sprite.bin"
 PLASMA_ANIM	incbin "anim4.bin.mlz"
-PLASMA_HEIGHT	db	9*8-10
 
 		align	256
 SIN_TABLE:  ; check listing file to see resulting table bytes
-    lua allpass ; EVERY pass must emit the machine code to not affect following labels
+    lua allpass
         for i = 0, 255, 1 do
             sj.add_byte(math.floor(16.0 + math.sin(math.pi * i / 128.0) * 15.5))
         end
     endlua
 
 TWISTER_DATA	incbin "twistdata.bin"
+		incbin "twistdata.bin",0,64
 
 
 		savebin "final.bin",start,$-start
@@ -578,7 +733,7 @@ LUCYSCR		incbin "../lucyshow/lucyshow.scr"
 
 		define PRESET.border 1
 		define PRESET.paper 0q011
-		define PRESET.waitfor 5760
+		define PRESET.waitfor SYNC
 		include "../kernel/kernel.micro.inc"
 		savesna "lucy.sna",microkernel
 	opt pop
