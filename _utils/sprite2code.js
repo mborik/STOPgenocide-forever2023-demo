@@ -37,28 +37,79 @@ const src = fs.readFileSync(process.argv[2]);
 const baseScrAdr = parseInt(process.argv[3], 16);
 const w = parseInt(process.argv[4], 10);
 const h = src.length / w;
+const orMode = /^or$/i.test(process.argv[5]);
 
 let dst = '';
 let x, y, i, b, c, scradr = baseScrAdr;
-let ptr, ptrSet;
+let ptr, ptrSet, ptrInced, ptrLast = -1;
 
 for (y = 0; y < h; y++) {
 	ptr = scradr;
 	ptrSet = false;
+	ptrInced = 0;
 
 	for (x = 0; x < w; x++, ptr++) {
 		i = (y * w) + x;
 		b = src[i];
 
+		if (orMode && !b) {
+			if (ptrSet)
+				ptrInced++;
+			continue;
+		}
+
 		if (!ptrSet) {
-			dst += `\t	ld	hl,#${toHex(ptr, 4)}\n`;
+			if (orMode) {
+				const delta = ptr - ptrLast;
+				if (delta === 255) {
+					dst += `\t	inc	h\n`;
+					dst += `\t	dec	l\n`;
+				}
+				else if (delta === 256) {
+					dst += `\t	inc	h\n`;
+				}
+				else if (delta === 257) {
+					dst += `\t	inc	h\n`;
+					dst += `\t	inc	l\n`;
+				}
+				else {
+					dst += `\t	ld	hl,#${toHex(ptr, 4)}\n`;
+				}
+
+				ptrLast = ptr;
+			}
+
 			ptrSet = true;
 		}
 		else {
-			dst += `\t	inc	l\n`;
+			if (orMode) {
+				ptrLast = ptr;
+
+				if (ptrInced > 2) {
+					dst += `\t	ld	l,#${toHex(ptr & 0xff)}\n`;
+					ptrInced = 0;
+				}
+				else while (ptrInced) {
+					dst += `\t	inc	l\n`;
+					ptrInced--;
+				}
+			}
+			else {
+				dst += `\t	inc	l\n`;
+			}
 		}
 
-		dst += `\t	ld	(hl),#${toHex(b)}\n`;
+		if (orMode) {
+			dst += `\t	ld	a,(hl)\n`;
+			dst += `\t	or	#${toHex(b)}\n`;
+			dst += `\t	ld	(hl),a\n`;
+
+			ptrInced++;
+		}
+		else {
+			dst += `\t	ld	(hl),#${toHex(b)}\n`;
+		}
+
 		incPotentat(toHex(b));
 	}
 
@@ -72,13 +123,31 @@ for (s in potentat) {
 }
 pots2sort.sort((a, b) => b.count - a.count);
 
-const [ rA, rB, rC, rD, rE ] = pots2sort.slice(0, 5).map(v => v.id);
-
-dst = `\t	${rA > 0 ? `ld	a,${rA}` : 'xor	a'}\n\t	ld	bc,#${rB}${rC}\n\t	ld	de,#${rD}${rE}\n` + dst
-	.replace(new RegExp(`#${rA}`, 'ig'), 'a')
-	.replace(new RegExp(`#${rB}`, 'ig'), 'b')
-	.replace(new RegExp(`#${rC}`, 'ig'), 'c')
-	.replace(new RegExp(`#${rD}`, 'ig'), 'd')
-	.replace(new RegExp(`#${rE}`, 'ig'), 'e');
+if (orMode) {
+	const [ rB, rC, rD, rE ] = pots2sort.slice(0, 4).map(v => v.id);
+	dst = (`
+		ld	bc,#${rB}${rC}
+		ld	de,#${rD}${rE}
+` + dst
+		.replace(new RegExp(`#${rB}`, 'ig'), 'b')
+		.replace(new RegExp(`#${rC}`, 'ig'), 'c')
+		.replace(new RegExp(`#${rD}`, 'ig'), 'd')
+		.replace(new RegExp(`#${rE}`, 'ig'), 'e'))
+		.slice(1);
+}
+else {
+	const [ rA, rB, rC, rD, rE ] = pots2sort.slice(0, 5).map(v => v.id);
+	dst = (`
+		${rA > 0 ? `ld	a,${rA}` : 'xor	a'}
+		ld	bc,#${rB}${rC}
+		ld	de,#${rD}${rE}
+` + dst
+		.replace(new RegExp(`#${rA}`, 'ig'), 'a')
+		.replace(new RegExp(`#${rB}`, 'ig'), 'b')
+		.replace(new RegExp(`#${rC}`, 'ig'), 'c')
+		.replace(new RegExp(`#${rD}`, 'ig'), 'd')
+		.replace(new RegExp(`#${rE}`, 'ig'), 'e'))
+		.slice(1);
+}
 
 fs.writeFileSync(path.parse(process.argv[2]).name + '.inc', dst, { flag: 'w' });

@@ -1,0 +1,314 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'simon'"
+	endif
+
+@DEBUG = 0
+
+		include "../kernel/constants.inc"
+
+SCREEN = #4000
+
+;;-----------------------------------------------------------------------------
+	macro border n
+	  if DEBUG
+	    if n > 0
+		ld	a,n
+	    else
+		xor	a
+	    endif
+		out	(254),a
+	  endif
+	endm
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start	ifndef isFX
+		ld	hl,simon_base
+		ld	de,SCREEN
+		ld	bc,#1B00
+		ldir
+	endif
+		call	mkscrtab
+
+.loop:		ei
+		halt
+		border	3
+		call	followscene
+		border	2
+		call	anim.DisplayFrame
+		call	anim.NextFrame
+		border	1
+		ld	hl,scradrtab
+		ld	a,80
+		call	moveup
+		push	hl
+		border	7
+		ei
+		halt
+		border	1
+		ld	a,80
+		pop	hl
+		call	moveup
+		border	7
+		ei
+		halt
+		border	2
+		call	anim.DisplayFrame
+		call	anim.NextFrame
+		border	7
+		ei
+		halt
+		border	7
+		jr	.loop
+
+ending		pop	hl
+		ret
+
+followscene	ld	a,1
+		dec	a
+		jr	z,.readscn
+		ld	(followscene+1),a
+.callback	jp	82
+
+.readscn	di
+		ld	(.backsp+1),sp
+.scnptr		ld	sp,scenario
+		pop	bc
+		ld	hl,(FRAMES)
+		sbc	hl,bc
+		jr	c,.backsp
+		pop	hl
+		ld	(.callback+1),hl
+		ld	(.scnptr+1),sp
+		ld	a,1
+.backsp		ld	sp,0
+		inc	a
+		ld	(followscene+1),a
+		ei
+		ret
+
+moveup		di
+		ld	(moveup9+1),sp
+		ld	sp,hl
+		ld	h,high fader_masks
+moveup2		ex	af,af'
+moveup3		ld	l,low fader_masks
+		pop	de
+		pop	bc
+	dup 7
+		ld	a,(de)
+		and	(hl)
+		ld	(bc),a
+		inc	d
+		inc	b
+		inc	l
+	edup
+		ld	a,(de)
+		and	(hl)
+		ld	(bc),a
+moveup4		ld	l,low fader_masks
+		pop	de
+		pop	bc
+	dup 7
+		ld	a,(de)
+		and	(hl)
+		ld	(bc),a
+		inc	d
+		inc	b
+		inc	l
+	edup
+		ld	a,(de)
+		and	(hl)
+		ld	(bc),a
+		ex	af,af'
+		dec	a
+		jr	nz,moveup2
+		inc	l
+		ld	a,l
+		jr	nc,moveup5
+		ld	a,low fader_masks
+moveup5		ld	(moveup3+1),a
+		ld	(moveup4+1),a
+		ld	hl,0
+		add	hl,sp
+moveup9		ld	sp,0
+		ei
+		ret
+
+mkscrtab	ld	hl,scradrtab
+		ld	ix,SCREEN+#182A
+		ld	de,#402A
+		ld	b,16
+mkscrtab1	ld	c,20
+mkscrtab2	ld	a,(ix+0)
+		and	7
+		jr	nz,mkscrtab3
+		ld	(hl),-1
+		inc	hl
+		ld	(hl),#10 + high SCREEN
+		jr	mkscrtab4
+mkscrtab3	ld	(hl),e
+		inc	hl
+		ld	(hl),d
+mkscrtab4	inc	hl
+		push	de
+		ld	a,e
+		sub	32
+		ld	e,a
+		jr	nc,mkscrtab5
+		ld	a,d
+		sub	8
+		ld	d,a
+mkscrtab5	ld	a,(ix-32)
+		and	7
+		jr	nz,mkscrtab6
+		ld	(hl),-1
+		inc	hl
+		ld	(hl),#10 + high SCREEN
+		jr	mkscrtab7
+mkscrtab6	ld	(hl),e
+		inc	hl
+		ld	(hl),d
+mkscrtab7	pop	de
+		inc	hl
+		inc	de
+		inc	ix
+		dec	c
+		jr	nz,mkscrtab2
+		ld	a,b
+		ld	bc,12
+		add	ix,bc
+		ld	b,a
+		ld	a,c
+		add	a,e
+		ld	e,a
+		jr	nc,mkscrtab8
+		ld	a,d
+		add	a,8
+		ld	d,a
+mkscrtab8	djnz	mkscrtab1
+		ret
+
+	module anim
+	opt push listoff
+		include "anim.a80"
+	opt pop
+	endmodule
+
+	module spr
+	opt push listoff
+SKRJU		include "greetz/skrju.sprite.inc": ret
+KPACKU		include "greetz/kpacku.sprite.inc": ret
+STARDUST	include "greetz/stardust.sprite.inc": ret
+SIBCREW		include "greetz/sibcrew.sprite.inc": ret
+DEMARCHE	include "greetz/demarche.sprite.inc": ret
+LIFEONMARS	include "greetz/lifeonmars.sprite.inc": ret
+TRIEBKRAFT	include "greetz/triebkraft.sprite.inc": ret
+MAYHEM		include "greetz/mayhem.sprite.inc": ret
+THESUPER	include "greetz/thesuper.sprite.inc": ret
+TECHNOLAB	include "greetz/technolab.sprite.inc": ret
+EXODUS		include "greetz/exodus.sprite.inc": ret
+QBONE		include "greetz/qbone.sprite.inc": ret
+SCOOPEX		include "greetz/scoopex.sprite.inc": ret
+SPECCYPL	include "greetz/speccypl.sprite.inc": ret
+ESI		include "greetz/esi.sprite.inc": ret
+HOOY		include "greetz/hooy.sprite.inc": ret
+TRISC		include "greetz/trisc.sprite.inc": ret
+ZEROTEAM	include "greetz/zeroteam.sprite.inc": ret
+RMTEAM		include "greetz/rmteam.sprite.inc": ret
+CI5		include "greetz/ci5.sprite.inc": ret
+KRAPGANG	include "greetz/krapgang.sprite.inc": ret
+TCG		include "greetz/tcg.sprite.inc": ret
+	opt pop
+	endmodule
+
+scenario:
+		dw	6528
+		dw	spr.SKRJU
+		dw	6571
+		dw	spr.KPACKU
+		dw	6624
+		dw	spr.STARDUST
+		dw	6672
+		dw	spr.SIBCREW
+		dw	6696
+		dw	spr.DEMARCHE
+		dw	6720
+		dw	spr.LIFEONMARS
+		dw	6763
+		dw	spr.TRIEBKRAFT
+		dw	6816
+		dw	spr.MAYHEM
+		dw	6864
+		dw	spr.THESUPER
+		dw	6883
+		dw	spr.TECHNOLAB
+		dw	6900
+		dw	spr.QBONE
+
+		dw	6912
+		dw	spr.SPECCYPL
+		dw	6955
+		dw	spr.SCOOPEX
+		dw	7008
+		dw	spr.HOOY
+		dw	7056
+		dw	spr.ESI
+		dw	7080
+		dw	spr.EXODUS
+		dw	7104
+		dw	spr.TRISC
+		dw	7147
+		dw	spr.ZEROTEAM
+		dw	7200
+		dw	spr.RMTEAM
+		dw	7248
+		dw	spr.CI5
+		dw	7267
+		dw	spr.KRAPGANG
+		dw	7284
+		dw	spr.TCG
+
+		dw	7344
+		dw	ending
+
+
+;;-----------------------------------------------------------------------------
+		block	(128 + (high($) + 1) * 256) - $, #FF
+
+fader_masks	db	#FF, #BD, #FF, #FF, #FF, #FF, #BD, #FF
+		db	#FF, #DF, #FB, #FF, #F7, #FF, #DF, #FF
+		db	#FF, #FF, #BD, #FF, #7F, #FF, #FF, #FE
+		db	#F7, #FF, #DF, #FF, #FB, #FF, #FF, #EF
+		db	#7F, #FF, #FF, #FE, #BF, #FF, #FF, #FD
+		db	#FB, #FF, #FF, #EF, #FD, #FF, #FF, #DF
+		db	#BF, #FF, #FF, #FD, #DF, #FF, #FF, #FB
+		db	#FD, #FF, #FF, #DF, #FE, #FF, #FF, #BF
+		db	#DF, #FF, #FF, #FB, #EF, #FF, #FF, #F7
+		db	#FE, #FF, #FF, #BF, #FF, #FE, #FF, #7F
+		db	#EF, #FF, #FF, #F7, #FF, #EF, #F7, #FF
+		db	#FF, #FE, #FF, #7F, #FF, #FF, #7E, #FF
+		db	#FF, #EF, #F7, #FF, #FF, #F7, #EF, #FF
+		db	#FF, #FF, #7E, #FF, #FF, #7B, #FF, #FF
+		db	#FF, #F7, #EF, #FF, #FF, #BD, #FF, #FF
+		db	#FF, #7B, #FF, #FF, #FF, #DF, #FB, #FF
+
+		savebin "final.bin",start,$-start
+
+scradrtab
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+simon_base:	incbin "simon.scr"
+
+		define PRESET.border 7
+		define PRESET.paper 0q077
+		define PRESET.waitfor 6525
+		include "../kernel/kernel.micro.inc"
+		savesna "simon.sna",microkernel
+	opt pop
+	endif
