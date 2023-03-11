@@ -8,7 +8,7 @@
 
 ;;-----------------------------------------------------------------------------
 
-SYNC = 5760
+SYNC = 5520
 
 
 		org	RUNZONE
@@ -198,10 +198,10 @@ TWISTER_STAT1R	ex	af,af'
 		ret
 
 TWISTER_STAT3	ex	af,af'
-; TWISTER_STAT3X	ld	a,0
-; 		xor	1
-; 		ld	(TWISTER_STAT3X+1),a
-; 		jr	nz,TWISTER_STAT3R
+TWISTER_STAT3X	ld	a,0
+		xor	1
+		ld	(TWISTER_STAT3X+1),a
+		jr	nz,TWISTER_STAT3R
 		ld	hl,(TWISTER_VRAM+1)
 		ex	de,hl
 		call	UPDE
@@ -696,13 +696,13 @@ INTER_HEART	db	00000111b, 10000011b, 11000000b
 		db	00000000b, 00101000b, 00000000b
 PLASMA_ZERO	block	8,0
 
-TIMER_TAB	dw	SYNC + 24, ENABLE_EFFECT
-		dw	SYNC + 300, ENABLE_EFFECT
-		dw	SYNC + 384, ENABLE_HEART
-		dw	SYNC + 512, END_TWISTER
-		dw	SYNC + 524, ENABLE_P_GROW
+TIMER_TAB	dw	SYNC, ENABLE_EFFECT
+		dw	SYNC + 240, ENABLE_EFFECT
+		dw	SYNC + 320, ENABLE_HEART
+		dw	SYNC + 480, END_TWISTER
+		dw	SYNC + 480, ENABLE_P_GROW
 		dw	SYNC + 760, ENABLE_P_SHRINK
-		dw	SYNC + 1024, END_PLASMA
+		dw	SYNC + 1000, END_PLASMA
 		dw	0
 
 PLASMA_ANIM	incbin "anim4.bin.mlz"
@@ -733,7 +733,7 @@ LUCYSCR		incbin "../lucyshow/lucyshow.scr"
 
 		define PRESET.border 1
 		define PRESET.paper 0q011
-		define PRESET.waitfor SYNC
+		define PRESET.waitfor SYNC-1
 		include "../kernel/kernel.micro.inc"
 		savesna "lucy.sna",microkernel
 	opt pop
