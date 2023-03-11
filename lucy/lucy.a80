@@ -50,7 +50,7 @@ start		ei
 		call	xchg.bnk
 		ld	hl,#4000
 		ld	de,#C000
-		ld	bc,#1AFF
+		ld	bc,#1B00
 		ldir
 		ei
 		halt
