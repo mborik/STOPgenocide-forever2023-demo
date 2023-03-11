@@ -58,43 +58,6 @@ fx_finish	ld	bc,5520
 		xor	a
 		sbc	hl,bc
 		jr	c,.waitforit
-
-		ld	b,24
-		call	action.flyin
-		ld	b,90
-		call	action.justasec
-		ld	b,48
-		call	action.flyin
-		ld	b,96
-		call	action.justasec
-		ld	b,12
-		call	action.flyin
-
-		ld	de,#4000 + 4 * 32 + 12
-.windowloop	push	de
-		call	fx_window
-		call	renderbuffer
-		pop	de
-		ei
-		halt
-		dec	e
-		ld	a,e
-		inc	a
-		and	31
-		jr	nz,.windowloop
-		ret
-
-action.flyin	ei
-		halt
-		push	bc
-		call	renderbuffer
-		pop	bc
-		djnz	action.flyin
-		ret
-
-action.justasec	ei
-		halt
-		djnz	action.justasec
 		ret
 
 frame		ld	xh,a
@@ -109,79 +72,6 @@ frame		ld	xh,a
 backsp		ld	sp,#5555	;; sa v pohode stiha
 		ei
 		pop	af
-		ret
-
-renderbuffer	ld	hl,flyintab
-		ld	e,(hl)
-		inc	hl
-		ld	(renderbuffer+1),hl
-		ld	d,high subtitles
-		ld	hl,#4020
-.secondtime	push	hl
-		ld	a,8
-.eights		ex	de,hl
-		ld	bc,#0100
-	dup 32
-		ldi
-	edup
-		add	hl,bc
-		ex	de,hl
-		add	hl,bc
-		dec	a
-		jr	nz,.eights
-		pop	hl
-		bit	6,l
-		ret	nz
-		ld	a,32
-		add	a,l
-		ld	l,a
-		jr	.secondtime
-
-fx_window	ld	hl,window
-		ld	b,12
-.loop1		push	bc
-		push	de
-		ld	bc,12*256+255
-.loop2
-	dup 8
-		ldi
-		dec	e
-		inc	d
-	edup
-		ld	a,e
-		add	a,32
-		ld	e,a
-		jr	c,.continue
-		ld	a,d
-		sub	8
-		ld	d,a
-.continue	djnz	.loop2
-		pop	de
-		push	de
-		ld	a,d
-		rra
-		rra
-		rra
-		and	11b
-		or	58h
-		ld	d,a
-		ld	bc,12*256+255
-.loop3		ldi
-		ld	a,e
-		add	a,31
-		ld	e,a
-		ld	a,d
-		adc	a,0
-		ld	d,a
-		djnz	.loop3
-		pop	de
-		pop	bc
-		dec	e
-		ld	a,e
-		inc	a
-		and	31
-		ret	z
-		djnz	.loop1
 		ret
 
 ;; initialization / generators
@@ -529,14 +419,9 @@ shades
 		db	0,1,2,3,4,5,6,7
 
 
-flyintab	include "subtitles.flyin.inc"
-window		incbin "window.bin"
-
-
 		align	256
 
 pattern		incbin "pattern.bin"
-subtitles	incbin "subtitles.intro.bin"
 screen		incbin "lucyshow.scr"
 scratt = screen + #1800
 
