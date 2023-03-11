@@ -1,0 +1,194 @@
+SCREEN = #C000
+HIATTR = high(SCREEN + #1800)
+
+HIDE_OKNO_LUCY	ld	de,SCREEN + 4*32 + 12
+		ld	a,1
+.loop		push	af
+		ld	(SHOW_LUCY_SPR+1),a
+		ld	a,e
+		inc	a
+		and	31
+		call	nz,VIEW_OKNO
+		push	de
+		call	SHOW_LUCY0
+		pop	de
+		ei
+		halt
+		pop	af
+		inc	a
+		cp	18
+		jr	nz,.loop
+		ret
+
+VIEW_OKNO	push	de
+		ld	hl,SPR_OKNO
+		ld	b,12
+VIEW_OKNO4	push	bc
+		push	de
+		ld	bc,12*256+255
+VIEW_OKNO2
+	dup 8
+		ldi
+		dec	e
+		inc	d
+	edup
+		ld	a,e
+		add	a,32
+		ld	e,a
+		jr	c,VIEW_OKNO1
+		ld	a,d
+		sub	8
+		ld	d,a
+VIEW_OKNO1	djnz	VIEW_OKNO2
+		pop	de
+		push	de
+		ld	a,d
+		rra
+		rra
+		rra
+		and	11b
+		or	HIATTR
+		ld	d,a
+		ld	bc,12*256+255
+VIEW_OKNO3	ldi
+		ld	a,e
+		add	a,31
+		ld	e,a
+		ld	a,d
+		adc	a,0
+		ld	d,a
+		djnz	VIEW_OKNO3
+		pop	de
+		pop	bc
+		ld	a,e
+		dec	e
+		and	31
+		jr	z,VIEW_OKNO5
+		djnz	VIEW_OKNO4
+VIEW_OKNO5	pop	de
+		dec	e
+		ret
+
+SHOW_LUCY0	ld	hl,SPR_LUCY1
+		ld	de,SCREEN+#C9
+		ld	bc,4*256+4
+		ld	a,14
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY2
+		ld	de,SCREEN+#C9+4
+		ld	bc,1*256+8
+		ld	a,10
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY3
+		ld	de,SCREEN+#C9+5
+		ld	bc,4*256+16
+		ld	a,2
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY4
+		ld	de,SCREEN+#C9+9
+		ld	bc,2*256+18
+		ld	a,0
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY5
+		ld	de,SCREEN+#C9+11
+		ld	bc,7*256+14
+		ld	a,4
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY6
+		ld	de,SCREEN+#C9+18
+		ld	bc,1*256+8
+		ld	a,10
+		call	SHOW_LUCY_SPR
+
+		ld	hl,SPR_LUCY7
+		ld	de,SCREEN+#C9+19
+		ld	bc,1*256+3
+		ld	a,10
+
+SHOW_LUCY_SPR	add	a,0
+		cp	18
+		ret	nc
+
+		push	bc
+		ld	b,a
+		ld	c,0
+		rr	a
+		rr	c
+		rr	a
+		rr	c
+		rr	a
+		rr	c
+		ld	a,b
+		and	11111000b
+		ld	b,a
+		ld	a,c
+		add	a,e
+		ld	e,a
+		sbc	a,a
+		and	8
+		add	a,b
+		add	a,d
+		ld	d,a
+		pop	bc
+
+SHOW_LUCY3	push	de
+		push	bc
+		ld	c,8
+SHOW_LUCY2	ld	a,b
+		ex	af,af'
+SHOW_LUCY1	ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		inc	e
+		djnz	SHOW_LUCY1
+		ex	af,af'
+		ld	b,a
+		ld	a,e
+		sub	b
+		ld	e,a
+		inc	d
+		dec	c
+		jr	nz,SHOW_LUCY2
+		pop	bc
+		pop	de
+		push	bc
+		push	de
+		ld	a,d
+		rra
+		rra
+		rra
+		and	11b
+		or	HIATTR
+		ld	d,a
+
+		ld	c,b
+		ld	b,0
+		ldir
+		pop	de
+		ld	a,e
+		add	a,32
+		ld	e,a
+		sbc	a,a
+		and	8
+		add	a,d
+		ld	d,a
+		pop	bc
+		cp	HIATTR
+		ret	z
+		dec	c
+		jr	nz,SHOW_LUCY3
+		ret
+
+SPR_OKNO	incbin "transition.spr"
+SPR_LUCY1	equ	SPR_OKNO+1296
+SPR_LUCY2	equ	SPR_LUCY1+144
+SPR_LUCY3	equ	SPR_LUCY2+72
+SPR_LUCY4	equ	SPR_LUCY3+576
+SPR_LUCY5	equ	SPR_LUCY4+324
+SPR_LUCY6	equ	SPR_LUCY5+882
+SPR_LUCY7	equ	SPR_LUCY6+72

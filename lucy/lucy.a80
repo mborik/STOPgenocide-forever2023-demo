@@ -9,6 +9,8 @@
 ;;-----------------------------------------------------------------------------
 
 SYNC = 5520
+BLIK_WHITE = #17
+BLIK_BLUEY = #1F
 
 
 		org	RUNZONE
@@ -21,6 +23,10 @@ start		ei
 		ld	de,#4000
 		ld	bc,#1B00
 		ldir
+		ld	a,#CD
+		ld	hl,NOOP
+		ld	(IMCALL),a
+		ld	(IMCALL+1),hl
 	endif
 
 .mainloop	ei
@@ -38,8 +44,54 @@ start		ei
 		jr	nz,.mainloop
 
 		call	PLASMA
-		ld	a,#01		;; Zrusenie volania rutint
+		ei
+		halt
+		ld	a,BLIK_WHITE
+		call	xchg.bnk
+		ld	hl,#4000
+		ld	de,#C000
+		ld	bc,#1AFF
+		ldir
+		ei
+		halt
+		ld	a,BLIK_BLUEY
+		call	xchg.bnk
+		ld	hl,#5800
+		ld	de,#5801
+		ld	bc,#02FF
+		ld	(hl),0q077
+		ldir
+		ld	hl,BLIK_SHEDULER
+		ld	(IMCALL+1),hl
+		call	HIDE_OKNO_LUCY
+.awaiter	ld	a,1
+		or	a
+		jr	nz,.awaiter
+		inc	a
 		ld	(IMCALL),a
+		ret
+
+BLIK_SHEDULER	di
+		ld	(.BACKSP+1),sp
+.SCNPTR		ld	sp,TIMER_BLIK
+		pop	bc
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.BACKSP
+		pop	hl
+		ld	(.SCNPTR+1),sp
+		or	l
+		jr	nz,.SETBNK
+		ld	(start.awaiter+1),a
+		ld	h,7
+		ld	a,BLIK_WHITE
+.SETBNK		call	xchg.bnk
+		ld	a,h
+		ld	(actborder),a
+		out	(254),a
+.BACKSP		ld	sp,0
+		ei
 		ret
 
 PART_SHEDULER
@@ -240,9 +292,9 @@ TWISTER_STAT3P	ex	af,af'
 
 START_PLASMA
 PLASMA		ld	hl,PLASMA_FRAME
-		ld	(DEPAK_TOP),hl
+		ld	(DEPAK_TOP+1),hl
+		ex	hl,de
 		ld	hl,PLASMA_ANIM
-		ld	de,PLASMA_FRAME
 		call	DEC40
 		jr	PLASMA
 
@@ -253,15 +305,15 @@ VIEW_SPRITE
 
 		exx
 
-		ld	hl,(DEPAK_TOP)
+DEPAK_TOP	ld	hl,PLASMA_FRAME
 		call	VIEW_SPRITE0
 
-		ld	hl,(DEPAK_TOP)
+		ld	hl,(DEPAK_TOP+1)
 		ld	de,432
 		add	hl,de
-		ld	(DEPAK_TOP),hl
+		ld	(DEPAK_TOP+1),hl
 
-		ld	a,(DEPAK_TOP)
+		ld	a,(DEPAK_TOP+1)
 		cp	PLASMA_FRAME/256+16+2
 		jr	nc,VIEW_SPRITE_C
 		exx
@@ -271,10 +323,10 @@ VIEW_SPRITE_C	ld	hl,PLASMA_FRAME+432
 		ld	de,PLASMA_FRAME
 		ld	bc,(16+2)*256
 		ldir
-		ld	hl,(DEPAK_TOP)
+		ld	hl,(DEPAK_TOP+1)
 		ld	de,-432
 		add	hl,de
-		ld	(DEPAK_TOP),hl
+		ld	(DEPAK_TOP+1),hl
 
 		call	PART_SHEDULER
 
@@ -443,7 +495,7 @@ INTER_NOHAIR
 		cp	40
 		jr	nc,INTER_NOHAIR2
 		ld	l,a
-		ld	a,40
+		ld	a,39
 		sub	l
 		call	HAIR_SHRINK
 INTER_NOHAIR2
@@ -642,7 +694,7 @@ M3		dec	b
 		ldir
 ;------------------------------------
 		push	af
-		ld	a,(DEPAK_TOP+1)
+		ld	a,(DEPAK_TOP+2)
 		inc	a
 		inc	a
 		cp	d
@@ -653,8 +705,6 @@ M3		dec	b
 		pop	hl
 		jr	M0
 
-
-DEPAK_TOP	dw	PLASMA_FRAME
 
 LUCY_HAIR	db	00110000b
 		db	00111000b
@@ -701,10 +751,33 @@ TIMER_TAB	dw	SYNC, ENABLE_EFFECT
 		dw	SYNC + 320, ENABLE_HEART
 		dw	SYNC + 480, END_TWISTER
 		dw	SYNC + 480, ENABLE_P_GROW
-		dw	SYNC + 760, ENABLE_P_SHRINK
-		dw	SYNC + 1000, END_PLASMA
+		dw	SYNC + 800, ENABLE_P_SHRINK
+		dw	SYNC + 967, END_PLASMA
 		dw	0
 
+TIMER_BLIK	dw	SYNC + 979
+		db	BLIK_WHITE, 7
+
+		dw	SYNC + 982
+		db	BLIK_BLUEY, 1
+
+		dw	SYNC + 984
+		db	BLIK_WHITE, 7
+
+		dw	SYNC + 987
+		db	BLIK_BLUEY, 1
+
+		dw	SYNC + 996
+		db	BLIK_WHITE, 7
+
+		dw	SYNC + 999
+		db	BLIK_BLUEY, 1
+
+		dw	SYNC + 1003
+		dw	0
+
+
+		include "transition.a80"
 PLASMA_ANIM	incbin "anim4.bin.mlz"
 
 		align	256
