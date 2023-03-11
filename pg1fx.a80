@@ -29,7 +29,7 @@ lookupTables = #D800
 		display "Too long! ",/D,($-lookupTables)," bytes out!"
 		end
 	else
-		display /D,(lookupTables-$)," bytes free..."
+		display /D,(lookupTables-$)," bytes free in bank ",/D,isFX
 	endif
 
 		org	lookupTables

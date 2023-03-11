@@ -32,8 +32,6 @@ MUSIC.out  = sq_send
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
 		end
-	else
-		display /D,(#10000-$)," bytes free..."
 	endif
 
 		align	16384,0

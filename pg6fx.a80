@@ -20,7 +20,7 @@
 		display "Too long! ",/D,($-#10000)," bytes out!"
 		end
 	else
-		display /D,(#10000-$)," bytes free..."
+		display /D,(#10000-$)," bytes free in bank ",/D,isFX
 	endif
 
 		align	16384,0

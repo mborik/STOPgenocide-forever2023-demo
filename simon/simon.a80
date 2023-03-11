@@ -1,4 +1,4 @@
-		device	zxspectrum128
+	device	zxspectrum128
 
 	ifdef isFX
 		display "Compiling 'simon'"
@@ -7,6 +7,7 @@
 @DEBUG = 0
 
 		include "../kernel/constants.inc"
+		include "anim.inc"
 
 SCREEN = #4000
 
@@ -25,12 +26,12 @@ SCREEN = #4000
 ;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
-start	ifndef isFX
+start		ld	a,AnimBank
+		call	xchg.bnk
 		ld	hl,simon_base
 		ld	de,SCREEN
 		ld	bc,#1B00
 		ldir
-	endif
 		call	mkscrtab
 
 .loop:		ei
@@ -38,8 +39,8 @@ start	ifndef isFX
 		border	3
 		call	followscene
 		border	2
-		call	anim.DisplayFrame
-		call	anim.NextFrame
+		call	DisplayFrame
+		call	NextFrame
 		border	1
 		ld	hl,scradrtab
 		ld	a,80
@@ -56,8 +57,8 @@ start	ifndef isFX
 		ei
 		halt
 		border	2
-		call	anim.DisplayFrame
-		call	anim.NextFrame
+		call	DisplayFrame
+		call	NextFrame
 		border	7
 		ei
 		halt
@@ -65,6 +66,31 @@ start	ifndef isFX
 		jr	.loop
 
 ending		pop	hl
+.loop		call	DisplayFrame
+		call	NextFrame
+.ptr		ld	hl,#5800
+		ld	d,h
+		ld	e,l
+		inc	e
+		ld	bc,#001F
+		ld	(hl),0q177
+		ldir
+		ex	de,hl
+		ld	(ending.ptr+1),hl
+		ei
+		halt
+		halt
+		ld	bc,#5AE0
+		xor	a
+		sbc	hl,bc
+		jr	c,.loop
+		inc	de
+		ld	h,d
+		ld	l,e
+		inc	e
+		ld	bc,#001F
+		ld	(hl),0q077
+		ldir
 		ret
 
 followscene	ld	a,1
@@ -192,12 +218,6 @@ mkscrtab7	pop	de
 mkscrtab8	djnz	mkscrtab1
 		ret
 
-	module anim
-	opt push listoff
-		include "anim.a80"
-	opt pop
-	endmodule
-
 	module spr
 	opt push listoff
 SKRJU		include "greetz/skrju.sprite.inc": ret
@@ -296,14 +316,17 @@ fader_masks	db	#FF, #BD, #FF, #FF, #FF, #FF, #BD, #FF
 		db	#FF, #F7, #EF, #FF, #FF, #BD, #FF, #FF
 		db	#FF, #7B, #FF, #FF, #FF, #DF, #FB, #FF
 
-		savebin "final.bin",start,$-start
-
 scradrtab
+simon_base:	incbin "simon.scr"
+
+		savebin "final.bin",start,$-start
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
-simon_base:	incbin "simon.scr"
+		page (AnimBank & 7)
+		org DisplayFrame
+		incbin "anim.bin"
 
 		define PRESET.border 7
 		define PRESET.paper 0q077

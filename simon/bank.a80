@@ -1,0 +1,20 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Preparation of 'simon' anim bank"
+	endif
+
+		include "../kernel/constants.inc"
+		include "anim.inc"
+
+		org	RUNZONE
+
+start		ld	a,AnimBank
+		call	xchg.bnk
+		ld	hl,packed
+		ld	de,DisplayFrame
+		jp	depack
+
+packed		incbin "anim.pak"
+
+		savebin "bank.bin",start,$-start

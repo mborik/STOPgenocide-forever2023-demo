@@ -1,3 +1,9 @@
+		output	"anim.bin"
+		org	#10000 - (EOF - START)
+
+@AnimBank = #11
+
+@START
 DisplayFrame	ld	hl,FRAME_0000
 		jp	(hl)
 
@@ -80,3 +86,9 @@ FRAME_001a	include	"anim/001a.asm"
 FRAME_001b	include	"anim/001b.asm"
 FRAME_001c	include	"anim/001c.asm"
 FRAME_001d	include	"anim/001d.asm"
+
+@EOF
+
+		export	AnimBank
+		export	DisplayFrame
+		export	NextFrame

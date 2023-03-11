@@ -10,6 +10,10 @@ fx_lucy:	incbin "lucy/final.pak"
 .pg = _fxpage
 .sync = 5758
 
+fx_simon:	incbin "simon/final.pak"
+.pg = _fxpage
+.sync = 6523
+
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
 ;
@@ -24,7 +28,7 @@ fx_lucy:	incbin "lucy/final.pak"
 		display "Too long! ",/D,($-#10000)," bytes out!"
 		end
 	else
-		display /D,(#10000-$)," bytes free..."
+		display /D,(#10000-$)," bytes free in bank ",/D,isFX
 	endif
 
 		align	16384,0
@@ -40,3 +44,7 @@ fx_lucy:	incbin "lucy/final.pak"
 		export fx_lucy
 		export fx_lucy.pg
 		export fx_lucy.sync
+
+		export fx_simon
+		export fx_simon.pg
+		export fx_simon.sync

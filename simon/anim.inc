@@ -1,0 +1,3 @@
+AnimBank: EQU 0x00000011
+DisplayFrame: EQU 0x0000E075
+NextFrame: EQU 0x0000E079

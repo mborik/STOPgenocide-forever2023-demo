@@ -35,12 +35,16 @@ fx_lucyshow:	incbin "lucyshow/final.pak"
 .pg = _fxpage
 .sync = 5376
 
+fx_simon_bank:	incbin "simon/bank.bin"
+.pg = _fxpage ; data transfer part
+.length = $-fx_simon_bank
+
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
 		display "Too long! ",/D,($-#10000)," bytes out!"
 		end
 	else
-		display /D,(#10000-$)," bytes free..."
+		display /D,(#10000-$)," bytes free in bank ",/D,isFX
 	endif
 
 		align	16384,0
@@ -72,3 +76,7 @@ fx_lucyshow:	incbin "lucyshow/final.pak"
 		export fx_lucyshow
 		export fx_lucyshow.pg
 		export fx_lucyshow.sync
+
+		export fx_simon_bank
+		export fx_simon_bank.pg
+		export fx_simon_bank.length

@@ -10,36 +10,23 @@ numberOfBanks = 5
 		emptytap OUTPUT
 
 
-page128		equ	#7FFD
-act128page	equ	#5B5C
-actborder	equ	#5C48
-FRAMES		equ	#5C78
+@page128	equ	#7FFD
+@act128page	equ	#5B5C
+@actborder	equ	#5C48
+@FRAMES		equ	#5C78
+@RUNZONE	equ	#8400
+@basesp		equ	RUNZONE
 
 
 	module loader
 		display "Composing loader & kernel"
 
-		org	#8000 - introscr.len
+		org	#7800
 begin = $
 
-introscr.dat:	incbin "loading.pak"
-introscr.len = $ - introscr.dat
-
-@basesp
 introscr:	ld	hl,introscr.dat
 		ld	de,#4000
-		jr	depack
-
-unpackpage:	ld	hl,#51A1
-		ld	bc,((30 / numberOfBanks) << 8) | #FF
-.pgprog:	ld	(hl),c	; draw progress
-		inc	l
-		djnz	.pgprog
-		ld	(unpackpage+1),hl
-		di
-		ld	hl,RUNZONE
-		ld	de,#C000
-		jr	depack
+		jr	introzx0.depack
 
 fadeoutandrun:	ld	a,25
 .loop:		ei
@@ -50,19 +37,28 @@ fadeoutandrun:	ld	a,25
 		ex	af,af'
 		dec	a
 		jr	nz,.loop
+		ld	hl,kernelblock.src
+		ld	de,kernelblock.dest
+		ld	bc,kernelblock.length
+		ldir
 		jp	kernel
 
-@xchg.vram:	ld	a,#1D
-		xor	#0A
-		ld	(xchg.vram+1),a
-@xchg.bnk:	ld	(act128page),a
-		ld	bc,page128
-		out	(c),a
-		ret
+unpackpage:	ld	hl,#51A1
+		ld	bc,((30 / numberOfBanks) << 8) | #FF
+.pgprog:	ld	(hl),c	; draw progress
+		inc	l
+		djnz	.pgprog
+		ld	(unpackpage+1),hl
+		di
+		ld	hl,#8000
+		ld	de,#C000
 
-@depack:	module zx0
+	module introzx0
+depack
+	opt push listoff
 		include "dzx0_fast.a80"
-		endmodule
+	opt pop
+	endmodule
 
 attrhide:	ld	hl,22528
 		ld	c,24
@@ -94,7 +90,76 @@ attrhide:	ld	hl,22528
 		dec	c
 		jr	nz,.atthd2
 		ret
-.end = $
+
+kernelblock.src
+		phase	#8000
+kernelblock.dest
+
+@xchg.vram:	ld	a,#1D
+		xor	#0A
+		ld	(xchg.vram+1),a
+@xchg.bnk:	ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+@depack:	module zx0
+		include "dzx0_fast.a80"
+		endmodule
+
+;;-----------------------------------------------------------------------------
+; Every part is defined with this effect descriptor:
+;
+;     db  fx_demopart.pg   ; current fx 128k page
+;                          ; (set bit.7 to ldir given length, not decompress)
+;     dw  fx_demopart      ; place where fx data lives
+;     dw  fx_demopart.sync ; number of halts from start of demo to sync with
+;     ... or ...
+;     dw  fx_demopart.length
+
+fxtable:
+		db	fx_intro.pg
+		dw	fx_intro
+		dw	fx_intro.sync
+
+		db	fx_micka.pg
+		dw	fx_micka
+		dw	fx_micka.sync
+
+		db	fx_grinder.pg
+		dw	fx_grinder
+		dw	fx_grinder.sync
+
+		db	fx_kitty_bank.pg + #80
+		dw	fx_kitty_bank
+		dw	fx_kitty_bank.length
+
+		db	fx_plasma1.pg
+		dw	fx_plasma1
+		dw	fx_plasma1.sync
+
+		db	fx_kitty.pg
+		dw	fx_kitty
+		dw	fx_kitty.sync
+
+		db	fx_simon_bank.pg + #80
+		dw	fx_simon_bank
+		dw	fx_simon_bank.length
+
+		db	fx_lucyshow.pg
+		dw	fx_lucyshow
+		dw	fx_lucyshow.sync
+
+		db	fx_lucy.pg
+		dw	fx_lucy
+		dw	fx_lucy.sync
+
+		db	fx_simon.pg
+		dw	fx_simon
+		dw	fx_simon.sync
+
+		db	0
+
 
 	if $ > #8181
 		display "Too long! ",/D,($-#8181)," bytes out of interrupt!"
@@ -250,58 +315,14 @@ im2vector = ((high $) + 1) << 8
 		halt
 		jr	.end
 
-;;-----------------------------------------------------------------------------
-; Every part is defined with this effect descriptor:
-;
-;     db  fx_demopart.pg   ; current fx 128k page
-;                          ; (set bit.7 to ldir given length, not decompress)
-;     dw  fx_demopart      ; place where fx data lives
-;     dw  fx_demopart.sync ; number of halts from start of demo to sync with
-;     ... or ...
-;     dw  fx_demopart.length
-
-fxtable:
-		db	fx_intro.pg
-		dw	fx_intro
-		dw	fx_intro.sync
-
-		db	fx_micka.pg
-		dw	fx_micka
-		dw	fx_micka.sync
-
-		db	fx_grinder.pg
-		dw	fx_grinder
-		dw	fx_grinder.sync
-
-		db	fx_kitty_bank.pg + #80
-		dw	fx_kitty_bank
-		dw	fx_kitty_bank.length
-
-		db	fx_plasma1.pg
-		dw	fx_plasma1
-		dw	fx_plasma1.sync
-
-		db	fx_kitty.pg
-		dw	fx_kitty
-		dw	fx_kitty.sync
-
-		db	fx_lucyshow.pg
-		dw	fx_lucyshow
-		dw	fx_lucyshow.sync
-
-		db	fx_lucy.pg
-		dw	fx_lucy
-		dw	fx_lucy.sync
-
-		db	0
-total = $-begin
-
+kernelblock.length = $ - kernelblock.dest
 
 		display /D,(RUNZONE-$)," bytes free after kernel"
+	dephase
 
-		align	256
-@RUNZONE	equ	$
+introscr.dat:	incbin "loading.pak"
 
+total = $-begin
 	endmodule
 
 
@@ -425,8 +446,8 @@ total = $ - line1
 		endlua
 
 			dw	.filelength
-			dw	RUNZONE ;; block start address
-			dw	0x8000
+			dw	#8000 ;; block start address
+			dw	#8000
 		tapend
 
 		tapout OUTPUT
@@ -434,7 +455,7 @@ total = $ - line1
 .filedata		incbin filename?
 .filelength = $-.filedata
 
-	if .filelength > (#C000 - RUNZONE)
+	if .filelength > #4000
 		display "Packed bank ",/D,(__putBank_number & 7)," is too long!"
 	endif
 		tapend

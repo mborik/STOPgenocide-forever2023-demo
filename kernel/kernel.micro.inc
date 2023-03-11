@@ -13,10 +13,25 @@
 		block	#1800, 0
 		block	#0300, PRESET.paper
 
-		org	#8000
+;;- COMMON FUNCTIONS ----------------------------------------------------------
+		org	xchg.vram
+
+	module commons
+vram:		ld	a,#1D
+		xor	#0A
+		ld	(xchg.vram+1),a
+bnk:		ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+depack:		module zx0
+		include "dzx0_fast.a80"
+		endmodule
+	endmodule
 
 @microkernel:	di
-		ld	sp,RUNZONE
+		ld	sp,basesp
 		ld	a,PRESET.border
 		out	(254),a
 		ld	(actborder),a
@@ -84,54 +99,6 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 		pop	af
 		ei
 		ret
-
-;;- COMMON FUNCTIONS ----------------------------------------------------------
-		org	xchg.vram
-
-	module commons
-vram:		ld	a,#1D
-		xor	#0A
-		ld	(xchg.vram+1),a
-bnk:		ld	(act128page),a
-		ld	bc,page128
-		out	(c),a
-		ret
-
-depack:		module zx0
-		include "dzx0_fast.a80"
-		endmodule
-
-attrhide:	ld	hl,22528
-		ld	c,24
-.atthd2:	ld	b,32
-		push	bc
-.atthd3:	ld	a,(hl)
-		and	7
-		jr	z,.atthd4
-		dec	a
-.atthd4:	push	af
-		ld	a,(hl)
-		and	56
-		jr	z,.atthd5
-		ld	c,8
-		sub	c
-		ld	c,a
-		pop	af
-		or	c
-		jr	.atthd6
-.atthd5:	ld	a,(hl)
-		and	248
-		ld	c,a
-		pop	af
-		or	c
-.atthd6:	ld	(hl),a
-		inc	hl
-		djnz	.atthd3
-		pop	bc
-		dec	c
-		jr	nz,.atthd2
-		ret
-	endmodule
 
 ;;-----------------------------------------------------------------------------
 		org	#8200
