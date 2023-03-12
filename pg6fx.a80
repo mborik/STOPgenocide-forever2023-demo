@@ -6,6 +6,10 @@
 @_fxpage = #16
 @_fxpage_start
 
+fx_plasma2:	incbin "plasma2/final.pak"
+.pg = _fxpage
+.sync = 4700
+
 fx_vodoshow:	incbin "vodoshow/final.pak"
 .pg = _fxpage
 .sync = 8200
@@ -36,6 +40,10 @@ fx_vodoshow:	incbin "vodoshow/final.pak"
 ;		export fx_demopart
 ;		export fx_demopart.pg
 ;		export fx_demopart.sync
+
+		export fx_plasma2
+		export fx_plasma2.pg
+		export fx_plasma2.sync
 
 		export fx_vodoshow
 		export fx_vodoshow.pg

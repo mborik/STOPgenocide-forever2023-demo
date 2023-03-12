@@ -10,9 +10,9 @@ fx_kitty_bank.length: EQU 0x00001963
 fx_kitty: EQU 0x0000E318
 fx_kitty.pg: EQU 0x00000013
 fx_kitty.sync: EQU 0x00000D7A
-fx_lucyshow: EQU 0x0000E727
+fx_lucyshow: EQU 0x0000E715
 fx_lucyshow.pg: EQU 0x00000013
-fx_lucyshow.sync: EQU 0x00001500
-fx_simon_bank: EQU 0x0000ED5B
+fx_lucyshow.sync: EQU 0x000014FA
+fx_simon_bank: EQU 0x0000ED49
 fx_simon_bank.pg: EQU 0x00000013
 fx_simon_bank.length: EQU 0x00001168

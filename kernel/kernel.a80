@@ -142,6 +142,10 @@ fxtable:
 		dw	fx_kitty
 		dw	fx_kitty.sync
 
+		db	fx_plasma2.pg
+		dw	fx_plasma2
+		dw	fx_plasma2.sync
+
 		db	fx_simon_bank.pg + #80
 		dw	fx_simon_bank
 		dw	fx_simon_bank.length
@@ -157,10 +161,6 @@ fxtable:
 		db	fx_simon.pg
 		dw	fx_simon
 		dw	fx_simon.sync
-
-		db	fx_plasma2.pg
-		dw	fx_plasma2
-		dw	fx_plasma2.sync
 
 		db	fx_vodoshow.pg
 		dw	fx_vodoshow

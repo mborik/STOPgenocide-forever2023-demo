@@ -4,6 +4,3 @@ fx_lucy.sync: EQU 0x0000167E
 fx_simon: EQU 0x0000EBFF
 fx_simon.pg: EQU 0x00000014
 fx_simon.sync: EQU 0x0000197B
-fx_plasma2: EQU 0x0000F9EC
-fx_plasma2.pg: EQU 0x00000014
-fx_plasma2.sync: EQU 0x00001CE0
