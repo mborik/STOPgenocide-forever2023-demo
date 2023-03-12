@@ -24,9 +24,18 @@ numberOfBanks = 5
 		org	#7800
 begin = $
 
-introscr:	ld	hl,introscr.dat
-		ld	de,#4000
-		jr	introzx0.depack
+unpackpage:	ld	hl,#51A1
+		ld	bc,((30 / numberOfBanks) << 8) | #FF
+.pgprog:	ld	(hl),c	; draw progress
+		inc	l
+		djnz	.pgprog
+		ld	(unpackpage+1),hl
+		di
+		ld	hl,#8000
+		ld	de,#C000
+		call	introzx0.depack
+		ei
+		ret
 
 fadeoutandrun:	ld	a,25
 .loop:		ei
@@ -43,15 +52,8 @@ fadeoutandrun:	ld	a,25
 		ldir
 		jp	kernel
 
-unpackpage:	ld	hl,#51A1
-		ld	bc,((30 / numberOfBanks) << 8) | #FF
-.pgprog:	ld	(hl),c	; draw progress
-		inc	l
-		djnz	.pgprog
-		ld	(unpackpage+1),hl
-		di
-		ld	hl,#8000
-		ld	de,#C000
+introscr:	ld	hl,introscr.dat
+		ld	de,#4000
 
 	module introzx0
 depack
@@ -413,16 +415,16 @@ line2.len = $ - line2.cmds
 
 line3:		db	0, 3
 		dw	line3.len
-		; PAUSE VAL "42"
+line3.cmds	; PAUSE VAL "42"
 		db	C_PAUSE
 		VAL	42, ":"
-line3.cmds	; RANDOMIZE USR VAL "x"
+		; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
 		VAL	loader.fadeoutandrun, EOL
 line3.len = $ - line3.cmds
 
 line9:		db	0, 9
-		dw	.len
+		dw	line9.len
 line9.cmds	; DATA...
 		db	C_DATA
 		VAL	#11, ','
