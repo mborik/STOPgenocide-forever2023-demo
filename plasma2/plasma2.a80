@@ -8,9 +8,9 @@
 
 @DEBUG = 0
 
-WAIT_VAL	equ	64		;cas hlavnej slucky efektu
-BACK_ATTR	equ	0q050		;farba ktorou sa ciary zmazu
-LINE_ATTR	equ	BACK_ATTR | 1	;farba ciar nad/pod efektom
+WAIT_VAL	equ	60		;cas hlavnej slucky efektu
+BACK_ATTR	equ	0q060		;farba ktorou sa ciary zmazu
+LINE_ATTR	equ	BACK_ATTR | 2	;farba ciar nad/pod efektom
 
 ;GEN_CHUNKS vygeneruje 4K chunkovych rutin na adresy
 ;E000 - EFFF. Offset sa da zmenit pomocou CHUNKY_BASE v
@@ -28,42 +28,95 @@ LINE_ATTR	equ	BACK_ATTR | 1	;farba ciar nad/pod efektom
 		org	RUNZONE
 
 
-start		ld	a,#10
+start		ld	a,#17
 		call	xchg.bnk
 		ld	hl,#4000
 		ld	de,#4001
 		ld	bc,#17FF
 		ld	(hl),l
 		ldir
-		ld	hl,BACKGROUND_ATTR
+		ld	hl,DEADCAT
+		ld	de,#C000
+		ld	bc,#1800
+		ldir
+		push	hl
+		ld	h,d
+		ld	l,e
+		inc	e
+		ld	bc,#02FF
+		ld	(hl),0q020
+		ldir
+		pop	hl
+		ld	de,#5800
 		ld	bc,#0300
 		ldir
+		ld	a,#10
+		call	xchg.bnk
 
 		call	GEN_CHUNKS
 		call	GEN_PLASMA
 
+		ld	a,#CD
+		ld	hl,BLIK_SHEDULER
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+
 PLASMA		ld	hl,PLASMA_LAYER1
 		ld	de,PLASMA_LAYER2
-;		ld	bc,PLASMA_LAYER3+64
 		ld	a,64
 PLASMA_0	push	af
 		push	hl
 		push	de
-;		push	bc
 PLASMA_CALL	call	PLASMA2
 		call	PLASMA_UPDATE
-;		pop	bc
 		pop	de
 		pop	hl
 		pop	af
 		inc	de
-;		dec	bc
 		dec	a
 		jr	nz,PLASMA_0
 		ld	a,(PLASMA_STATE)
 		cp	7
 		jr	nz,PLASMA
-		ret
+
+COLORGRADE	exx
+		ld	hl,#58C0
+		ld	de,#58C1
+		ld	bc,#017F
+COLORGRADE_V	ld	(hl),BACK_ATTR + 2
+		ldir
+		exx
+		push	af
+		push	hl
+		push	de
+		call	PLASMA2
+		pop	de
+		pop	hl
+		pop	af
+		inc	de
+		dec	a
+		push	af
+		push	hl
+		push	de
+		call	PLASMA2
+		ld	a,(COLORGRADE_V+1)
+		inc	a
+		cp	BACK_ATTR + 7
+		jr	z,COLORGRADE_X
+		ld	(COLORGRADE_V+1),a
+		pop	de
+		pop	hl
+		pop	af
+		inc	de
+		dec	a
+		jr	COLORGRADE
+COLORGRADE_X	pop	de
+		pop	hl
+		pop	af
+AWAITER		ld	a,1
+		or	a
+		ret	z
+		jr	AWAITER
 
 PLASMA_UPDATE	ld	hl,PLASMA_STATE
 		ld	de,PLASMA_OFFSET
@@ -139,6 +192,7 @@ PLASMA_UPDATE3	dec	a
 		jr	nz,PLASMA_UPDATE4
 		ld	de,(PLASMA_WAIT)
 		dec	de
+		dec	de
 		ld	(PLASMA_WAIT),de
 		ld	a,d
 		or	e
@@ -192,11 +246,6 @@ PLASMA_UPDATE5	dec	a
 		ret
 
 PLASMA_UPDATE6	dec	a
-		ret	nz
-		ld	a,(de)
-		inc	a
-		ld	(de),a
-		cp	35
 		ret	nz
 		inc	(hl)
 		ret
@@ -338,13 +387,56 @@ GEN_ZERO1	ld	(hl),0
 		djnz	GEN_ZERO1
 		ret
 
+BLIK_SHEDULER	di
+		ld	(.BACKSP+1),sp
+.SCNPTR		ld	sp,FINAL_BLIK
+		pop	bc
+		ld	a,b
+		or	c
+		jr	nz,.NEXT
+		ld	(AWAITER+1),a
+		inc	a
+		ld	(IMCALL),a
+		jr	.BACKSP
 
+.NEXT		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.BACKSP
+		pop	hl
+		ld	(.SCNPTR+1),sp
+		ld	a,l
+		call	xchg.bnk
+		ld	a,h
+		ld	(actborder),a
+		out	(254),a
+.BACKSP		ld	sp,0
+		ei
+		ret
+
+FINAL_BLIK	dw	5352
+		db	#18, 2
+		dw	5355
+		db	#10, 6
+		dw	5359
+		db	#18, 2
+		dw	5363
+		db	#10, 6
+		dw	5364
+		db	#18, 2
+		dw	5368
+		db	#10, 6
+		dw	0
+
+
+DEADCAT		incbin "deadcat.scr",0,6144
 BACKGROUND_ATTR	incbin "plasma.bg.scr",6144
 
 PLASMA_STATE	db	0
 PLASMA_OFFSET	db	35
 PLASMA_WAIT	dw	250
 PLASMA_HEIGHT	db	23
+
 
 		include "chunky.a80"
 
@@ -376,9 +468,9 @@ PLASMA_LAYER2
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
-		define PRESET.border 5
-		define PRESET.paper 0q055
-		define PRESET.waitfor 7392
+		define PRESET.border 6
+		define PRESET.paper 0q066
+		define PRESET.waitfor 4700
 		include "../kernel/kernel.micro.inc"
 		savesna "plasma2.sna",microkernel
 	opt pop

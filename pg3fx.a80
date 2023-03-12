@@ -33,7 +33,7 @@ fx_kitty:	incbin "hellokitty/final.pak"
 
 fx_lucyshow:	incbin "lucyshow/final.pak"
 .pg = _fxpage
-.sync = 5376
+.sync = 5370
 
 fx_simon_bank:	incbin "simon/bank.bin"
 .pg = _fxpage ; data transfer part
