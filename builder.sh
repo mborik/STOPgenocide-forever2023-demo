@@ -72,6 +72,10 @@ ASM bank.a80 -DisFX --lst=bank.lst
 ASM simon.a80 -DisFX --lst=simon.lst
 PAK final.bin final.pak
 
+cd ../plasma2
+ASM plasma2.a80 -DisFX --lst=plasma2.lst
+PAK final.bin final.pak
+
 # banks composition
 cd ..
 rm -f bank*

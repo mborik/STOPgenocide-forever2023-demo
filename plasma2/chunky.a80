@@ -1,0 +1,221 @@
+
+CHUNKY_BASE	equ	0E0h
+
+
+GEN_CHUNKS	ld	de,CHUNKS
+		ld	b,0
+GEN_CHUNKS1	ld	hl,CHUNK_MATRIX
+
+		ld	a,4
+GEN_CHUNKS2	ex	af,af'
+	dup 4
+		ld	a,(hl)
+		cp	b
+		rl	c
+		inc	hl
+	edup
+
+		ld	a,c
+		and	15
+		ld	(de),a
+		inc	de
+		ex	af,af'
+		dec	a
+		jr	nz,GEN_CHUNKS2
+
+		inc	b
+		bit	7,b
+		jr	z,GEN_CHUNKS1
+
+
+		ld	bc,0
+GEN_CHUNKS4	ld	a,b
+		call	GET_CHUNK_ADDR
+		ex	de,hl
+		ld	a,c
+		call	GET_CHUNK_ADDR
+		exx
+		ld	hl,CHUNK_COMBINED
+		ld	b,4
+GEN_CHUNKS3	exx
+		ld	a,(de)
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		inc	de
+		or	(hl)
+		inc	hl
+		exx
+		ld	(hl),a
+		inc	hl
+		djnz	GEN_CHUNKS3
+
+		exx
+
+		push	bc
+		ld	a,b
+		or	CHUNKY_BASE
+		ld	d,a
+		ld	a,c
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		ld	e,a
+		ld	hl,PUT_CHUNK
+		ld	bc,PUT_CHUNK_LEN
+		ldir
+		ex	de,hl
+		or	a
+		ld	bc,PUT_CHUNK_LEN-2
+		sbc	hl,bc
+		ld	de,CHUNK_COMBINED
+		ex	de,hl
+		ldi
+		inc	de
+		inc	de
+		ldi
+		inc	de
+		inc	de
+		ldi
+		inc	de
+		inc	de
+		ldi
+		pop	bc
+
+		ld	a,c
+		inc	a
+		and	15
+		ld	c,a
+		jr	nz,GEN_CHUNKS4
+		inc	b
+		ld	a,b
+		cp	16
+		jr	nz,GEN_CHUNKS4
+
+		ld	hl,CHUNKY_VRAM
+		ld	de,40C0h
+		ld	b,36
+GEN_CHUNKS5	ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+		call	DOWNDE4
+		djnz	GEN_CHUNKS5
+		ld	b,36
+		xor	a
+GEN_CHUNKS6	ld	(hl),a
+		inc	hl
+		ld	(hl),a
+		inc	hl
+		djnz	GEN_CHUNKS6
+		ret
+
+;down 4 pixels
+DOWNDE4		ld	a,d
+		add	a,4
+		ld	d,a
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+;input = a (0 - 15)
+;output = de
+GET_CHUNK_ADDR	add	a,a
+		add	a,a
+		add	a,CHUNKS%256
+		ld	e,a
+		ld	a,CHUNKS/256
+		adc	a,0
+		ld	d,a
+		ret
+
+
+
+PUT_CHUNK	ld	a,h	;  4
+		ld	(hl),0	; 10
+		inc	h	;  4
+		ld	(hl),0	; 10
+		inc	h	;  4
+		ld	(hl),0	; 10
+		inc	h	;  4
+		ld	(hl),0	; 10
+		ld	h,a	;  4
+		inc	l	;  4
+		ret		; 10
+				; 74
+
+PUT_CHUNK_LEN	equ	$-PUT_CHUNK
+
+;PUT_NL		ld	a,l
+;		sub	32
+;		ld	l,a
+;		ld	a,h
+;		add	a,4
+;		ld	h,a
+;		and	7
+;		ret	nz
+;		ld	a,h
+;		sub	8
+;		ld	h,a
+;		ld	a,l
+;		add	a,32
+;		ld	l,a
+;		ret
+PUT_NL		ex	de,hl
+		ld	e,(hl)
+		inc	hl
+		ld	d,(hl)
+		inc	hl
+		ex	de,hl
+		ret
+
+
+VIEW_CHUNKS	di
+		ld	(END_CHUNKS+1),sp
+		ld	sp,CHUNKY_BUFF
+
+		ld	a,(PLASMA_OFFSET)
+		add	a,a
+		ld	e,a
+		ld	d,0
+		ld	hl,CHUNKY_VRAM
+		add	hl,de
+
+		ld	e,(hl)
+		inc	hl
+		ld	d,(hl)
+		inc	hl
+		ex	de,hl
+		ret
+
+
+END_CHUNKS	ld	sp,0
+		ei
+		ret
+
+
+
+
+CHUNK_MATRIX	db	 0,  8,  2, 10
+		db	12,  4, 14,  6
+		db	 3, 11,  1,  9
+		db	15,  7, 13,  5
+
+CHUNKS		ds	4*16
+
+		align	256
+CHUNKY_VRAM
+CHUNK_COMBINED	ds	4
+		ds	(48+48)*2-4	;reuse of CHUNK_COMBINED
+
+; zobrazujeme len 1/3
+CHUNKY_BUFF	ds	25*(64+2)+2

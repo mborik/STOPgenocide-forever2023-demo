@@ -158,6 +158,10 @@ fxtable:
 		dw	fx_simon
 		dw	fx_simon.sync
 
+		db	fx_plasma2.pg
+		dw	fx_plasma2
+		dw	fx_plasma2.sync
+
 		db	0
 
 
@@ -265,9 +269,9 @@ im2vector = ((high $) + 1) << 8
 		ld	a,(hl)
 		or	a
 		jr	z,.end
-		inc	l
+		inc	hl
 		ld	e,(hl)
-		inc	l
+		inc	hl
 		ld	d,(hl)
 		push	hl
 		ex	de,hl
@@ -286,11 +290,11 @@ im2vector = ((high $) + 1) << 8
 		pop	af
 		call	xchg.bnk
 		pop	hl
-		inc	l
+		inc	hl
 		ld	e,(hl)
-		inc	l
+		inc	hl
 		ld	d,(hl)
-		inc	l
+		inc	hl
 		ld	(.run+1),hl
 		call	RUNZONE
 		jr	.run

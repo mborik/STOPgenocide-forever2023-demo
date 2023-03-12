@@ -73,24 +73,18 @@ ending		pop	hl
 		ld	e,l
 		inc	e
 		ld	bc,#001F
-		ld	(hl),0q177
+		ld	(hl),0q055
 		ldir
 		ex	de,hl
 		ld	(ending.ptr+1),hl
 		ei
 		halt
 		halt
-		ld	bc,#5AE0
-		xor	a
-		sbc	hl,bc
-		jr	c,.loop
-		inc	de
-		ld	h,d
-		ld	l,e
-		inc	e
-		ld	bc,#001F
-		ld	(hl),0q077
-		ldir
+		ld	a,h
+		cp	#5B
+		jr	nz,.loop
+		ld	a,5
+		ld	(actborder),a
 		ret
 
 followscene	ld	a,1

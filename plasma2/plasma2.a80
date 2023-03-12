@@ -1,0 +1,385 @@
+	device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'plasma2'"
+	endif
+
+		include "../kernel/constants.inc"
+
+@DEBUG = 0
+
+WAIT_VAL	equ	64		;cas hlavnej slucky efektu
+BACK_ATTR	equ	0q050		;farba ktorou sa ciary zmazu
+LINE_ATTR	equ	BACK_ATTR | 1	;farba ciar nad/pod efektom
+
+;GEN_CHUNKS vygeneruje 4K chunkovych rutin na adresy
+;E000 - EFFF. Offset sa da zmenit pomocou CHUNKY_BASE v
+;subore chunky.a80, ale musi zostat v tvare X0h
+
+;inak si efekt vygeneruje 2 predlohy na adresy
+;PLASMA_LAYER1 (cca. 1.5K) a PLASMA_LAYER2 (cca. 3K)
+;a CHUNKY_BUFF este okupuje 1.6K
+
+;okolo riadka 344 je volanie VIEW_CHUNKS
+;toto musi byt volane hned po prichode prerusenia, pretoze
+;naraba so zasobnikom a preto zakazuje prerusenie
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+
+start		ld	a,#10
+		call	xchg.bnk
+		ld	hl,#4000
+		ld	de,#4001
+		ld	bc,#17FF
+		ld	(hl),l
+		ldir
+		ld	hl,BACKGROUND_ATTR
+		ld	bc,#0300
+		ldir
+
+		call	GEN_CHUNKS
+		call	GEN_PLASMA
+
+PLASMA		ld	hl,PLASMA_LAYER1
+		ld	de,PLASMA_LAYER2
+;		ld	bc,PLASMA_LAYER3+64
+		ld	a,64
+PLASMA_0	push	af
+		push	hl
+		push	de
+;		push	bc
+PLASMA_CALL	call	PLASMA2
+		call	PLASMA_UPDATE
+;		pop	bc
+		pop	de
+		pop	hl
+		pop	af
+		inc	de
+;		dec	bc
+		dec	a
+		jr	nz,PLASMA_0
+		ld	a,(PLASMA_STATE)
+		cp	7
+		jr	nz,PLASMA
+		ret
+
+PLASMA_UPDATE	ld	hl,PLASMA_STATE
+		ld	de,PLASMA_OFFSET
+		ld	a,(hl)
+		or	a
+		jr	nz,PLASMA_UPDATE1
+		ld	a,(de)
+		dec	a
+		ld	(de),a
+		ret	nz
+		xor	a
+		ld	(PLASMA_WAIT),a
+		inc	(hl)
+		ret
+PLASMA_UPDATE1	dec	a
+		jr	nz,PLASMA_UPDATE2
+		ld	a,(PLASMA_WAIT)
+		or	a
+		jr	nz,PLASMA_UPDATE1_1
+		ld	hl,22528+5*32
+		ld	de,22528+5*32+1
+		ld	bc,31
+		ld	(hl),LINE_ATTR
+		ldir
+PLASMA_UPDATE1_1
+		inc	a
+		ld	(PLASMA_WAIT),a
+		ld	e,a
+		exx
+		ld	hl,44A0h
+		add	a,l
+		ld	l,a
+		ld	(hl),255
+		exx
+		ld	a,e
+		cp	30
+		ret	nz
+		xor	a
+		ld	(PLASMA_WAIT),a
+		inc	(hl)
+		ret
+PLASMA_UPDATE2	dec	a
+		jr	nz,PLASMA_UPDATE3
+
+		ld	a,(PLASMA_WAIT)
+		or	a
+		jr	nz,PLASMA_UPDATE2_1
+		ld	hl,22528+18*32
+		ld	de,22528+18*32+1
+		ld	bc,31
+		ld	(hl),LINE_ATTR
+		ldir
+PLASMA_UPDATE2_1
+		inc	a
+		ld	(PLASMA_WAIT),a
+		ld	e,a
+		exx
+		ld	hl,5440h+31
+		neg
+		add	a,l
+		ld	l,a
+		ld	(hl),255
+		exx
+		ld	a,e
+		cp	30
+		ret	nz
+		ld	de,WAIT_VAL
+		ld	(PLASMA_WAIT),de
+		inc	(hl)
+		ret
+
+PLASMA_UPDATE3	dec	a
+		jr	nz,PLASMA_UPDATE4
+		ld	de,(PLASMA_WAIT)
+		dec	de
+		ld	(PLASMA_WAIT),de
+		ld	a,d
+		or	e
+		ret	nz
+		inc	(hl)
+		ret
+PLASMA_UPDATE4	dec	a
+		jr	nz,PLASMA_UPDATE5
+
+		ld	a,(PLASMA_WAIT)
+		inc	a
+		ld	(PLASMA_WAIT),a
+		ld	e,a
+		exx
+		ld	hl,5440h
+		add	a,l
+		ld	l,a
+		ld	(hl),0
+		exx
+		ld	a,e
+		cp	30
+		ret	nz
+		inc	(hl)
+		ld	hl,22528+18*32
+		ld	de,22528+18*32+1
+		ld	bc,31
+		ld	(hl),BACK_ATTR
+		ldir
+		ret
+PLASMA_UPDATE5	dec	a
+		jr	nz,PLASMA_UPDATE6
+		ld	a,(PLASMA_WAIT)
+		dec	a
+		ld	(PLASMA_WAIT),a
+		ld	e,a
+		exx
+		ld	hl,44A0h+1
+		add	a,l
+		ld	l,a
+		ld	(hl),0
+		exx
+		ld	a,e
+		or	a
+		ret	nz
+		inc	(hl)
+		ld	hl,22528+5*32
+		ld	de,22528+5*32+1
+		ld	bc,31
+		ld	(hl),BACK_ATTR
+		ldir
+		ret
+
+PLASMA_UPDATE6	dec	a
+		ret	nz
+		ld	a,(de)
+		inc	a
+		ld	(de),a
+		cp	35
+		ret	nz
+		inc	(hl)
+		ret
+
+PLASMA2		ld	bc,CHUNKY_BUFF+64+2
+		exx
+		ld	a,(PLASMA_HEIGHT)
+		ld	b,a
+PLASMA2_2	exx
+		ld	a,32
+PLASMA2_1	ex	af,af'
+
+		ld	a,(de)
+		add	a,(hl)
+
+		;add	a,a
+		;add	a,a
+		;add	a,a
+		;add	a,a
+		and	0F0h
+		ld	(bc),a
+
+		inc	hl
+		inc	de
+		inc	bc
+
+		ld	a,(de)
+		add	a,(hl)
+		rra
+		rra
+		rra
+		rra
+		and	0Fh
+		or	CHUNKY_BASE
+		ld	(bc),a
+
+		inc	hl
+		inc	de
+		inc	bc
+		ex	af,af'
+		dec	a
+		jr	nz,PLASMA2_1
+
+		inc	bc
+		inc	bc
+
+		ld	a,e
+		add	a,64
+		ld	e,a
+		ld	a,d
+		adc	a,0
+		ld	d,a
+
+		exx
+		djnz	PLASMA2_2
+		exx
+
+		ei
+		halt
+		call	VIEW_CHUNKS
+		ret
+
+
+GEN_PLASMA	ld	hl,PLASMA_LAYER1+24
+		ld	de,PLASMA_LAYER1+25
+
+		ld	b,24
+GEN_PLASMA1_1	ld	a,(hl)
+		ld	(de),a
+		dec	hl
+		inc	de
+		djnz	GEN_PLASMA1_1
+		ld	b,64-48+1
+		ld	a,60
+GEN_PLASMA1_2	ld	(de),a
+		inc	de
+		djnz	GEN_PLASMA1_2
+
+		ld	hl,PLASMA_LAYER1
+		ld	de,PLASMA_LAYER1+64+1
+		ld	bc,23*65
+		ldir
+
+		ld	hl,PLASMA_LAYER2
+		ld	d,SIN_TABLE/256
+		ld	c,23+1
+GEN_PLASMA2_1	ld	b,128
+
+GEN_PLASMA2_2	ld	a,b
+		add	a,a
+		add	a,a
+		ld	e,a
+		ld	a,(de)
+		add	a,a
+		ld	e,a
+		ld	a,c
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,c
+		add	a,c
+		add	a,e
+		ld	e,a
+		ld	a,(de)
+		ld	(hl),a
+		inc	hl
+		djnz	GEN_PLASMA2_2
+
+		dec	c
+		jr	nz,GEN_PLASMA2_1
+
+
+		ld	hl,CHUNKY_BUFF
+		call	GEN_ZERO
+		ld	b,24
+GEN_BUFF2	ld	(hl),low PUT_NL
+		inc	hl
+		ld	(hl),high PUT_NL
+		inc	hl
+		ld	de,64
+		add	hl,de
+		djnz	GEN_BUFF2
+		ld	de,-64
+		add	hl,de
+		call	GEN_ZERO
+		ld	(hl),low END_CHUNKS
+		inc	hl
+		ld	(hl),high END_CHUNKS
+
+		ret
+
+GEN_ZERO	ld	b,32
+GEN_ZERO1	ld	(hl),0
+		inc	hl
+		ld	(hl),CHUNKY_BASE
+		inc	hl
+		djnz	GEN_ZERO1
+		ret
+
+
+BACKGROUND_ATTR	incbin "plasma.bg.scr",6144
+
+PLASMA_STATE	db	0
+PLASMA_OFFSET	db	35
+PLASMA_WAIT	dw	250
+PLASMA_HEIGHT	db	23
+
+		include "chunky.a80"
+
+		align   256
+SIN_TABLE
+    lua allpass
+        for i = 0, 255, 1 do
+            sj.add_byte(math.floor(30.0 + math.sin(math.pi * i / 128.0) * 29.5))
+        end
+    endlua
+
+
+PLASMA_LAYER1
+		db	60, 57, 55, 52, 50, 47
+		db	45, 42, 40, 37, 35, 32
+		db	30, 27, 25, 22, 20, 17
+		db	15, 12, 10, 7, 5, 2
+
+PLASMA_LAYER1_E
+		ds	64-24
+		ds	64*23	;1024
+
+PLASMA_LAYER2
+		ds	128*23
+
+
+		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		define PRESET.border 5
+		define PRESET.paper 0q055
+		define PRESET.waitfor 7392
+		include "../kernel/kernel.micro.inc"
+		savesna "plasma2.sna",microkernel
+	opt pop
+	endif

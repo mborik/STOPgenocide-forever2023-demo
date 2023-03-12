@@ -14,6 +14,10 @@ fx_simon:	incbin "simon/final.pak"
 .pg = _fxpage
 .sync = 6523
 
+fx_plasma2:	incbin "plasma2/final.pak"
+.pg = _fxpage
+.sync = 7392
+
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
 ;
@@ -48,3 +52,7 @@ fx_simon:	incbin "simon/final.pak"
 		export fx_simon
 		export fx_simon.pg
 		export fx_simon.sync
+
+		export fx_plasma2
+		export fx_plasma2.pg
+		export fx_plasma2.sync
