@@ -9,23 +9,48 @@
 		include "../kernel/constants.inc"
 
 ;;-----------------------------------------------------------------------------
-	macro border n
-	  if DEBUG
-	    if n > 0
-		ld	a,n
-	    else
-		xor	a
-	    endif
-		out	(254),a
-	  endif
-	endm
+;; Busy soft ;; 02.03.2023 - 10.03.2023 ;; Zvisly twister pre odpadkovy kos ;;
 
-;;-----------------------------------------------------------------------------
+screen = #C000		;; Adresa obrazovky pre graficke rutinky
+
+;; Poloha mazaneho okna
+clsadd = #000D		;; Offset videoram adresy pre pravy horny roh mazaneho okna
+clslin = #58		;; Pocet mazanych pixelovych riadokov
+clspus = 5		;; Sirka mazaneho okna v PUSHoch
+
+;; Poloha vykreslovania twisteru
+posxxx = #18		;; X laveho horneho rohu twistera
+posyyy = #00		;; Y laveho horneho rohu twistera
+sizeyy = #58		;; Vyska twistera v pixeloch
+
+;; Scenar efektu - tri casti:
+;;
+;;  Objavenie twistu ... sizeyy pedesiatin
+;; Beh celeho twistu ... timrun pedesiatin
+;;  Zmiznutie twistu ... sizeyy pedesiatin
+;;
+;; Celkovy cas behu efektu: timrun + 2*sizeyy
+
+timrun = 500		;; Pocet pedesiatin chodu twistera v plnej sirke
+
+
 		org	RUNZONE
 
 start
-		ei
+		call	makidx		;; Konverzia a zindexovanie dat
+		call	maksin		;; Vytvorenie tabulky pre sinus
+		call	makbod		;; Vytvorenie tabulky pre adresaciu videoramky
+
+		call	rutint		;; Prve zavolanie matematiky pre inicializaciu polohy
+
+		ld	bc,7442
+.waitforstart	ei
 		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforstart
+
 		ld	a,#1D
 		call	xchg.vram + 2
 
@@ -61,7 +86,7 @@ start
 		ldir
 		call	xchg.vram
 
-		ld	bc,2960
+		ld	bc,7555
 .waitforlid	ei
 		halt
 		ld	hl,(FRAMES)
@@ -94,34 +119,447 @@ start
 		ld	de,#4000
 		ld	bc,#1B00
 		ldir
-		ld	a,#10
-		call	xchg.bnk
 
-		ld	bc,3450
-.waitforend	ei
+		ld	a,#57
+		ld	(vid128+1),a
+		out	(#fd),a
+
+		ld	a,#CD
+		ld	hl,rutint
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+
+;		call	slucka
+
+; 		ld	bc,8592
+; .waitforend	ei
+; 		halt
+; 		push	bc
+; 		call	followscene
+; 		pop	bc
+; 		ld	hl,(FRAMES)
+; 		xor	a
+; 		sbc	hl,bc
+; 		jr	c,.waitforend
+; 		ld	a,#17
+; 		call	xchg.bnk
+; 		ld	hl,#C000
+; 		ld	de,#C001
+; 		ld	bc,#1800
+; 		ld	(hl),l
+; 		ldir
+; 		ld	bc,#02FF
+; 		ld	(hl),0q000
+; 		ldir
+; 		ld	hl,#C000
+; 		ld	de,#4000
+; 		ld	bc,#1B00
+; 		ldir
+;		ret
+
+slucka		ei
 		halt
-		push	bc
-		call	followscene
-		pop	bc
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforend
-		ld	a,#17
-		call	xchg.bnk
-		ld	hl,#C000
-		ld	de,#C001
-		ld	bc,#1800
-		ld	(hl),l
-		ldir
-		ld	bc,#02FF
-		ld	(hl),0q070
-		ldir
-		ld	hl,#C000
-		ld	de,#4000
-		ld	bc,#1B00
-		ldir
+		call	vidxch		;; Prepnutie aktivnej videoramky
+		call	zmaz		;; Zmazanie stareho twistera
+
+toc1		ld	bc,#5555
+toc2		ld	de,#5555
+toc3		ld	hl,#5555
+
+		exx
+
+modsiz		ld	a,sizeyy*0	;; Sirka twistera v pixeloch
+		or	a
+		jr	z,koniec
+		ld	xh,a
+
+modpos		ld	hl,tabloy + posyyy
+		ld	c,(hl)
+		dec	h
+		ld	b,(hl)		;; BC = bazova adresa pixeloveho riadku
+
+pos1		ld	l,#00		;; Offset v ramci obrazku
+
+znovu		exx			;; Slucka pre pixelove stlpce
+		ld	a,(bc)
+		ld	xl,a		;; XL = vodorovny shift (vlnenie)
+		inc	c
+		inc	c
+		ld	a,(de)		;; Jedna sinusovka
+		add	a,(hl)		;; Druha sinusovka
+		dec	e		;; (ich sucet urci uhol natocenia)
+		dec	l
+		exx
+
+		rrca
+		rrca
+		or	high tabidx
+		ld	h,a		;; HL = smernik do indexovej tabulky
+
+vid128		ld	a,#57
+		and	#58
+		out	(#fd),a
+
+		ld	e,(hl)		;; Precitanie adresy z indexovej tabulky
+		inc	l		;; (adresa = zaciatok sekvencie Y suradnic)
+		ld	d,(hl)
+		inc	l
+
+		ld	a,(vid128+1)
+		ld	(act128page),a
+		out	(#fd),a
+
+		push	hl
+		jr	pixelread
+
+pixel		add	a,xl		;; Pripocitanie shiftu pre vlnenie
+		ld	l,a
+		ld	h,high tablox	;; Nakreslenie pixelu
+		ld	a,(hl)		;; A = Offset pre X
+		inc	h
+		ld	h,(hl)		;; H = Pixel maska
+		or	c
+		ld	l,a
+		ld	a,h
+		ld	h,b
+		or	(hl)
+		ld	(hl),a
+
+pixelread	ld	a,(de)		;; A = Y suradnica pixelu
+		inc	de
+		or	a		;; (nula znamena koniec sekvencie Y suradnic)
+		jr	nz,pixel
+
+		pop	hl
+
+		inc	b		;; Posun pixelovej masky a offsetu adresy o 1 pixel vpravo
+		ld	a,b
+		and	#07
+		jr	nz,move
+		ld	a,#20
+		add	a,c
+		ld	c,a
+		jr	c,move
+		ld	a,#F8
+		add	a,b
+		ld	b,a
+
+move		dec	xh		;; Opakuj pre vsetky pixelove sltpce
+		jr	nz,znovu
+		jp	slucka
+
+
+;; Vymena obrazoviek
+
+vidxch		ld	hl,vid128+1	;; Vymena videoramiek pre animaciu
+		ld	a,(hl)
+		xor	#0A
+		ld	(hl),a
+		ld	(act128page),a
+		out	(#fd),a
 		ret
+
+;; Upratanie obrazovky na koniec
+
+koniec		call	vidxch
+		ld	a,#01
+		ld	(IMCALL),a
+
+;; Zmazanie stareho efektu
+;;
+;;  clsadd = offset videoram adresy pre pravy horny roh mazaneho okna
+;;  clslin = pocet mazanych pixelovych riadokov
+;;  clspus = sirka mazaneho okna v PUSHoch
+
+zmaz		ld	b,clslin
+		ld	de,#0000	;; + #0180 ;; pre zviditelnenie mazanej oblasti
+		ld	hl,screen+clsadd
+		ld	(zmzstk+1),sp
+		di
+zmzlop
+;		inc	hl		;; Ak mazana oblast konci uplne vpravo
+		ld	sp,hl		;; treba odkomentovat tieto inc/dec hl
+;		dec	hl		;; aby downhl mohlo spravne pracovat
+	dup clspus
+		push	de
+	edup
+		inc	h		;; downhl
+		ld	a,h
+		and	#07
+		jr	nz,zmznxt
+		ld	a,#20
+		add	a,l
+		ld	l,a
+		jr	c,zmznxt
+		ld	a,#F8
+		add	a,h
+		ld	h,a
+zmznxt		djnz	zmzlop
+zmzstk		ld	sp,#5555
+		ei
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Matematika volana z prerusenia
+
+rutint
+
+;; Riadenie rotacii twistera
+
+		ld	de,#0277	;; Vlnenie sa (vodorovny shift)
+mvuho0		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho0+1),hl
+		ld	l,h
+		ld	h,high tabsht
+		ld	(toc1+1),hl
+
+		ld	de,#0219	;; "Dvojoperatorove" krutenie
+mvuho1		ld	hl,#5555	;; okolo vlastnej osi
+		add	hl,de
+		ld	(mvuho1+1),hl
+		ld	b,h
+
+		ld	de,#0333
+mvuho2		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho2+1),hl
+
+		ld	d,high tabsnh
+		ld	e,h
+		ld	l,b
+		ld	h,d
+
+		ld	(toc2+1),hl	;; Pointer 1 do sinus tabulky
+		ld	(toc3+1),de	;; Pointer 2 do sinus tabulky
+
+;; Riadenie zvisleho posunu kresby v twisteri
+
+mvpic0		ld	a,#55		;; Jednosmerna zlozka
+		add	a,#FD		;; pohybu smerom dole
+		ld	(mvpic0+1),a
+
+		ld	de,#0133	;; "Dvojoperatorovy" pohyb sem-tam
+mvpic1		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic1+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+
+		ld	de,#0077
+mvpic2		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic2+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+		and	#FE
+		ld	(pos1+1),a
+
+;; Objavovanie napisov vpravo
+
+		ld	a,(vid128+1)	;; Spristupnenie oboch videoramiek
+		or	#07
+		out	(#fd),a
+
+		call	followscene	;; Atributovy scenar
+
+;; Scenar - nabeh, beh a dobeh twistera
+
+scenar		ld	hl,modpos+1	;; Y-suradnica zaciatku twistera
+		ld	de,modsiz+1	;; Vyska twistera
+sccnt		ld	bc,timrun
+		ld	a,b
+		or	c
+		jr	z,sczmaz	;; Ak je pocitadlo casu nulove, skok na zamazavanie
+
+		ld	a,(de)		;; Ak je vyska uz pozadovana, skok na odpocitavanie pocitadla
+		cp	sizeyy
+		jr	nc,scbeh
+
+scukaz		inc	a		;; Ak vyska este nie je konecna, zvysime ju o 1
+		ld	(de),a
+		ret
+
+scbeh		dec	bc		;; Odpocitavanie pocitadla casu behu
+		ld	(sccnt+1),bc
+		ret
+
+sczmaz		ld	a,(de)		;; Dobeh: Ak je vyska uz nulova tak nic
+		or	a
+		ret	z
+		dec	a		;; Inak ju znizime o 1
+		ld	(de),a
+		inc	(hl)		;; a zaciatocne Y zvysime o 1
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Priprava dat pre twister
+;;
+;;  - presun na adresu urcenia (1.cast: #6000-#7F0x 2.cast: codend-kolko treba)
+;;  - offsetnutie podla zadanej Y-polohy na obrazovke
+;;  - zindexovanie pre rychly priamy pristup ku ktorejkolvek casti
+
+makidx		ld	hl,tabidx	;; Vytvarana indexova tabulka
+		ld	de,patterns	;; Zdrojove data pre twister
+		ld	bc,#6000	;; Cielove data pre twister
+
+mkiset		res	7,l
+		ld	(hl),c
+		inc	l
+		ld	(hl),b
+		dec	l
+		set	7,l
+		ld	(hl),c
+		inc	l
+		ld	(hl),b
+		inc	hl
+
+mkisea		ld	a,(de)
+		inc	de
+		or	a
+		jr	z,mkinul
+		cpl
+		add	a,#78 + posxxx
+		ld	(bc),a
+		inc	bc
+		jr	mkisea
+
+mkinul		ld	(bc),a
+mkinxt		inc	bc
+
+		bit	7,h
+		jr	z,mkiend
+
+		ld	a,b
+		cp	#7F
+		jr	nz,mkiset
+		ld	bc,codend
+		jr	mkiset
+
+mkiend		xor	a
+		ld	(bc),a
+		inc	bc
+		ld	(bc),a
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+maksin		ld	hl,sintab		;; Vytvorenie sinus tabuliek
+		ld	de,tabsyn
+		ld	bc,tabsyn+#80
+mksin1		ld	a,(hl)
+		ld	(de),a
+		ld	(bc),a
+		inc	hl
+		inc	e
+		inc	c
+		bit	6,e
+		jr	z,mksin1
+mksin2		ld	a,(hl)
+		ld	(de),a
+		ld	(bc),a
+		dec	hl
+		inc	e
+		inc	c
+		jr	nz,mksin2
+
+		inc	b
+		ld	e,c
+		ex	de,hl
+		ld	de,tabsnh
+
+mksin3		ld	a,c
+		add	a,c
+		sbc	a,a
+		xor	(hl)
+		rra
+		bit	7,c
+		jr	nz,mksin4
+		xor	#80
+mksin4		ld	(bc),a
+		or	a
+		rra
+		ld	(de),a
+		inc	d
+		rrca
+		rrca
+		rrca
+		and	#0F
+		ld	(de),a
+		dec	d
+		inc	l
+		inc	e
+		inc	c
+		jr	nz,mksin3
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+makbod		ld	de,screen	;; Vytvorenie tabulky adries bodov
+		ld	l,e		;; pre rychly prepocet suradnic pre plot
+		ld	b,#80
+mkb111		ld	h,high tabhi2
+		ld	a,d
+		and	#07
+		ld	a,d
+		jr	nz,mkb444
+		inc	a
+mkb444		ld	(hl),a
+		inc	h
+		ld	(hl),d		;; Vyssi bajt adresy pre Y
+		inc	h
+		ld	(hl),e		;; Nizsi bajt adresy pre Y
+		inc	h
+		inc	d
+		ld	a,d
+		and	#07
+		jr	nz,mkb333
+		ld	a,#20
+		add	a,e
+		ld	e,a
+		jr	c,mkb333
+		ld	a,#F8
+		add	a,d
+		ld	d,a
+mkb333		ld	a,d			;; Ak Y>191
+		cp	high screen + #18	;; tak adresa riadku bude #1000
+		jr	c,mkb222		;; (aby to nebolo vidno)
+		ld	d,#10
+mkb222		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#1F
+		ld	(hl),a		;; Offset #00-#1F adresy pre X
+		inc	h
+		ld	(hl),b		;; Maska pixela v bajte pre X
+		inc	h
+		ld	a,b
+		add	a,a
+		jr	nc,mkb555
+		ld	a,#C0
+mkb555		or	b
+		ld	(hl),a		;; Maska dvojiteho pixela
+		rrc	b
+		inc	l
+		jr	nz,mkb111
+		ret
+
+sintab		db	#00,#06,#0D,#13,#19,#1F,#25,#2C
+		db	#32,#38,#3E,#44,#4A,#50,#56,#5C
+		db	#62,#67,#6D,#73,#78,#7E,#83,#88
+		db	#8E,#93,#98,#9D,#A2,#A7,#AB,#B0
+		db	#B4,#B9,#BD,#C1,#C5,#C9,#CD,#D0
+		db	#D4,#D7,#DB,#DE,#E1,#E4,#E7,#E9
+		db	#EC,#EE,#F0,#F2,#F4,#F6,#F7,#F9
+		db	#FA,#FB,#FC,#FD,#FE,#FE,#FF,#FF
+		db	#FF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 waitf:		ei
 		halt
@@ -173,6 +611,9 @@ followscene:	ld	ix,scenario
 		ld	c,a
 		ex	af,af'
 .fillrow	ld	(hl),a
+		set	7,h		;; Zmena:
+		ld	(hl),a		;; Zapis atributu
+		res	7,h		;; do oboch obrazoviek
 		inc	hl
 		dec	c
 		jr	nz,.fillrow
@@ -203,33 +644,34 @@ followscene:	ld	ix,scenario
 	endm
 
 scenario:
-		hilite	3072, 15,  4, 16, 2, 0q174, 0q177
-		hilite	3077, 15,  6,  1, 1, 0q174, 0q177
+	opt push listoff
+		hilite	7725, 15,  5, 16, 2, 0q174, 0q177
+		hilite	7733, 16,  7,  1, 1, 0q174, 0q177
 
-		hilite	3165, 16,  6, 15, 3, 0q170, 0q177
-		hilite	3177, 15,  9, 16, 2, 0q170, 0q177
-		hilite	3201, 22, 11,  9, 3, 0q170, 0q177
-		hilite	3213, 16, 14, 15, 2, 0q170, 0q177
+		hilite	7785, 16,  8, 15, 3, 0q170, 0q177
+		hilite	7797, 16, 12, 15, 2, 0q170, 0q177
+		hilite	7804, 16, 15, 15, 3, 0q170, 0q177
+		hilite	7816, 16, 19, 15, 2, 0q170, 0q177
 
-		dw	3415
+		dw	8556
 		region	0,  0, 0, 1, 0q077 ; clr
 		db	0
-		dw	3427
+		dw	8563
 		region	0,  4, 0, 1, 0q077 ; clr
 		db	0
-		dw	3432
+		dw	8568
 		region	0,  8, 0, 1, 0q077 ; clr
 		db	0
-		dw	3439
+		dw	8575
 		region	0, 12, 0, 1, 0q077 ; clr
 		db	0
-		dw	3441
+		dw	8580
 		region	0, 16, 0, 1, 0q077 ; clr
 		db	0
-		dw	3450
+		dw	8587
 		region	0, 20, 0, 1, 0q077 ; clr
 		db	0
-
+	opt pop
 		dw	0
 
 
@@ -245,13 +687,40 @@ lid
 .p3		incbin "gfx/13.pak"
 	endmodule
 
+codend
+
+;; Predspracovane data pre hrany
+patterns	incbin	"patterns.bin"
+
 		savebin "final.bin",start,$-start
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		org	#B600	;; Tabulky a buffery
+tables
+tabsyn		ds	#0100	;; Sinus tabulka - absolutne hodnoty
+tabsin		ds	#0100	;; Sinus tabulka - 128-0-128-255-128
+tabsnh		ds	#0100	;; Sinus tabulka - zmensene hodnoty
+tabsht		ds	#0100	;; Sinus tabulka - este mensie hodnoty
+
+tabhi2		ds	#0100	;; Line: Vyssi bajt adresy pre Y pre pixely 2x2
+tabhiy		ds	#0100	;; Line: Vyssi bajt adresy pre Y
+tabloy		ds	#0100	;; Line: Nizsi bajt adresy pre Y
+tablox		ds	#0100	;; Line: Offset #00-#1F adresy pre X
+tabpix		ds	#0100	;; Line: Maska pixela v bajte pre X
+tabpx2		ds	#0100	;; Line: Maska pre pixel 2x2
+
+		org	#E000
+
+tabidx		ds	#2000	;; 8kB tabulka zindexovanych dat v banke 0
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
+	opt push listoff
 		define	PRESET.border 7
 		define	PRESET.paper 0q177
 		define	PRESET.waitfor 7395
 		include "../kernel/kernel.micro.inc"
 		savesna "recycle.sna",microkernel
+	opt pop
 	endif

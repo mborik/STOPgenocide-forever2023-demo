@@ -164,9 +164,9 @@ fxtable:
 		dw	fx_simon
 		dw	fx_simon.sync
 
-		db	fx_vodoshow.pg
-		dw	fx_vodoshow
-		dw	fx_vodoshow.sync
+;		db	fx_vodoshow.pg
+;		dw	fx_vodoshow
+;		dw	fx_vodoshow.sync
 
 		db	0
 

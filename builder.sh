@@ -42,11 +42,6 @@ cd ../grinder
 ASM grinder.a80 -DisFX --lst=grinder.lst
 PAK final.bin final.pak
 
-# cd ../recycle
-# . preparegfx.sh &> /dev/null
-# ASM recycle.a80 -DisFX --lst=recycle.lst
-# PAK final.bin final.pak
-
 cd ../plasma1
 ASM plasma1.a80 -DisFX --lst=plasma1.lst
 PAK final.bin final.pak
@@ -74,6 +69,11 @@ PAK final.bin final.pak
 
 cd ../plasma2
 ASM plasma2.a80 -DisFX --lst=plasma2.lst
+PAK final.bin final.pak
+
+cd ../recycle
+. preparegfx.sh &> /dev/null
+ASM recycle.a80 -DisFX --lst=recycle.lst
 PAK final.bin final.pak
 
 cd ../vodoshow
