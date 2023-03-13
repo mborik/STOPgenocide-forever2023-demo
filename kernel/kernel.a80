@@ -1,14 +1,10 @@
 		device	zxspectrum128
 
-numberOfBanks = 5
 		include "pg1fx.inc"
 		include "pg3fx.inc"
 		include "pg4fx.inc"
 		include "pg6fx.inc"
 		include "pg7fx.inc"
-
-		emptytap OUTPUT
-
 
 @page128	equ	#7FFD
 @act128page	equ	#5B5C
@@ -18,84 +14,8 @@ numberOfBanks = 5
 @basesp		equ	RUNZONE
 
 
-	module loader
-		display "Composing loader & kernel"
-
-		org	#7800
-begin = $
-
-unpackpage:	ld	hl,#51A1
-		ld	bc,((30 / numberOfBanks) << 8) | #FF
-.pgprog:	ld	(hl),c	; draw progress
-		inc	l
-		djnz	.pgprog
-		ld	(unpackpage+1),hl
-		di
-		ld	hl,#8000
-		ld	de,#C000
-		call	introzx0.depack
-		ei
-		ret
-
-fadeoutandrun:	ld	a,25
-.loop:		ei
-		halt
-		halt
-		ex	af,af'
-		call	attrhide
-		ex	af,af'
-		dec	a
-		jr	nz,.loop
-		ld	hl,kernelblock.src
-		ld	de,kernelblock.dest
-		ld	bc,kernelblock.length
-		ldir
-		jp	kernel
-
-introscr:	ld	hl,introscr.dat
-		ld	de,#4000
-
-	module introzx0
-depack
-	opt push listoff
-		include "dzx0_fast.a80"
-	opt pop
-	endmodule
-
-attrhide:	ld	hl,22528
-		ld	c,24
-.atthd2:	ld	b,32
-		push	bc
-.atthd3:	ld	a,(hl)
-		and	7
-		jr	z,.atthd4
-		dec	a
-.atthd4:	push	af
-		ld	a,(hl)
-		and	56
-		jr	z,.atthd5
-		ld	c,8
-		sub	c
-		ld	c,a
-		pop	af
-		or	c
-		jr	.atthd6
-.atthd5:	ld	a,(hl)
-		and	248
-		ld	c,a
-		pop	af
-		or	c
-.atthd6:	ld	(hl),a
-		inc	hl
-		djnz	.atthd3
-		pop	bc
-		dec	c
-		jr	nz,.atthd2
-		ret
-
-kernelblock.src
-		phase	#8000
-kernelblock.dest
+		org	#8000
+		output	"final.bin"
 
 @xchg.vram:	ld	a,#1D
 		xor	#0A
@@ -181,22 +101,16 @@ interrupt:	push	af		; zakladne osetrenie prerusenia
 
 im2vector = ((high $) + 1) << 8
 		display /D,(im2vector-$)," bytes free to IM2 vector"
-		block	(im2vector-$) + 257, 0
+		block	(im2vector-$), 0
+		block	257, high interrupt
 
 ;;-----------------------------------------------------------------------------
 
 @kernel:	di
 		ld	sp,basesp
-		ld	hl,im2vector
-		ld	a,h
+		ld	a,high im2vector
 		ld	i,a
 		im	2
-		ld	a,high interrupt
-.mkim2:		ld	(hl),a
-		inc	l
-		jr	nz,.mkim2
-		inc	h
-		ld	(hl),a
 ; init music
 		ld	a,MUSIC.page | #10
 		call	xchg.bnk
@@ -267,160 +181,10 @@ im2vector = ((high $) + 1) << 8
 		halt
 		jr	.end
 
-kernelblock.length = $ - kernelblock.dest
-
 		display /D,(RUNZONE-$)," bytes free after kernel"
-	dephase
+		block	(RUNZONE-$),0
 
-introscr.dat:	incbin "loading.pak"
-
-total = $-begin
-	endmodule
-
-
-		display "Composing BASIC"
-		include "sinclairBASIC.inc"
-
-		org	23755-17
-
-; BASIC header
-	tapout OUTPUT,0
-
-		db	0
-		db	C_STOP, "GENOCIDE "
-		dw	bas.total
-		dw	1 ; start line
-		dw	bas.total
-
-	tapend
-
-; BASIC block
-	tapout OUTPUT
-
-	module bas
-line1:		db	0, 1
-		dw	line1.len
-line1.cmds	; POKE VAL "23624",NOT PI:
-		db	C_POKE
-		VAL	23624, ','
-		db	C_NOT, C_PI, ':'
-		; POKE VAL "23693",NOT PI:
-		db	C_POKE
-		VAL	23693, ','
-		db	C_NOT, C_PI, ':'
-		; CLEAR VAL "x":
-		db	C_CLEAR
-		VAL	loader.begin - 1, ':'
-		; POKE VAL "23739",CODE "o":
-		db	C_POKE
-		VAL	23739, ','
-		db	C_CODE, '"o":'
-		; POKE VAL "23388",VAL "16":
-		db	C_POKE
-		VAL	23388, ','
-		VAL	16, ':'
-		; OUT VAL "32765",VAL "16"
-		db	C_OUT
-		VAL	32765, ','
-		VAL	16, ':'
-		; LOAD _"loader" CODE:
-		db	C_LOAD, ' "loader"', C_CODE, ':'
-		; RANDOMIZE USR VAL "x"
-		db	C_RANDOMIZE, C_USR
-		VAL	loader.introscr, EOL
-line1.len = $ - line1.cmds
-
-line2:		db	0, 2
-		dw	line2.len
-line2.cmds	; READ s
-		db	C_READ, 's:'
-		; POKE VAL "23388",s:
-		db	C_POKE
-		VAL	23388, ','
-		db	's:'
-		; OUT VAL "32765",s:
-		db	C_OUT
-		VAL	32765, ','
-		db	's:'
-		; LOAD _"page"+(STR$ s) CODE:
-		db	C_LOAD, ' "bank"+(', C_STRS, 's)', C_CODE, ':'
-		; RANDOMIZE USR VAL "x":
-		db	C_RANDOMIZE, C_USR
-		VAL	loader.unpackpage, ':'
-		; IF s <> VAL "23" THEN
-		db	C_IF, 's', C_NOTEQ
-		VAL	23, C_THEN
-		; GO TO VAL "2"
-		db	C_GOTO
-		VAL	2, EOL
-line2.len = $ - line2.cmds
-
-line3:		db	0, 3
-		dw	line3.len
-line3.cmds	; PAUSE VAL "42"
-		db	C_PAUSE
-		VAL	42, ":"
-		; RANDOMIZE USR VAL "x"
-		db	C_RANDOMIZE, C_USR
-		VAL	loader.fadeoutandrun, EOL
-line3.len = $ - line3.cmds
-
-line9:		db	0, 9
-		dw	line9.len
-line9.cmds	; DATA...
-		db	C_DATA
-		VAL	#11, ','
-		VAL	#13, ','
-		VAL	#14, ','
-		VAL	#16, ','
-		VAL	#17, EOL
-line9.len = $ - line9.cmds
-
-total = $ - line1
-	endmodule
-	tapend
-
-; loader block
-		display "Storing loader into output tape"
-		savetap OUTPUT, CODE, "loader", loader.begin, loader.total
-
-;;-----------------------------------------------------------------------------
-	macro putBank number?, filename?
-@__putBank_number = number?
-		lua allpass
-			_pl("putBank"..tostring(_c('__putBank_number')))
-		endlua
-
-		tapout OUTPUT,0
-			db	3 ;; BYTES
-		lua allpass
-			_pc("db 'bank"..tostring(_c('__putBank_number')).."    '")
-		endlua
-
-			dw	.filelength
-			dw	#8000 ;; block start address
-			dw	#8000
-		tapend
-
-		tapout OUTPUT
-			org #C000,(__putBank_number & 7)
-.filedata		incbin filename?
-.filelength = $-.filedata
-
-	if .filelength > #4000
-		display "Packed bank ",/D,(__putBank_number & 7)," is too long!"
-	endif
-		tapend
-	endm
-;;-----------------------------------------------------------------------------
-		display "Storing banks into output tape"
-
-		putBank #11,"../bank1.pak"
-		putBank #13,"../bank3.pak"
-		putBank #14,"../bank4.pak"
-		putBank #16,"../bank6.pak"
-		putBank #17,"../bank7.pak"
-
+		outend
 
 		export page128
 		export act128page

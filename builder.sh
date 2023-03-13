@@ -101,4 +101,6 @@ PAK bank7 bank7.pak
 
 cd kernel
 PAK loading.scr loading.pak
-ASM kernel.a80 -DOUTPUT="\"../build/${OUTPUT}\"" --lst=kernel.lst --exp=constants.inc
+ASM kernel.a80 --lst=kernel.lst --exp=constants.inc
+PAK final.bin final.pak
+ASM loader.a80 -DOUTPUT="\"../build/${OUTPUT}\"" --lst=loader.lst
