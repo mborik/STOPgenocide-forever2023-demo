@@ -1,7 +1,7 @@
 		device	zxspectrum128
 
 	ifdef isFX
-		display "Compiling 'recycle'"
+		display "Compiling 'rectwist'"
 	endif
 
 		include "../kernel/constants.inc"
@@ -29,7 +29,7 @@ sizeyy = #58		;; Vyska twistera v pixeloch
 ;;
 ;; Celkovy cas behu efektu: timrun + 2*sizeyy
 
-timrun = 480		;; Pocet pedesiatin chodu twistera v plnej sirke
+timrun = 460		;; Pocet pedesiatin chodu twistera v plnej sirke
 
 
 		org	#B600	;; Tabulky a buffery
@@ -54,12 +54,6 @@ tabidx		ds	#2000	;; 8kB tabulka zindexovanych dat v banke 0
 		org	RUNZONE
 
 start
-		ld	a,#57
-		ld	(vid128+1),a
-		and	#F8
-		ld	(act128page),a
-		out	(#fd),a
-
 		call	makidx		;; Konverzia a zindexovanie dat
 		call	maksin		;; Vytvorenie tabulky pre sinus
 		call	makbod		;; Vytvorenie tabulky pre adresaciu videoramky
@@ -547,32 +541,13 @@ followscene:	ld	ix,scenario
 
 scenario:
 	opt push listoff
-		hilite	7725, 15,  5, 16, 2, 0q174, 0q177
-		hilite	7733, 16,  7,  1, 1, 0q174, 0q177
+		hilite	7685, 15,  5, 16, 3, 0q174, 0q177
+		hilite	7725, 15,  5, 16, 3, 0q171, 0q176
 
-		hilite	7785, 16,  8, 15, 3, 0q170, 0q177
-		hilite	7797, 16, 12, 15, 2, 0q170, 0q177
-		hilite	7804, 16, 15, 15, 3, 0q170, 0q177
-		hilite	7816, 16, 19, 15, 2, 0q170, 0q177
-
-		dw	8556
-		region	0,  0, 0, 1, 0q077 ; clr
-		db	0
-		dw	8563
-		region	0,  4, 0, 1, 0q077 ; clr
-		db	0
-		dw	8568
-		region	0,  8, 0, 1, 0q077 ; clr
-		db	0
-		dw	8575
-		region	0, 12, 0, 1, 0q077 ; clr
-		db	0
-		dw	8580
-		region	0, 16, 0, 1, 0q077 ; clr
-		db	0
-		dw	8587
-		region	0, 20, 0, 1, 0q077 ; clr
-		db	0
+		hilite	7785, 16,  8, 15, 3, 0q171, 0q177
+		hilite	7797, 16, 12, 15, 2, 0q171, 0q177
+		hilite	7804, 16, 15, 15, 3, 0q171, 0q177
+		hilite	7816, 16, 19, 15, 2, 0q171, 0q177
 	opt pop
 		dw	0
 
@@ -600,6 +575,6 @@ patterns.length
 		page 7
 		org #C000
 		incbin "../recyclefall/gfx/13.scr"
-		savesna "recycle.sna",microkernel
+		savesna "rectwist.sna",microkernel
 	opt pop
 	endif

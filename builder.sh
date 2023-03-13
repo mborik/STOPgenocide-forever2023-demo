@@ -76,9 +76,10 @@ cd ../recyclefall
 ASM recyclefall.a80 -DisFX --lst=recyclefall.lst
 PAK final.bin final.pak
 
-cd ../vodoshow
-ASM vodoshow.a80 -DisFX --lst=vodoshow.lst
+cd ../rectwist
+ASM rectwist.a80 -DisFX --lst=rectwist.lst
 PAK final.bin final.pak
+ASM bank.a80 -DisFX --lst=bank.lst
 
 # banks composition
 cd ..

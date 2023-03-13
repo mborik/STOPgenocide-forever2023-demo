@@ -168,6 +168,10 @@ fxtable:
 		dw	fx_recyclefall
 		dw	fx_recyclefall.sync
 
+		db	fx_rectwist.pg + #80
+		dw	fx_rectwist
+		dw	fx_rectwist.length
+
 		db	0
 
 

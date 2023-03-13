@@ -14,6 +14,10 @@ fx_recyclefall:	incbin "recyclefall/final.pak"
 .pg = _fxpage
 .sync = 7395
 
+fx_rectwist:	incbin "rectwist/bank.bin"
+.pg = _fxpage ; data transfer part
+.length = $-fx_rectwist
+
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
 ;
@@ -48,3 +52,7 @@ fx_recyclefall:	incbin "recyclefall/final.pak"
 		export fx_recyclefall
 		export fx_recyclefall.pg
 		export fx_recyclefall.sync
+
+		export fx_rectwist
+		export fx_rectwist.pg
+		export fx_rectwist.length
