@@ -10,9 +10,9 @@ fx_plasma2:	incbin "plasma2/final.pak"
 .pg = _fxpage
 .sync = 4700
 
-fx_vodoshow:	incbin "vodoshow/final.pak"
+fx_recyclefall:	incbin "recyclefall/final.pak"
 .pg = _fxpage
-.sync = 8200
+.sync = 7395
 
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
@@ -45,6 +45,6 @@ fx_vodoshow:	incbin "vodoshow/final.pak"
 		export fx_plasma2.pg
 		export fx_plasma2.sync
 
-		export fx_vodoshow
-		export fx_vodoshow.pg
-		export fx_vodoshow.sync
+		export fx_recyclefall
+		export fx_recyclefall.pg
+		export fx_recyclefall.sync

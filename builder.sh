@@ -71,9 +71,9 @@ cd ../plasma2
 ASM plasma2.a80 -DisFX --lst=plasma2.lst
 PAK final.bin final.pak
 
-cd ../recycle
+cd ../recyclefall
 . preparegfx.sh &> /dev/null
-ASM recycle.a80 -DisFX --lst=recycle.lst
+ASM recyclefall.a80 -DisFX --lst=recyclefall.lst
 PAK final.bin final.pak
 
 cd ../vodoshow

@@ -1,0 +1,127 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'recyclefall'"
+	endif
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start
+		ld	bc,7442
+.waitforstart	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforstart
+
+		ld	a,#1D
+		call	xchg.vram + 2
+
+		ld	hl,gfx.fall.p1
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p2
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p3
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ei
+		halt
+		ld	hl,gfx.fall.p4
+		ld	de,#C000
+		call	depack
+		call	xchg.vralign
+
+		ld	hl,#4000
+		ld	de,#C000
+		ld	bc,#1B00
+		ldir
+		call	xchg.vram
+
+		ld	bc,7555
+.waitforlid	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforlid
+
+		ld	hl,gfx.lid.p1
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ld	b,2
+		call	waitf
+
+		ld	hl,gfx.lid.p2
+		ld	de,#C000
+		call	depack
+		call	xchg.vram
+
+		ld	b,2
+		call	waitf
+
+		ld	hl,gfx.lid.p3
+		ld	de,#C000
+		call	depack
+		call	xchg.vralign
+
+		ld	hl,#C000
+		ld	de,#4000
+		ld	bc,#1B00
+		ldir
+		ret
+
+waitf:		ei
+		halt
+		djnz	waitf
+		ret
+
+xchg.vralign	ld	a,(xchg.vram+1)
+		or	7
+xchg.vram2	xor	8
+		ld	(act128page),a
+		ld	bc,page128
+		out	(c),a
+		ret
+
+	module gfx
+fall
+.p1		incbin "gfx/01.pak"
+.p2		incbin "gfx/02.pak"
+.p3		incbin "gfx/03.pak"
+.p4		incbin "gfx/04.pak"
+lid
+.p1		incbin "gfx/11.pak"
+.p2		incbin "gfx/12.pak"
+.p3		incbin "gfx/13.pak"
+	endmodule
+
+		savebin "final.bin",start,$-start
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		define	PRESET.border 7
+		define	PRESET.paper 0q177
+		define	PRESET.waitfor 7395
+		include "../kernel/kernel.micro.inc"
+		savesna "recyclefall.sna",microkernel
+	opt pop
+	endif
