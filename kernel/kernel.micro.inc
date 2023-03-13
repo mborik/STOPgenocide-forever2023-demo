@@ -8,10 +8,12 @@
 	endif
 
 	module __microkernel__
+	ifndef PRESET.noclearscr
 		org	#4000
 
 		block	#1800, 0
 		block	#0300, PRESET.paper
+	endif
 
 ;;- COMMON FUNCTIONS ----------------------------------------------------------
 		org	xchg.vram
@@ -136,10 +138,14 @@ baseloop:	ld	a,MUSIC.page | #10
 
 		org	#C000
 
+	ifndef PRESET.noclearscr
 		block	#1800, 0
 		block	#0300, PRESET.paper
 
 		ds	#0200 ; gap
+	else
+		ds	#1D00
+	endif
 
 MUSIC.buffer	dw	0, 0, 0
 		db	0, #3F ; mixer

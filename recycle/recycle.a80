@@ -4,8 +4,6 @@
 		display "Compiling 'recycle'"
 	endif
 
-@DEBUG = 0
-
 		include "../kernel/constants.inc"
 
 ;;-----------------------------------------------------------------------------
@@ -31,131 +29,47 @@ sizeyy = #58		;; Vyska twistera v pixeloch
 ;;
 ;; Celkovy cas behu efektu: timrun + 2*sizeyy
 
-timrun = 500		;; Pocet pedesiatin chodu twistera v plnej sirke
+timrun = 480		;; Pocet pedesiatin chodu twistera v plnej sirke
 
 
+		org	#B600	;; Tabulky a buffery
+tables
+tabsyn		ds	#0100	;; Sinus tabulka - absolutne hodnoty
+tabsin		ds	#0100	;; Sinus tabulka - 128-0-128-255-128
+tabsnh		ds	#0100	;; Sinus tabulka - zmensene hodnoty
+tabsht		ds	#0100	;; Sinus tabulka - este mensie hodnoty
+
+tabhi2		ds	#0100	;; Line: Vyssi bajt adresy pre Y pre pixely 2x2
+tabhiy		ds	#0100	;; Line: Vyssi bajt adresy pre Y
+tabloy		ds	#0100	;; Line: Nizsi bajt adresy pre Y
+tablox		ds	#0100	;; Line: Offset #00-#1F adresy pre X
+tabpix		ds	#0100	;; Line: Maska pixela v bajte pre X
+tabpx2		ds	#0100	;; Line: Maska pre pixel 2x2
+
+		org	#E000
+
+tabidx		ds	#2000	;; 8kB tabulka zindexovanych dat v banke 0
+
+;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
 start
+		ld	a,#57
+		ld	(vid128+1),a
+		and	#F8
+		ld	(act128page),a
+		out	(#fd),a
+
 		call	makidx		;; Konverzia a zindexovanie dat
 		call	maksin		;; Vytvorenie tabulky pre sinus
 		call	makbod		;; Vytvorenie tabulky pre adresaciu videoramky
 
 		call	rutint		;; Prve zavolanie matematiky pre inicializaciu polohy
 
-		ld	bc,7442
-.waitforstart	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforstart
-
-		ld	a,#1D
-		call	xchg.vram + 2
-
-		ld	hl,gfx.fall.p1
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ei
-		halt
-		ld	hl,gfx.fall.p2
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ei
-		halt
-		ld	hl,gfx.fall.p3
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ei
-		halt
-		ld	hl,gfx.fall.p4
-		ld	de,#C000
-		call	depack
-		call	xchg.vralign
-
-		ld	hl,#4000
-		ld	de,#C000
-		ld	bc,#1B00
-		ldir
-		call	xchg.vram
-
-		ld	bc,7555
-.waitforlid	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforlid
-
-		ld	hl,gfx.lid.p1
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ld	b,2
-		call	waitf
-
-		ld	hl,gfx.lid.p2
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ld	b,2
-		call	waitf
-
-		ld	hl,gfx.lid.p3
-		ld	de,#C000
-		call	depack
-		call	xchg.vralign
-
-		ld	hl,#C000
-		ld	de,#4000
-		ld	bc,#1B00
-		ldir
-
-		ld	a,#57
-		ld	(vid128+1),a
-		out	(#fd),a
-
 		ld	a,#CD
 		ld	hl,rutint
 		ld	(IMCALL+1),hl
 		ld	(IMCALL),a
-
-;		call	slucka
-
-; 		ld	bc,8592
-; .waitforend	ei
-; 		halt
-; 		push	bc
-; 		call	followscene
-; 		pop	bc
-; 		ld	hl,(FRAMES)
-; 		xor	a
-; 		sbc	hl,bc
-; 		jr	c,.waitforend
-; 		ld	a,#17
-; 		call	xchg.bnk
-; 		ld	hl,#C000
-; 		ld	de,#C001
-; 		ld	bc,#1800
-; 		ld	(hl),l
-; 		ldir
-; 		ld	bc,#02FF
-; 		ld	(hl),0q000
-; 		ldir
-; 		ld	hl,#C000
-; 		ld	de,#4000
-; 		ld	bc,#1B00
-; 		ldir
-;		ret
 
 slucka		ei
 		halt
@@ -198,6 +112,7 @@ znovu		exx			;; Slucka pre pixelove stlpce
 
 vid128		ld	a,#57
 		and	#58
+		ld	(act128page),a
 		out	(#fd),a
 
 		ld	e,(hl)		;; Precitanie adresy z indexovej tabulky
@@ -435,7 +350,7 @@ mkinxt		inc	bc
 		jr	z,mkiend
 
 		ld	a,b
-		cp	#7F
+		cp	#80
 		jr	nz,mkiset
 		ld	bc,codend
 		jr	mkiset
@@ -561,19 +476,6 @@ sintab		db	#00,#06,#0D,#13,#19,#1F,#25,#2C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-waitf:		ei
-		halt
-		djnz	waitf
-		ret
-
-xchg.vralign	ld	a,(xchg.vram+1)
-		or	7
-xchg.vram2	xor	8
-		ld	(act128page),a
-		ld	bc,page128
-		out	(c),a
-		ret
-
 followscene:	ld	ix,scenario
 		ld	a,(ix)
 		ld	e,a
@@ -674,53 +576,30 @@ scenario:
 	opt pop
 		dw	0
 
-
-	module gfx
-fall
-.p1		incbin "gfx/01.pak"
-.p2		incbin "gfx/02.pak"
-.p3		incbin "gfx/03.pak"
-.p4		incbin "gfx/04.pak"
-lid
-.p1		incbin "gfx/11.pak"
-.p2		incbin "gfx/12.pak"
-.p3		incbin "gfx/13.pak"
-	endmodule
-
 codend
 
 ;; Predspracovane data pre hrany
 patterns	incbin	"patterns.bin"
+patterns.length
+		assert	(patterns.length - #2000) < tables
+
 
 		savebin "final.bin",start,$-start
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		org	#B600	;; Tabulky a buffery
-tables
-tabsyn		ds	#0100	;; Sinus tabulka - absolutne hodnoty
-tabsin		ds	#0100	;; Sinus tabulka - 128-0-128-255-128
-tabsnh		ds	#0100	;; Sinus tabulka - zmensene hodnoty
-tabsht		ds	#0100	;; Sinus tabulka - este mensie hodnoty
-
-tabhi2		ds	#0100	;; Line: Vyssi bajt adresy pre Y pre pixely 2x2
-tabhiy		ds	#0100	;; Line: Vyssi bajt adresy pre Y
-tabloy		ds	#0100	;; Line: Nizsi bajt adresy pre Y
-tablox		ds	#0100	;; Line: Offset #00-#1F adresy pre X
-tabpix		ds	#0100	;; Line: Maska pixela v bajte pre X
-tabpx2		ds	#0100	;; Line: Maska pre pixel 2x2
-
-		org	#E000
-
-tabidx		ds	#2000	;; 8kB tabulka zindexovanych dat v banke 0
 
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
+		org #4000
+		incbin "../recyclefall/gfx/13.scr"
+
 		define	PRESET.border 7
-		define	PRESET.paper 0q177
-		define	PRESET.waitfor 7395
+		define	PRESET.noclearscr 1
+		define	PRESET.waitfor 7567
 		include "../kernel/kernel.micro.inc"
+
+		page 7
+		org #C000
+		incbin "../recyclefall/gfx/13.scr"
 		savesna "recycle.sna",microkernel
 	opt pop
 	endif
