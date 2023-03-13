@@ -9,10 +9,12 @@
 fx_lucy:	incbin "lucy/final.pak"
 .pg = _fxpage
 .sync = 5758
+		display "'lucy' part length: ",/D,($-fx_lucy)
 
 fx_simon:	incbin "simon/final.pak"
 .pg = _fxpage
 .sync = 6523
+		display "'simon' part length: ",/D,($-fx_simon)
 
 ;;-----------------------------------------------------------------------------
 ; Every part is defined with this descriptor:
@@ -20,7 +22,7 @@ fx_simon:	incbin "simon/final.pak"
 ; fx_demopart: incbin "demo-part-folder/final.pak"
 ; .pg = _fxpage     ; current fx 128k page
 ;                   ; (set bit.7 to just ldir given length, not decompress)
-; .sync = 1234      ; number of halts from start of demo to sync with
+; .sync = 1234      ; some constant to sync with part passed in DE
 ; .length           ; optional when data transfer (ldir) needed
 
 ;;-----------------------------------------------------------------------------

@@ -12,16 +12,18 @@
 ; fx_demopart: incbin "demo-part-folder/final.pak"
 ; .pg = _fxpage     ; current fx 128k page
 ;                   ; (set bit.7 to just ldir given length, not decompress)
-; .sync = 1234      ; number of halts from start of demo to sync with
+; .sync = 1234      ; some constant to sync with part passed in DE
 ; .length           ; optional when data transfer (ldir) needed
 
 fx_micka:	incbin "priskocmicka/final.pak"
 .pg = _fxpage
 .sync = 766
+		display "'priskocmicka' part length: ",/D,($-fx_micka)
 
 fx_grinder:	incbin "grinder/final.pak"
 .pg = _fxpage
 .sync = 1340
+		display "'grinder' part length: ",/D,($-fx_grinder)
 
 lookupTables = #D800
 ;;-----------------------------------------------------------------------------

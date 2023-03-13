@@ -12,32 +12,38 @@
 ; fx_demopart: incbin "demo-part-folder/final.pak"
 ; .pg = _fxpage     ; current fx 128k page
 ;                   ; (set bit.7 to just ldir given length, not decompress)
-; .sync = 1234      ; number of halts from start of demo to sync with
+; .sync = 1234      ; some constant to sync with part passed in DE
 ; .length           ; optional when data transfer (ldir) needed
 
 fx_intro:	incbin "intro/final.pak"
 .pg = _fxpage
 .sync = 0
+		display "'intro' part length: ",/D,($-fx_intro)
 
 fx_plasma1:	incbin "plasma1/final.pak"
 .pg = _fxpage
 .sync = 2868
+		display "'plasma1' part length: ",/D,($-fx_plasma1)
 
 fx_kitty_bank:	incbin "hellokitty/bank.bin"
 .pg = _fxpage ; data transfer part
 .length = $-fx_kitty_bank
+		display "'hellokitty' bank length: ",/D,($-fx_kitty_bank)
 
 fx_kitty:	incbin "hellokitty/final.pak"
 .pg = _fxpage
 .sync = 3450
+		display "'hellokitty' part length: ",/D,($-fx_kitty)
 
 fx_lucyshow:	incbin "lucyshow/final.pak"
 .pg = _fxpage
 .sync = 5370
+		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
 
 fx_simon_bank:	incbin "simon/bank.bin"
 .pg = _fxpage ; data transfer part
 .length = $-fx_simon_bank
+		display "'simon' bank length: ",/D,($-fx_simon_bank)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
