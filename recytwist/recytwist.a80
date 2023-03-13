@@ -1,7 +1,7 @@
 		device	zxspectrum128
 
 	ifdef isFX
-		display "Compiling 'rectwist'"
+		display "Compiling 'recytwist'"
 	endif
 
 		include "../kernel/constants.inc"
@@ -344,7 +344,7 @@ mkinxt		inc	bc
 		jr	z,mkiend
 
 		ld	a,b
-		cp	#80
+		cp	#7F
 		jr	nz,mkiset
 		ld	bc,codend
 		jr	mkiset
@@ -575,6 +575,6 @@ patterns.length
 		page 7
 		org #C000
 		incbin "../recyclefall/gfx/13.scr"
-		savesna "rectwist.sna",microkernel
+		savesna "recytwist.sna",microkernel
 	opt pop
 	endif

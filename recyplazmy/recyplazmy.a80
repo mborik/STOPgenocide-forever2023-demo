@@ -1,0 +1,969 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Compiling 'recyplazmy'"
+	endif
+
+		include "../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+;; Busy soft ;; 10.03.2023 - 11.03.2023 ;; Plazma pre odpadkovy kos ;;
+
+sizexx = #10		;; X rozmer pracovneho okna (max #40)
+sizeyy = #16		;; Y rozmer pracovneho okna (max #30)
+
+miesto = #C004		;; Adresa laveho horneho rohu pracovneho okna v ZX videoram
+
+timrun = 8		;; Pocet pedesiatin chodu twistera v plnej vyske
+
+;; Celkova doba behu efektu: Pocet_poloziek_v_scenari * (4*sizeyy + timrun)
+
+;;-----------------------------------------------------------------------------
+		org	RUNZONE
+
+start
+		call	mksin		;; Vygenerovanie sinus tabulky (pouziva plazma)
+		call	mkpatt		;; Vygenerovanie patternov pre raster viewer
+
+		ld	bc,8256
+.waitforstart	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforstart
+
+znovu		ld	hl,scenar
+slucka		ld	a,(hl)
+		ld	(ppzoom+2),a
+		inc	hl
+		or	a
+		jr	z,ending
+		ld	a,(hl)
+		ld	(hustota+1),a
+		inc	hl
+		push	hl
+		call	main
+		pop	hl
+		jr	slucka
+
+scenar		db	6,3		;; Osem poloziek v scenari = osem roznych typov plazmy
+		db	3,3
+		db	5,2
+		db	7,2
+		db	4,3
+		db	4,2
+		db	4,1
+		db	5,3
+		db	6,1
+		db	6,2
+		db	7,3
+		db	5,1
+		db	6,3
+		db	0
+
+ending		ld	a,#10
+		call	xchg.bnk
+		call	init
+.phaseEnd	ld	a,#55
+.loop		call	frame
+		dec	a
+.phaseStart	cp	#55
+		jr	nz,.loop
+		ret
+
+frame		ld	xh,a
+		push	af
+		halt
+		di			;; DI kvoli pristupu
+		ld	(backsp+1),sp	;; k datam cez zasobnik
+		ld	sp,vzoatt
+		ld	bc,#5800	;; Hlavny engine zaberie
+		ld	h,(high tabsel)	;; cca 40000 taktov
+		jp	rutexe		;; takze za prerusenie
+backsp		ld	sp,0		;; sa v pohode stiha
+		ei
+		pop	af
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Jedna padajuca plazma
+
+main		call	mksnp		;; Modifikacia sinus tabulky pre dany pocet schodov
+
+		ld	ix,sizeyy<<8|sizexx	;; Prve vygenerovanie plazmoveho obrazca
+		call	plazma
+
+		ei
+		halt
+
+		ld	hl,video
+		ld	(vidadd+1),hl
+
+		ld	hl,miesto
+		ld	de,#0100|sizexx
+		ld	bc,miesto-#0320
+
+nabeh		call	pracuj			;; Objavovanie plazmy
+		call	spodok			;; so zaoblednymi spodnymi rohmi
+		call	pracuj
+		call	spodok
+
+		ld	a,4
+		add	a,b
+		ld	b,a
+		and	#07
+		jr	nz,nabnxt
+		ld	a,#20
+		add	a,c
+		ld	c,a
+		jr	c,nabnxt
+		ld	a,#F8
+		add	a,b
+		ld	b,a
+
+nabnxt		inc	d
+		ld	a,d
+		cp	sizeyy
+		jr	c,nabeh
+
+		call	pracuj
+		call	spodok
+		call	pracuj
+		call	spodok
+
+		ld	bc,timrun - 6		;; Beh plazmy bez zaoblovania rohov
+beh		push	bc
+		call	pracuj
+		pop	bc
+		dec	bc
+		ld	a,b
+		or	c
+		jr	nz,beh
+
+		call	pracuj			;; Miznutie plazmy
+;;		ld	hl,miesto-#0320		;; so zaoblenymi hornymi okrajmi
+;;		call	vrch
+;;		call	pracuj
+		ld	hl,miesto
+		call	vrch
+		call	pracuj
+
+		dec	d
+		ld	hl,miesto
+dobeh		call	vidnxt
+		push	hl
+		call	zmaz
+		call	vrch
+		call	pracuj
+		pop	hl
+		call	zmaz
+		call	vrch
+		call	pracuj
+		dec	d
+		jr	nz,dobeh
+
+		halt
+
+		push	hl		;; Zaverecne vycistenie obrazovky
+		call	zmaz
+		call	xchg.vram	;; Prepnutie aktivnej videoramky
+		pop	hl
+
+;; Zmazanie jedneho riadku
+
+zmaz		ld	b,#04
+zmzlop		ld	c,l
+		xor	a
+	dup	sizexx >> 1
+		ld	(hl),a
+		inc	l
+	edup
+		ld	l,c
+		call	dole
+		djnz	zmzlop
+		ret
+
+;; Posun HL o riadok nizsie
+
+dole		inc	h
+dolex		ld	a,h
+		and	#07
+		ret	nz
+		ld	a,#20
+		add	a,l
+		ld	l,a
+		ret	c
+		ld	a,#F8
+		add	a,h
+		ld	h,a
+		ret
+
+;; Posun video buffera o jeden riadok
+
+vidnxt		push	hl
+		ld	hl,vidadd+1
+		ld	a,sizexx
+		add	a,(hl)
+		ld	(hl),a
+		jr	nc,vidend
+		inc	hl
+		inc	(hl)
+vidend		pop	hl
+		ret
+
+;; Akoze zaoblene okraje
+
+vrch		push	de
+		push	hl
+		ld	de,maska0
+		call	maskuj
+		pop	hl
+		pop	de
+		ret
+
+spodok		push	bc
+		push	de
+		push	hl
+		ld	h,b
+		ld	l,c
+		ld	de,maska2
+		call	maskuj
+		pop	hl
+		pop	de
+		pop	bc
+		ret
+
+maskuj		call	msksub
+		ld	a,sizexx/2 - 1
+		add	a,l
+		ld	l,a
+msksub		push	hl
+	dup	8
+		ld	a,(de)
+		and	(hl)
+		ld	(hl),a
+		inc	de
+		call	dole
+	edup
+		pop	hl
+		ret
+
+maska0		dg	........
+		dg	.....###
+		dg	...#####
+		dg	..######
+		dg	..######
+		dg	.#######
+		dg	.#######
+		dg	.#######
+
+maska1		dg	........
+		dg	###.....
+		dg	#####...
+		dg	######..
+		dg	######..
+		dg	#######.
+		dg	#######.
+		dg	#######.
+
+maska2		dg	.#######
+		dg	.#######
+		dg	.#######
+		dg	..######
+		dg	..######
+		dg	...#####
+		dg	.....###
+		dg	........
+
+maska3		dg	#######.
+		dg	#######.
+		dg	#######.
+		dg	######..
+		dg	######..
+		dg	#####...
+		dg	###.....
+		dg	........
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Jedna faza pohybu plazmy
+
+pracuj		push	bc
+		push	de		;; D = sizeyy  E = sizexx
+		push	hl		;; HL = miesto
+
+		halt
+		call	xchg.vram	;; Prepnutie aktivnej videoramky
+
+		ld	ix,sizeyy << 8 | sizexx
+		call	plazma		;; Vygenerovanie plazmoveho obrazca
+
+		pop	hl
+		pop	de
+		push	de
+		push	hl
+
+		ld	xh,d
+		ld	xl,sizexx
+		ex	de,hl		;; Zobrazenie obrazca na obrazovke
+vidadd		ld	hl,video
+		call	view1
+
+		pop	hl
+		pop	de
+		pop	bc
+		ret
+
+;; Vygenerovanie jedneho plazmatickeho obrazca
+;;
+;; Vstup:
+;;  XH = Y rozmer vygenerovanej bitmapy
+;;  XL = X rozmer vygenerovanej bitmapy
+;;  plasin = sinus s upravenou amplitudou
+;;  ppzoom+2 = zvecsenie plazmy
+;;
+;; Vystup:
+;;  video = buffer velkosti X*Y zobrazitelny pomocou view1
+;;
+;; Rychlost rutinky:
+;;  cca 900 pixelov za 1/50 sec ... rychlost samotnej rutinky "plazma"
+;;  cca 350 pixelov za 1/50 sec ... spolu so zobrazovanim "view1"
+
+plazma		call	matika
+		dw	#00BB	;; Rychlost pohybu po osi X
+		dw	#5555
+		add	a,a
+		push	af
+		call	matika
+		dw	#0097	;; Rychlost zoomovania po osi X
+		dw	#5555
+		call	ppmatd
+		pop	de
+		ld	hl,plaxxx
+		ld	a,xl
+		call	ppfunc
+
+		call	matika
+		dw	#00DD	;; Rychlost pohybu po ose Y
+		dw	#5555
+		add	a,a
+		push	af
+		call	matika
+		dw	#0079	;; Rychlost zoomovania po osi Y
+		dw	#5555
+		call	ppmatd
+		pop	de
+		ld	hl,playyy
+		ld	a,xh
+		call	ppfunc
+
+		call	matika
+		dw	#0375	;; Rychlost zmeny "palety"
+		dw	#5555
+		ld	c,a
+		ld	h,high plapal
+		exx
+		ld	de,video	;; Finalne vyskladanie obrazca
+		ld	hl,playyy
+ppllyy		push	hl
+;;		ld	b,xl
+		ld	c,(hl)
+		ld	hl,plaxxx
+ppllxx
+	dup	sizexx
+		ld	a,c
+		add	a,(hl)
+		exx
+		add	a,c
+		ld	l,a
+		ld	a,(hl)
+		exx
+		ld	(de),a
+		inc	l
+		inc	de
+	edup
+
+;;		djnz	ppllxx
+
+		pop	hl
+		inc	l
+		dec	xh
+		jp	nz,ppllyy
+		ret
+
+ppfunc		push	ix		;; Prepocet jednej suradnice pre plazmu
+		push	de
+		pop	ix
+		ld	d,high plasin
+ppff11		ex	af,af
+		add	ix,bc
+		ld	e,xh
+		ld	a,(de)
+		ld	(hl),a
+		ex	af,af
+		inc	l
+		dec	a
+		jr	nz,ppff11
+		pop	ix
+		ret
+
+ppmatd		ld	e,#01
+ppzoom		ld	bc,#0600	;; Zoom pre plazmu: B=4,5,6,7
+ppdiv		srl	a		;; 4 =  male plazmaticke oka
+		rr	c		;; 7 = velke plazmaticke oka
+		rrc	e
+		djnz	ppdiv
+		add	a,e
+		ld	b,a
+		ret
+
+matika		pop	hl		;; Vezme prvy WORD
+		ld	c,(hl)		;; pripocita ho k druhemu WORDu
+		inc	hl		;; a vyssi bajt druheho WORDu
+		ld	b,(hl)		;; prezenie sinusovou tabulkou
+		inc	hl
+		ld	e,(hl)		;; Word2 = Word2+Word1
+		inc	hl		;; A = SIN(high(Word2))
+		ld	d,(hl)
+		ex	de,hl
+		add	hl,bc
+		ex	de,hl
+		dec	hl
+		ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+		ld	e,d
+		ld	d,high tabsin
+		ld	a,(de)
+		jp	(hl)
+
+mksnp		ld	hl,tabsin	;; Vytvorenie sinusovej tabulky s polovicnou aplitudou pre plazmu
+		ld	de,plasin
+mksn1		ld	a,(hl)
+		srl	a
+		ld	(de),a
+		inc	e
+		inc	l
+		jr	nz,mksn1
+
+		ld	hl,tabsin	;; Vytvorenie mapovacej farebnej palety
+		ld	de,plapal	;; resp. palety 16 odtienov sedej farby
+mkpl1		ld	a,e
+hustota		jr	riedka		;; Hustota plazmy: 3=riedka ... 0=husta
+husta		add	a,e
+		add	a,e
+		add	a,e
+riedka		ld	l,a
+		ld	a,(hl)
+		rrca
+		rrca
+		rrca
+		rrca
+		ld	(de),a
+		inc	l
+		inc	e
+		jr	nz,mkpl1
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Raster viewer 4x4
+;; ~~~~~~~~~~~~~~~~~
+;; Zobrazenie bitmapy na obrazovku
+;; so simulaciou odtienov sedej
+;; pomocou pixeloveho rastra 4x4
+
+;; Vstup:
+;;  HL = zdrojova adresa bitmapy
+;;  DE = cielova adresa v ZX videoramke
+;;  XH = Y rozmer bitmapy
+;;  XL = X rozmer bitmapy (musi byt parny!)
+
+;; Format zdrojovej bitmapy:
+;;  view1 = co makropixel to bajt, beriu sa spodne 4 bity
+;;  view2 = dva susedne makropixely v jednom bajte, horne 4 bity su lavy pixel
+
+;; Rychlost rutinky:
+;;  view1 = cca 750 makropixelov za 1/50 sec
+;;  view2 = cca 800 makropixelov za 1/50 sec
+
+view1
+;;		ld	a,xl
+;;		srl	a
+;;		ld	xl,a
+zz11yy		push	ix
+		push	de
+zz11xx
+	dup sizexx >> 1
+		ld	a,(hl)
+		inc	hl
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		ld	c,a
+		ld	a,#0F
+		and	(hl)
+		inc	hl
+		or	c
+		ld	c,a
+		ld	b,high bufpat
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		dec	d
+		dec	d
+		dec	d
+		inc	e
+	edup
+
+;;		dec	xl
+;;		jr	nz,zz11xx
+
+		pop	de
+		pop	ix
+		ld	a,#04
+		add	a,d
+		ld	d,a
+		and	#07
+		jr	nz,zz11do
+		ld	a,#20
+		add	a,e
+		ld	e,a
+		jr	c,zz11do
+		ld	a,#F8
+		add	a,d
+		ld	d,a
+zz11do		dec	xh
+		jp	nz,zz11yy
+		ret
+
+view2		ld	a,xl
+		srl	a
+		ld	xl,a
+zz22yy		push	ix
+		push	de
+zz22xx		ld	c,(hl)
+		ld	b,high bufpat
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		inc	b
+		inc	d
+		ld	a,(bc)
+		ld	(de),a
+		dec	d
+		dec	d
+		dec	d
+		inc	e
+		inc	hl
+		dec	xl
+		jr	nz,zz22xx
+		pop	de
+		pop	ix
+		ld	a,#04
+		add	a,d
+		ld	d,a
+		and	#07
+		jr	nz,zz22do
+		ld	a,#20
+		add	a,e
+		ld	e,a
+		jr	c,zz22do
+		ld	a,#F8
+		add	a,d
+		ld	d,a
+zz22do		dec	xh
+		jr	nz,zz22yy
+		ret
+
+;; Vygenerovanie tabulky patternov pre Raster viewer
+;; pre simulaciu 16-tich odtienov
+;; sedej farby pixelovym rastrom
+
+mkpatt		ld	hl,patern+patlen-1
+		ld	bc,tmppat+patlen-1
+		ld	d,b
+		ld	e,c
+mkp111		ld	a,(hl)
+		dec	hl
+		inc	c
+		ld	(de),a
+		xor	#0F
+		ld	(bc),a
+		dec	e
+		jp	p,mkp111
+
+		ld	hl,tmppat
+mkp555		res	7,l
+		ld	a,(hl)
+		add	a,a
+		add	a,a
+		add	a,a
+		add	a,a
+		set	7,l
+		ld	(hl),a
+		inc	l
+		jr	nz,mkp555
+
+		ld	hl,tmppat
+		ld	bc,bufpat
+		ld	xl,#04
+		ld	d,h
+		ld	e,l
+mkp444		ld	a,#03
+		and	e
+		ld	e,a
+mkp333		ld	xh,#10
+		ld	a,#03
+		and	l
+		ld	l,a
+mkp222		ld	a,(de)
+		rrca
+		rrca
+		rrca
+		rrca
+		or	(hl)
+		ld	(bc),a
+		inc	l
+		inc	l
+		inc	l
+		inc	l
+		inc	c
+		dec	xh
+		jr	nz,mkp222
+		inc	e
+		inc	e
+		inc	e
+		inc	e
+		xor	a
+		xor	c
+		jr	nz,mkp333
+		inc	l
+		inc	e
+		inc	b
+		dec	xl
+		jr	nz,mkp444
+		ret
+
+patern		db	%0000	;; 00	;; Rastre pre simulaciu
+		db	%0000		;; odtienov sedej farby
+		db	%0000
+		db	%0000
+
+		db	%0000	;; 01
+		db	%0000
+		db	%0100
+		db	%0000
+
+		db	%0000	;; 02
+		db	%0010
+		db	%0000
+		db	%1000
+
+		db	%0001	;; 03
+		db	%1000
+		db	%0000
+		db	%0100
+
+		db	%0010	;; 04
+		db	%1000
+		db	%0001
+		db	%0100
+
+		db	%0000	;; 05
+		db	%1010
+		db	%0100
+		db	%1010
+
+		db	%0001	;; 06
+		db	%1010
+		db	%0100
+		db	%1010
+
+		db	%0101	;; 07
+		db	%1010
+		db	%0101
+		db	%1010
+patend
+patlen = patend-patern
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Vygenerovanie tabulky sinusu
+;;
+;; Jednu stvrtperiodu "sintab"
+;; rozvinie na celu periodu do "tabsin"
+
+mksin		ld	hl,sintab
+		ld	de,tabsin
+		ld	bc,#40
+		ldir
+		ld	h,d
+		ld	l,e
+		ld	(hl),#ff
+mks3		ld	a,(hl)
+		ld	(de),a
+		dec	l
+		inc	e
+		jp	p,mks3
+mks4		ld	a,(hl)
+		neg
+		ld	(de),a
+		inc	l
+		inc	e
+		jr	nz,mks4
+		ret
+
+sintab		dw	#8380,#8986
+		dw	#908c,#9693
+		dw	#9c99,#a29f
+		dw	#a8a5,#aeab
+		dw	#b3b1,#b9b6
+		dw	#bfbc,#c4c1
+		dw	#c9c7,#cecc
+		dw	#d3d1,#d8d5
+		dw	#dcda,#e0de
+		dw	#e4e2,#e8e6
+		dw	#ebea,#efed
+		dw	#f1f0,#f4f3
+		dw	#f6f5,#f9f8
+		dw	#fafa,#fcfb
+		dw	#fdfd,#fefe
+		dw	#fffe,#ffff
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Inicializacne rutinky stmavovaca
+
+attrs = #5800
+
+init		ld	hl,shades
+		ld	de,tabmul
+		ld	bc,#0100
+		ldir
+
+		ld	hl,tabsel+#80
+		ld	de,tabsel+#7F
+		ld	bc,#0F10 + (high tabpal)
+		ld	a,(high tabpal) + #0F
+mksel1		ld	(hl),c
+		ld	(de),a
+		dec	a
+		dec	e
+		inc	l
+		inc	c
+		djnz	mksel1
+mksel2		ld	(hl),c
+		ld	(de),a
+		dec	e
+		inc	l
+		jr	nz,mksel2
+
+		ld	hl,tabpal
+		ld	d,(high tabmul)
+mkpal1		ld	a,h
+		sub	(high tabpal)
+		add	a,a
+		add	a,a
+		add	a,a
+		ld	e,a
+		ld	a,l
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		ld	c,a	;; INK
+		ld	a,e
+		and	#F8
+		ld	e,a
+		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		add	a,a
+		add	a,a
+		add	a,a
+		or	c
+		ld	(hl),a	;; PAPER
+		inc	l
+		bit	6,l
+		jr	z,mkpal1
+		ld	c,l
+		ld	b,h
+		ld	l,#00
+mkpal2		ld	a,c
+		and	#C0	;; BRIGHT FLASH
+		or	(hl)
+		ld	(bc),a
+		inc	l
+		inc	c
+		res	6,l
+		jr	nz,mkpal2
+		inc	h
+		ld	a,h
+		cp	(high tabpal) + #20
+		jr	c,mkpal1
+
+makvza		ld	hl,attrs
+		ld	de,attrpatt
+		ld	bc,vzoatt
+mkvzll		ld	a,(hl)
+		ld	(bc),a
+		inc	hl
+		inc	bc
+		ld	a,(de)
+		ld	(bc),a
+		inc	de
+		inc	bc
+		ld	a,h
+		cp	(high attrs) + #03
+		jr	c,mkvzll
+
+makrut		ld	hl,rutzac
+		ld	de,rutexe
+		ld	bc,rutlen
+		push	de
+		ldir
+		pop	hl
+		ld	bc,rutlen * #2FF
+		ldir
+		ex	de,hl
+		ld	(hl),#C3
+		inc	hl
+		ld	(hl),low backsp
+		inc	hl
+		ld	(hl),high backsp
+
+		ld	hl,attrpatt
+		ld	de,#00FF	;; D=max,E=min
+minmax		ld	a,(hl)
+		cp	d
+		jr	c,mmxx11
+		ld	d,a
+mmxx11		cp	e
+		jr	nc,mmxx22
+		ld	e,a
+mmxx22		inc	hl
+		ld	a,h
+		cp	(high attrpatt) + #03
+		jr	c,minmax
+		ld	a,#70
+		sub	d
+		ld	(ending.phaseStart+1),a
+		ld	a,#90
+		sub	e
+		ld	(ending.phaseEnd+1),a
+		ret
+
+rutzac		pop	de		;; D=vzor, E=original
+		ld	a,xh
+		add	a,d		;; Faza
+		ld	l,a
+		ld	d,(hl)		;; tabsel
+		ld	a,(de)		;; tabpal
+		ld	(bc),a		;; Atributy na obrazovke
+		inc	bc		;; \ 51 T
+rutlen = $-rutzac
+
+		;;	0-1-2-3-4-5-6-7
+shades		db	0,0,0,0,0,0,0,0	;; 32 stupnov pre fade-in + fade-out
+		db	0,0,0,0,0,0,0,0
+		db	0,0,0,0,0,0,0,1
+		db	0,0,0,0,0,0,1,1
+		db	0,0,0,0,0,1,1,1
+		db	0,0,0,0,1,1,1,1
+		db	0,0,0,0,1,1,1,2
+		db	0,0,0,1,1,1,1,2
+		db	0,0,0,1,1,1,2,2
+		db	0,0,1,1,1,1,2,2
+		db	0,0,1,1,1,2,2,2
+		db	0,0,1,1,1,2,2,3
+		db	0,0,1,1,2,2,2,3
+		db	0,1,1,1,2,2,2,3
+		db	0,1,1,1,2,2,3,3
+		db	0,1,1,2,2,2,3,3
+		db	0,1,1,2,2,3,3,3
+		db	0,1,1,2,2,3,3,4
+		db	0,1,1,2,2,3,4,4
+		db	0,1,1,2,3,3,4,4
+		db	0,1,2,2,3,3,4,4
+		db	0,1,2,2,3,3,4,5
+		db	0,1,2,2,3,4,4,5
+		db	0,1,2,3,3,4,4,5
+		db	0,1,2,3,3,4,5,5
+		db	0,1,2,3,3,4,5,6
+		db	0,1,2,3,4,4,5,6
+		db	0,1,2,3,4,5,5,6
+		db	0,1,2,3,4,5,6,6
+		db	0,1,2,3,4,5,6,7
+		db	0,1,2,3,4,5,6,6
+		db	0,1,2,3,4,5,6,7
+
+;;;;;;;;;;;;;;;;;;;;;;
+		align	256
+
+attrpatt	incbin "pattern.bin"
+
+
+		savebin "final.bin",start,$-start
+
+
+tabsin		ds	#0100	;; Sinusova tabulka
+tmppat		ds	#0100	;; Znegovane patterny
+bufpat		ds	#0400	;; Rozpocitane patterny
+plasin		ds	#0100	;; Zmenseny sinus pre plazmu
+plaxxx		ds	#0100	;; Vypocitane hodnoty funkcie X
+playyy		ds	#0100	;; Vypocitane hodnoty funkcie Y
+plapal		ds	#0100	;; Farebna paleta pre plazmu (resp. namapovanie na 16 odtienov sedi)
+
+;; Virtualna videoramka, 64*48 je maximalny rozmer
+video		ds	sizexx*sizeyy
+
+
+		align	256
+
+tabmul		ds	#0100	;; Tabulka pre proporcionalnu zmenu farieb
+tabsel		ds	#0100	;; Tabulka pre adresovanie paliet
+tabpal		ds	#2000	;; 32 paliet pre 32 urovni jasov obrazku
+vzoatt		ds	#0600	;; Skombinovane originalne atributy so vzorom
+
+rutexe		ds	#2000	;; Zobrazovaci engine
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		org #4000
+		incbin "../recyclefall/gfx/13.scr"
+
+		define	PRESET.border 7
+		define	PRESET.noclearscr 1
+		define	PRESET.waitfor 8202
+		include "../kernel/kernel.micro.inc"
+
+		page 7
+		org #C000
+		incbin "../recyclefall/gfx/13.scr"
+		savesna "recyplazmy.sna",microkernel
+	opt pop
+	endif

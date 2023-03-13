@@ -6,6 +6,15 @@
 @_fxpage = #16
 @_fxpage_start
 
+;;-----------------------------------------------------------------------------
+; Every part is defined with this descriptor:
+;
+; fx_demopart: incbin "demo-part-folder/final.pak"
+; .pg = _fxpage     ; current fx 128k page
+;                   ; (set bit.7 to just ldir given length, not decompress)
+; .sync = 1234      ; some constant to sync with part passed in DE
+; .length           ; optional when data transfer (ldir) needed
+
 fx_plasma2:	incbin "plasma2/final.pak"
 .pg = _fxpage
 .sync = 4700
@@ -16,19 +25,15 @@ fx_recyclefall:	incbin "recyclefall/final.pak"
 .sync = 7395
 		display "'recyclefall' part length: ",/D,($-fx_recyclefall)
 
-fx_rectwist:	incbin "rectwist/bank.bin"
+fx_recytwist:	incbin "recytwist/bank.bin"
 .pg = _fxpage ; data transfer part
-.length = $-fx_rectwist
-		display "'rectwist' part length: ",/D,($-fx_rectwist)
+.length = $-fx_recytwist
+		display "'recytwist' part length: ",/D,($-fx_recytwist)
 
-;;-----------------------------------------------------------------------------
-; Every part is defined with this descriptor:
-;
-; fx_demopart: incbin "demo-part-folder/final.pak"
-; .pg = _fxpage     ; current fx 128k page
-;                   ; (set bit.7 to just ldir given length, not decompress)
-; .sync = 1234      ; some constant to sync with part passed in DE
-; .length           ; optional when data transfer (ldir) needed
+fx_recyplazmy:	incbin "recyplazmy/final.pak"
+.pg = _fxpage
+.sync = 8202
+		display "'recyplazmy' part length: ",/D,($-fx_recyplazmy)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -56,6 +61,10 @@ fx_rectwist:	incbin "rectwist/bank.bin"
 		export fx_recyclefall.pg
 		export fx_recyclefall.sync
 
-		export fx_rectwist
-		export fx_rectwist.pg
-		export fx_rectwist.length
+		export fx_recytwist
+		export fx_recytwist.pg
+		export fx_recytwist.length
+
+		export fx_recyplazmy
+		export fx_recyplazmy.pg
+		export fx_recyplazmy.sync

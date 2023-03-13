@@ -76,10 +76,14 @@ cd ../recyclefall
 ASM recyclefall.a80 -DisFX --lst=recyclefall.lst
 PAK final.bin final.pak
 
-cd ../rectwist
-ASM rectwist.a80 -DisFX --lst=rectwist.lst
+cd ../recytwist
+ASM recytwist.a80 -DisFX --lst=recytwist.lst
 PAK final.bin final.pak
 ASM bank.a80 -DisFX --lst=bank.lst
+
+cd ../recyplazmy
+ASM recyplazmy.a80 -DisFX --lst=recyplazmy.lst
+PAK final.bin final.pak
 
 # banks composition
 cd ..

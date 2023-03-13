@@ -58,6 +58,10 @@ LDIR = #80
 		dw	fx_recyclefall
 		dw	fx_recyclefall.sync
 
-		db	fx_rectwist.pg | LDIR
-		dw	fx_rectwist
-		dw	fx_rectwist.length
+		db	fx_recytwist.pg | LDIR
+		dw	fx_recytwist
+		dw	fx_recytwist.length
+
+		db	fx_recyplazmy.pg
+		dw	fx_recyplazmy
+		dw	fx_recyplazmy.sync

@@ -4,6 +4,9 @@ fx_plasma2.sync: EQU 0x0000125C
 fx_recyclefall: EQU 0x0000C752
 fx_recyclefall.pg: EQU 0x00000016
 fx_recyclefall.sync: EQU 0x00001CE3
-fx_rectwist: EQU 0x0000D5A4
-fx_rectwist.pg: EQU 0x00000016
-fx_rectwist.length: EQU 0x00002263
+fx_recytwist: EQU 0x0000D5A4
+fx_recytwist.pg: EQU 0x00000016
+fx_recytwist.length: EQU 0x00002263
+fx_recyplazmy: EQU 0x0000F807
+fx_recyplazmy.pg: EQU 0x00000016
+fx_recyplazmy.sync: EQU 0x0000200A

@@ -6,6 +6,15 @@
 @_fxpage = #14
 @_fxpage_start
 
+;;-----------------------------------------------------------------------------
+; Every part is defined with this descriptor:
+;
+; fx_demopart: incbin "demo-part-folder/final.pak"
+; .pg = _fxpage     ; current fx 128k page
+;                   ; (set bit.7 to just ldir given length, not decompress)
+; .sync = 1234      ; some constant to sync with part passed in DE
+; .length           ; optional when data transfer (ldir) needed
+
 fx_lucy:	incbin "lucy/final.pak"
 .pg = _fxpage
 .sync = 5758
@@ -15,15 +24,6 @@ fx_simon:	incbin "simon/final.pak"
 .pg = _fxpage
 .sync = 6523
 		display "'simon' part length: ",/D,($-fx_simon)
-
-;;-----------------------------------------------------------------------------
-; Every part is defined with this descriptor:
-;
-; fx_demopart: incbin "demo-part-folder/final.pak"
-; .pg = _fxpage     ; current fx 128k page
-;                   ; (set bit.7 to just ldir given length, not decompress)
-; .sync = 1234      ; some constant to sync with part passed in DE
-; .length           ; optional when data transfer (ldir) needed
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
