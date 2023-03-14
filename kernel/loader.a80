@@ -4,7 +4,7 @@
 		include "constants.inc"
 
 	module loader
-		display "Composing loader & kernel"
+		display "Composing bank 0 & loader"
 
 		org	#6000
 

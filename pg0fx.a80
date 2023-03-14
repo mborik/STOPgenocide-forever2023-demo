@@ -41,11 +41,11 @@ fx_lucyshow:	incbin "lucyshow/final.pak"
 		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
 
 ;;-----------------------------------------------------------------------------
-	if $ > #8000
-		display "Too long! ",/D,($-#8000)," bytes out!"
+	if $ > #7D00
+		display "Too long! ",/D,($-#7D00)," bytes out!"
 		end
 	else
-		display /D,(#8000-$)," bytes free before #8000"
+		display /D,(#7D00-$)," bytes free before #7D00"
 	endif
 
 		savebin "bank0",(_fxpage_start),$-(_fxpage_start)
