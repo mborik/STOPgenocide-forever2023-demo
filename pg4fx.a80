@@ -20,10 +20,15 @@ fx_lucy:	incbin "lucy/final.pak"
 .sync = 5758
 		display "'lucy' part length: ",/D,($-fx_lucy)
 
-fx_simon:	incbin "simon/final.pak"
+fx_recyclefall:	incbin "recyclefall/final.pak"
 .pg = _fxpage
-.sync = 6523
-		display "'simon' part length: ",/D,($-fx_simon)
+.sync = 7395
+		display "'recyclefall' part length: ",/D,($-fx_recyclefall)
+
+fx_recyplazmy:	incbin "recyplazmy/final.pak"
+.pg = _fxpage
+.sync = 8202
+		display "'recyplazmy' part length: ",/D,($-fx_recyplazmy)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -47,6 +52,10 @@ fx_simon:	incbin "simon/final.pak"
 		export fx_lucy.pg
 		export fx_lucy.sync
 
-		export fx_simon
-		export fx_simon.pg
-		export fx_simon.sync
+		export fx_recyclefall
+		export fx_recyclefall.pg
+		export fx_recyclefall.sync
+
+		export fx_recyplazmy
+		export fx_recyplazmy.pg
+		export fx_recyplazmy.sync

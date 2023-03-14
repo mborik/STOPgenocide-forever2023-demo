@@ -15,35 +15,16 @@
 ; .sync = 1234      ; some constant to sync with part passed in DE
 ; .length           ; optional when data transfer (ldir) needed
 
-fx_intro:	incbin "intro/final.pak"
-.pg = _fxpage
-.sync = 0
-		display "'intro' part length: ",/D,($-fx_intro)
-
-fx_plasma1:	incbin "plasma1/final.pak"
-.pg = _fxpage
-.sync = 2868
-		display "'plasma1' part length: ",/D,($-fx_plasma1)
-
 fx_kitty_bank:	incbin "hellokitty/bank.bin"
 .pg = _fxpage ; data transfer part
 .length = $-fx_kitty_bank
 		display "'hellokitty' bank length: ",/D,($-fx_kitty_bank)
 
-fx_kitty:	incbin "hellokitty/final.pak"
-.pg = _fxpage
-.sync = 3450
-		display "'hellokitty' part length: ",/D,($-fx_kitty)
-
-fx_lucyshow:	incbin "lucyshow/final.pak"
-.pg = _fxpage
-.sync = 5370
-		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
-
-fx_simon_bank:	incbin "simon/bank.bin"
+fx_recytwist:	incbin "recytwist/bank.bin"
 .pg = _fxpage ; data transfer part
-.length = $-fx_simon_bank
-		display "'simon' bank length: ",/D,($-fx_simon_bank)
+.length = $-fx_recytwist
+		display "'recytwist' part length: ",/D,($-fx_recytwist)
+
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -63,26 +44,10 @@ fx_simon_bank:	incbin "simon/bank.bin"
 ;		export fx_demopart.pg
 ;		export fx_demopart.sync
 
-		export fx_intro
-		export fx_intro.pg
-		export fx_intro.sync
-
-		export fx_plasma1
-		export fx_plasma1.pg
-		export fx_plasma1.sync
-
 		export fx_kitty_bank
 		export fx_kitty_bank.pg
 		export fx_kitty_bank.length
 
-		export fx_kitty
-		export fx_kitty.pg
-		export fx_kitty.sync
-
-		export fx_lucyshow
-		export fx_lucyshow.pg
-		export fx_lucyshow.sync
-
-		export fx_simon_bank
-		export fx_simon_bank.pg
-		export fx_simon_bank.length
+		export fx_recytwist
+		export fx_recytwist.pg
+		export fx_recytwist.length

@@ -1,0 +1,78 @@
+		device	zxspectrum128
+		org	#6000
+		define isFX 5
+		display "Composing parts into #6000~#8000"
+
+@_fxpage = #10
+@_fxpage_start
+
+;;-----------------------------------------------------------------------------
+; Every part is defined with this descriptor:
+;
+; fx_demopart: incbin "demo-part-folder/final.pak"
+; .pg = _fxpage     ; current fx 128k page
+;                   ; (set bit.7 to just ldir given length, not decompress)
+; .sync = 1234      ; some constant to sync with part passed in DE
+; .length           ; optional when data transfer (ldir) needed
+
+fx_intro:	incbin "intro/final.pak"
+.pg = _fxpage
+.sync = 0
+		display "'intro' part length: ",/D,($-fx_intro)
+
+fx_plasma1:	incbin "plasma1/final.pak"
+.pg = _fxpage
+.sync = 2868
+		display "'plasma1' part length: ",/D,($-fx_plasma1)
+
+fx_plasma2:	incbin "plasma2/final.pak"
+.pg = _fxpage
+.sync = 4700
+		display "'plasma2' part length: ",/D,($-fx_plasma2)
+
+fx_kitty:	incbin "hellokitty/final.pak"
+.pg = _fxpage
+.sync = 3450
+		display "'hellokitty' part length: ",/D,($-fx_kitty)
+
+fx_lucyshow:	incbin "lucyshow/final.pak"
+.pg = _fxpage
+.sync = 5370
+		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
+
+;;-----------------------------------------------------------------------------
+	if $ > #8000
+		display "Too long! ",/D,($-#8000)," bytes out!"
+		end
+	else
+		display /D,(#8000-$)," bytes free before #8000"
+	endif
+
+		savebin "bank0",(_fxpage_start),$-(_fxpage_start)
+
+;;-----------------------------------------------------------------------------
+; Every part descriptor values should be exported:
+;
+;		export fx_demopart
+;		export fx_demopart.pg
+;		export fx_demopart.sync
+
+		export fx_intro
+		export fx_intro.pg
+		export fx_intro.sync
+
+		export fx_plasma1
+		export fx_plasma1.pg
+		export fx_plasma1.sync
+
+		export fx_plasma2
+		export fx_plasma2.pg
+		export fx_plasma2.sync
+
+		export fx_kitty
+		export fx_kitty.pg
+		export fx_kitty.sync
+
+		export fx_lucyshow
+		export fx_lucyshow.pg
+		export fx_lucyshow.sync

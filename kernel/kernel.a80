@@ -1,5 +1,6 @@
 		device	zxspectrum128
 
+		include "pg0fx.inc"
 		include "pg1fx.inc"
 		include "pg3fx.inc"
 		include "pg4fx.inc"

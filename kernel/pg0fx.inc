@@ -1,0 +1,15 @@
+fx_intro: EQU 0x00006000
+fx_intro.pg: EQU 0x00000010
+fx_intro.sync: EQU 0x00000000
+fx_plasma1: EQU 0x00006655
+fx_plasma1.pg: EQU 0x00000010
+fx_plasma1.sync: EQU 0x00000B34
+fx_plasma2: EQU 0x000069B5
+fx_plasma2.pg: EQU 0x00000010
+fx_plasma2.sync: EQU 0x0000125C
+fx_kitty: EQU 0x00007107
+fx_kitty.pg: EQU 0x00000010
+fx_kitty.sync: EQU 0x00000D7A
+fx_lucyshow: EQU 0x00007504
+fx_lucyshow.pg: EQU 0x00000010
+fx_lucyshow.sync: EQU 0x000014FA

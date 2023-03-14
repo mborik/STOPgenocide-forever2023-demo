@@ -88,6 +88,7 @@ PAK final.bin final.pak
 # banks composition
 cd ..
 rm -f bank*
+ASM pg0fx.a80 --lst=kernel/pg0fx.lst --exp=kernel/pg0fx.inc
 ASM pg1fx.a80 --lst=kernel/pg1fx.lst --exp=kernel/pg1fx.inc
 PAK bank1 bank1.pak
 ASM pg3fx.a80 --lst=kernel/pg3fx.lst --exp=kernel/pg3fx.inc

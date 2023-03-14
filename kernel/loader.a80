@@ -6,10 +6,13 @@
 	module loader
 		display "Composing loader & kernel"
 
-		org	#7D00
-begin = $
-numberOfBanks = 5
+		org	#6000
 
+begin = $
+		incbin "../bank0"
+
+
+numberOfBanks = 5
 unpackpage:	ld	hl,#51A1
 		ld	bc,((30 / numberOfBanks) << 8) | #FF
 .pgprog:	ld	(hl),c	; draw progress
@@ -130,8 +133,8 @@ line1.cmds	; POKE VAL "23624",NOT PI:
 		db	C_OUT
 		VAL	32765, ','
 		VAL	16, ':'
-		; LOAD _"loader" CODE:
-		db	C_LOAD, ' "loader"', C_CODE, ':'
+		; LOAD _"block0" CODE:
+		db	C_LOAD, ' "block0"', C_CODE, ':'
 		; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
 		VAL	loader.introscr, EOL
@@ -141,22 +144,24 @@ line2:		db	0, 2
 		dw	line2.len
 line2.cmds	; READ s
 		db	C_READ, 's:'
-		; POKE VAL "23388",s:
+		; POKE VAL "23388",s+VAL "16":
 		db	C_POKE
 		VAL	23388, ','
-		db	's:'
-		; OUT VAL "32765",s:
+		db	's+'
+		VAL	16, ':'
+		; OUT VAL "32765",s+VAL "16":
 		db	C_OUT
 		VAL	32765, ','
-		db	's:'
+		db	's+'
+		VAL	16, ':'
 		; LOAD _"page"+(STR$ s) CODE:
-		db	C_LOAD, ' "bank"+(', C_STRS, 's)', C_CODE, ':'
+		db	C_LOAD, ' "block"+(', C_STRS, 's)', C_CODE, ':'
 		; RANDOMIZE USR VAL "x":
 		db	C_RANDOMIZE, C_USR
 		VAL	loader.unpackpage, ':'
-		; IF s <> VAL "23" THEN
+		; IF s <> VAL "7" THEN
 		db	C_IF, 's', C_NOTEQ
-		VAL	23, C_THEN
+		VAL	7, C_THEN
 		; GO TO VAL "2"
 		db	C_GOTO
 		VAL	2, EOL
@@ -176,11 +181,11 @@ line9:		db	0, 9
 		dw	line9.len
 line9.cmds	; DATA...
 		db	C_DATA
-		VAL	#11, ','
-		VAL	#13, ','
-		VAL	#14, ','
-		VAL	#16, ','
-		VAL	#17, EOL
+		VAL	1, ','
+		VAL	3, ','
+		VAL	4, ','
+		VAL	6, ','
+		VAL	7, EOL
 line9.len = $ - line9.cmds
 
 total = $ - line1
@@ -189,7 +194,7 @@ total = $ - line1
 
 ; loader block
 		display "Storing loader into output tape"
-		savetap OUTPUT, CODE, "loader", loader.begin, loader.total
+		savetap OUTPUT, CODE, "block0", loader.begin, loader.total
 
 ;;-----------------------------------------------------------------------------
 	macro putBank number?, filename?
@@ -201,7 +206,7 @@ total = $ - line1
 		tapout OUTPUT,0
 			db	3 ;; BYTES
 		lua allpass
-			_pc("db 'bank"..tostring(_c('__putBank_number')).."    '")
+			_pc("db 'block"..tostring(_c('__putBank_number')).."    '")
 		endlua
 
 			dw	.filelength
@@ -210,20 +215,20 @@ total = $ - line1
 		tapend
 
 		tapout OUTPUT
-			org #C000,(__putBank_number & 7)
+			org #C000,(__putBank_number)
 .filedata		incbin filename?
 .filelength = $-.filedata
 
 	if .filelength > #4000
-		display "Packed bank ",/D,(__putBank_number & 7)," is too long!"
+		display "Packed bank ",/D,__putBank_number," is too long!"
 	endif
 		tapend
 	endm
 ;;-----------------------------------------------------------------------------
 		display "Storing banks into output tape"
 
-		putBank #11,"../bank1.pak"
-		putBank #13,"../bank3.pak"
-		putBank #14,"../bank4.pak"
-		putBank #16,"../bank6.pak"
-		putBank #17,"../bank7.pak"
+		putBank 1,"../bank1.pak"
+		putBank 3,"../bank3.pak"
+		putBank 4,"../bank4.pak"
+		putBank 6,"../bank6.pak"
+		putBank 7,"../bank7.pak"
