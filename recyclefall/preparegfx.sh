@@ -14,7 +14,7 @@ justtop=(
 )
 
 for FN in "${justtop[@]}"; do
-	dd if=${FN}.scr of=${FN}.part bs=4096 count=1 iflag=skip_bytes status=none
+	head -c 4096 ${FN}.scr > ${FN}.part
 done
 
 topack=(

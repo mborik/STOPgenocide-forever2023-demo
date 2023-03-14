@@ -20,7 +20,7 @@ justbottom=(
 )
 
 for FN in "${justbottom[@]}"; do
-	dd if=${FN}.scr of=${FN}.part skip=4096 iflag=skip_bytes status=none
+	tail -c +4097 ${FN}.scr > ${FN}.part
 done
 
 topack=(
