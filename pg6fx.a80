@@ -20,10 +20,20 @@ fx_simon_bank:	incbin "simon/bank.bin"
 .length = $-fx_simon_bank
 		display "'simon' bank length: ",/D,($-fx_simon_bank)
 
-fx_simon:	incbin "simon/final.pak"
+fx_plasma1:	incbin "plasma1/final.pak"
 .pg = _fxpage
-.sync = 6523
-		display "'simon' part length: ",/D,($-fx_simon)
+.sync = 2868
+		display "'plasma1' part length: ",/D,($-fx_plasma1)
+
+fx_kitty:	incbin "hellokitty/final.pak"
+.pg = _fxpage
+.sync = 3450
+		display "'hellokitty' part length: ",/D,($-fx_kitty)
+
+fx_lucyshow:	incbin "lucyshow/final.pak"
+.pg = _fxpage
+.sync = 5370
+		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -47,6 +57,14 @@ fx_simon:	incbin "simon/final.pak"
 		export fx_simon_bank.pg
 		export fx_simon_bank.length
 
-		export fx_simon
-		export fx_simon.pg
-		export fx_simon.sync
+		export fx_plasma1
+		export fx_plasma1.pg
+		export fx_plasma1.sync
+
+		export fx_kitty
+		export fx_kitty.pg
+		export fx_kitty.sync
+
+		export fx_lucyshow
+		export fx_lucyshow.pg
+		export fx_lucyshow.sync

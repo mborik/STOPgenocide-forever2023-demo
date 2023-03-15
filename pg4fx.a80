@@ -20,10 +20,10 @@ fx_lucy:	incbin "lucy/final.pak"
 .sync = 5758
 		display "'lucy' part length: ",/D,($-fx_lucy)
 
-fx_recyshow:	incbin "recyshow/final.pak"
+fx_simon:	incbin "simon/final.pak"
 .pg = _fxpage
-.sync = 7395
-		display "'recyshow' part length: ",/D,($-fx_recyshow)
+.sync = 6523
+		display "'simon' part length: ",/D,($-fx_simon)
 
 fx_recyplazmy:	incbin "recyplazmy/final.pak"
 .pg = _fxpage
@@ -52,9 +52,9 @@ fx_recyplazmy:	incbin "recyplazmy/final.pak"
 		export fx_lucy.pg
 		export fx_lucy.sync
 
-		export fx_recyshow
-		export fx_recyshow.pg
-		export fx_recyshow.sync
+		export fx_simon
+		export fx_simon.pg
+		export fx_simon.sync
 
 		export fx_recyplazmy
 		export fx_recyplazmy.pg

@@ -1,6 +1,12 @@
 fx_simon_bank: EQU 0x0000C000
 fx_simon_bank.pg: EQU 0x00000016
 fx_simon_bank.length: EQU 0x00001168
-fx_simon: EQU 0x0000D168
-fx_simon.pg: EQU 0x00000016
-fx_simon.sync: EQU 0x0000197B
+fx_plasma1: EQU 0x0000D168
+fx_plasma1.pg: EQU 0x00000016
+fx_plasma1.sync: EQU 0x00000B34
+fx_kitty: EQU 0x0000D4C8
+fx_kitty.pg: EQU 0x00000016
+fx_kitty.sync: EQU 0x00000D7A
+fx_lucyshow: EQU 0x0000D8C5
+fx_lucyshow.pg: EQU 0x00000016
+fx_lucyshow.sync: EQU 0x000014FA

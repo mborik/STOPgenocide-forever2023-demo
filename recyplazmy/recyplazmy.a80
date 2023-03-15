@@ -30,13 +30,12 @@ start		ld	a,#17
 		call	mksin		;; Vygenerovanie sinus tabulky (pouziva plazma)
 		call	mkpatt		;; Vygenerovanie patternov pre raster viewer
 
-		ld	bc,8256
+		ld	bc,-8256
 .waitforstart	ei
 		halt
 		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforstart
+		add	hl,bc
+		jr	nc,.waitforstart
 
 znovu		ld	hl,scenar
 slucka		ld	a,(hl)
@@ -192,7 +191,7 @@ dobeh		call	vidnxt
 zmaz		ld	b,#04
 zmzlop		ld	c,l
 		xor	a
-	dup	sizexx >> 1
+	dup sizexx >> 1
 		ld	(hl),a
 		inc	l
 	edup
@@ -256,7 +255,7 @@ maskuj		call	msksub
 		add	a,l
 		ld	l,a
 msksub		push	hl
-	dup	8
+	dup 8
 		ld	a,(de)
 		and	(hl)
 		ld	(hl),a
@@ -379,13 +378,13 @@ scenario:
 		region	3, 5, 10, 6, 0q163
 		end_region_list
 
-	opt pop
 		hilite	9216, 16, 19, 15, 2, 0q177, 0q170
 		hilite	9252, 16, 15, 15, 3, 0q177, 0q170
 		hilite	9312, 16, 12, 15, 2, 0q177, 0q170
 		hilite	9348, 16,  8, 15, 3, 0q177, 0q170
 		hilite	9408, 15,  5, 16, 3, 0q177, 0q170
 		end_scenario_list
+	opt pop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Jedna faza pohybu plazmy
