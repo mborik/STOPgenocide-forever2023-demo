@@ -48,7 +48,7 @@ start		ld	a,#10 + PATTERN_BANK
 efekt1		ld	xh,col000
 
 		ld	hl,#58C8
-		ld	a,#06
+		ld	a,6
 		call	ukaz
 
 		ld	b,140
@@ -65,7 +65,7 @@ efekt2		ld	xh,col111
 		call	wait
 
 		ld	hl,#59D0
-		ld	a,#06
+		ld	a,6
 		call	ukaz
 
 		ld	b,140
@@ -81,8 +81,8 @@ efekt3		ld	xh,col222
 		ld	b,28
 		call	wait
 
-		ld	hl,#5980
-		ld	a,#0C
+		ld	hl,#5960
+		ld	a,11
 		call	ukaz
 
 		ld	b,140
@@ -95,8 +95,8 @@ efekt3		ld	xh,col222
 
 efekt4		ld	xh,col111
 
-		ld	hl,#5998
-		ld	a,#0C
+		ld	hl,#5978
+		ld	a,11
 		call	ukaz
 
 		ld	b,90
@@ -105,7 +105,7 @@ efekt4		ld	xh,col111
 		ld	xh,col222
 
 		ld	hl,#58C8
-		ld	a,#06
+		ld	a,6
 		call	ukaz
 
 		ld	b,16
@@ -125,8 +125,8 @@ efekt5		ld	xh,col333
 		ld	b,24
 		call	wait
 
-		ld	hl,#5990
-		ld	a,#0C
+		ld	hl,#5970
+		ld	a,11
 		call	ukaz
 
 		ld	b,24
@@ -134,8 +134,8 @@ efekt5		ld	xh,col333
 
 		ld	xh,col222
 
-		ld	hl,#5980
-		ld	a,#0C
+		ld	hl,#5960
+		ld	a,11
 		call	ukaz
 
 		ld	b,24
@@ -143,8 +143,8 @@ efekt5		ld	xh,col333
 
 		ld	xh,col111
 
-		ld	hl,#5988
-		ld	a,#0C
+		ld	hl,#5968
+		ld	a,11
 		call	ukaz
 
 		ld	b,24
@@ -152,8 +152,8 @@ efekt5		ld	xh,col333
 
 		ld	xh,col000
 
-		ld	hl,#5998
-		ld	a,#0C
+		ld	hl,#5978
+		ld	a,11
 		call	ukaz
 
 		ld	b,200
