@@ -32,6 +32,61 @@
 		include "dzx0_fast.a80"
 		endmodule
 
+gameover:	ld	a,100
+.fadeout	ei
+		halt
+		halt
+		ex	af,af'
+		call	attrhide
+		ex	af,af'
+		dec	a
+		jr	nz,.fadeout
+		ld	a,#57
+		out	(#FD),a
+		xor	a
+		ld	hl,#5AFF
+		ld	de,#5AFE
+		ld	bc,#1AFF
+		ld	(hl),a
+		lddr
+		ld	de,#C000
+		ld	b,#1B
+		ldir
+		ld	a,#50
+		out	(#FD),a
+		ret
+
+attrhide:	ld	hl,22528
+		ld	c,24
+.atthd2:	ld	b,32
+		push	bc
+.atthd3:	ld	a,(hl)
+		and	7
+		jr	z,.atthd4
+		dec	a
+.atthd4:	push	af
+		ld	a,(hl)
+		and	56
+		jr	z,.atthd5
+		ld	c,8
+		sub	c
+		ld	c,a
+		pop	af
+		or	c
+		jr	.atthd6
+.atthd5:	ld	a,(hl)
+		and	248
+		ld	c,a
+		pop	af
+		or	c
+.atthd6:	ld	(hl),a
+		inc	hl
+		djnz	.atthd3
+		pop	bc
+		dec	c
+		jr	nz,.atthd2
+		ret
+
 fxtable:	include "fxtable.inc"
 		db	0
 
@@ -110,6 +165,7 @@ im2vector = ((high $) + 1) << 8
 ;;-----------------------------------------------------------------------------
 
 @kernel:	di
+		ld	(backsp+1),sp
 		ld	sp,basesp
 		ld	a,high im2vector
 		ld	i,a
@@ -180,11 +236,18 @@ im2vector = ((high $) + 1) << 8
 		call	RUNZONE
 		jr	.run
 
-.end		ei
-		halt
-		jr	.end
+.end		call	gameover
+		di
+		im	1
+		ld	iy,#5C3A
+		ld	hl,#2758
+backsp		ld	sp,0
+		exx
+		ei
+		ret
 
-		display /D,(RUNZONE-$)," bytes free after kernel"
+
+		display /D,(RUNZONE-$)," bytes free for stack"
 		block	(RUNZONE-$),0
 
 		outend
