@@ -755,19 +755,19 @@ TIMER_TAB	dw	SYNC, ENABLE_EFFECT
 		dw	SYNC + 967, END_PLASMA
 		dw	0
 
-TIMER_BLIK	dw	SYNC + 979
+TIMER_BLIK	dw	SYNC + 978
 		db	BLIK_WHITE, 7
 
 		dw	SYNC + 982
 		db	BLIK_BLUEY, 1
 
-		dw	SYNC + 984
+		dw	SYNC + 983
 		db	BLIK_WHITE, 7
 
 		dw	SYNC + 987
 		db	BLIK_BLUEY, 1
 
-		dw	SYNC + 996
+		dw	SYNC + 995
 		db	BLIK_WHITE, 7
 
 		dw	SYNC + 999
