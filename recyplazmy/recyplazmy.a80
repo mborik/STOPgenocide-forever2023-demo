@@ -21,7 +21,12 @@ timrun = 8		;; Pocet pedesiatin chodu twistera v plnej vyske
 ;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
-start
+start		ld	a,#17
+		call	xchg.bnk
+		call	followscene
+		ld	a,#10
+		call	xchg.bnk
+
 		call	mksin		;; Vygenerovanie sinus tabulky (pouziva plazma)
 		call	mkpatt		;; Vygenerovanie patternov pre raster viewer
 
@@ -67,9 +72,21 @@ ending		ld	a,#10
 		call	init
 .phaseEnd	ld	a,#55
 .loop		call	frame
+		ex	af,af'
+		ld	a,(#5AFF)
+		rrca
+		rrca
+		rrca
+		and	7
+		ld	(actborder),a
+		ex	af,af'
 		dec	a
 .phaseStart	cp	#55
 		jr	nz,.loop
+		ld	hl,attrpatt
+		ld	de,#7D00
+		ld	bc,#0300
+		ldir
 		ret
 
 frame		ld	xh,a
@@ -285,6 +302,91 @@ maska3		dg	#######.
 		dg	###.....
 		dg	........
 
+followscene:	ld	hl,scenario
+		ld	a,(FRAMES)
+		add	a,(hl)
+		inc	hl
+		ld	a,(FRAMES+1)
+		adc	a,(hl)
+		ret	nc		; (FRAMES) < sync
+		inc	hl
+
+.readpatts	; A is zeroed by FRAMES test or by countdown of height
+		or	(hl)
+		inc	hl
+		jr	z,.finishpatts	; high byte == 0 -> end of list
+		ld	d,a
+		ldi	e,(hl)
+		ret	m
+
+		ldi	a,(hl)		; color
+		ex	af,af
+		ldi	c,(hl)		; C = 32-width
+		ld	a,32
+		sub	c
+		ld	ixl,a		; IXL = width
+		ldi	a,(hl)		; height
+		ex	de,hl		; HL = VRAM, DE = scenario ptr, C = 32-w, IXL = w, A = h, A' = color
+.fillrect
+		ex	af,af'		; A = color, A' = row counter
+		ld	b,ixl		; B = width
+.fillrow	ld	(hl),a
+		set	7,h		;; Zmena:
+		ld	(hl),a		;; Zapis atributu
+		res	7,h		;; do oboch obrazoviek
+		inc	l
+		djnz	.fillrow
+		add	hl,bc		; attr_addr += 32-width
+		ex	af,af'
+		dec	a
+		jr	nz,.fillrect
+		ex	de,hl		; HL = scenario ptr
+		jr	.readpatts	; A is zero from height counter
+
+.finishpatts	ld	(followscene+1),hl
+		ret
+
+	define end_region_list db 0
+
+	define end_scenario_list dw 0
+
+	; synchronization stamp
+	macro sync t?
+		dw	-(t?)
+	endm
+
+	; action to draw attribute square
+	macro region x?, y?, w?, h?, color?
+.attr_addr = #5800 + 32 * (y?) + (x?)
+		db	high(.attr_addr), low(.attr_addr)
+		db	color?
+		db	32 - (w?), h?
+	endm
+
+	macro hilite snc?, x?, y?, w?, h?, c1?, c2?
+.c = (c2?) + 1
+	dup ((c1?) - .c + 1), .hilite_i
+		sync	(snc?) + (3 * .hilite_i)
+		region	x?, y?, w?, h?, (.c + .hilite_i)
+		end_region_list
+	edup
+	endm
+
+scenario:
+	opt push listoff
+		sync	8200
+		region	3, 0, 10, 5, 0q173
+		region	3, 5, 10, 6, 0q163
+		end_region_list
+
+	opt pop
+		hilite	9216, 16, 19, 15, 2, 0q177, 0q170
+		hilite	9252, 16, 15, 15, 3, 0q177, 0q170
+		hilite	9312, 16, 12, 15, 2, 0q177, 0q170
+		hilite	9348, 16,  8, 15, 3, 0q177, 0q170
+		hilite	9408, 15,  5, 16, 3, 0q177, 0q170
+		end_scenario_list
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Jedna faza pohybu plazmy
 
@@ -308,6 +410,14 @@ pracuj		push	bc
 		ex	de,hl		;; Zobrazenie obrazca na obrazovke
 vidadd		ld	hl,video
 		call	view1
+
+		ld	a,(xchg.vram+1)
+		push	af
+		or	#57
+		out	(#FD),a
+		call	followscene
+		pop	af
+		call	xchg.bnk+3
 
 		pop	hl
 		pop	de
