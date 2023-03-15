@@ -390,91 +390,115 @@ followscene:	ld	ix,scenario
 scenario:
 ;; kittens stripes 1
 		dw	240
-		region	 2, 16, 29,  1, 0q007
+		region	 2, 16, 29,  1, 0q003
 		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	242
-		region	 2, 17, 29,  1, 0q007
 		region	 2, 16, 29,  1, 0q002
 		region	 4, 16,  1,  1, 0q000
+		region	 2, 17, 29,  1, 0q003
 		db	0
 
 		dw	244
-		region	 2, 18, 29,  1, 0q007
-		region	 2, 17, 29,  1, 0q002
 		region	 2, 16, 29,  1, 0q001
 		region	 4, 16,  1,  1, 0q000
+		region	 2, 17, 29,  1, 0q002
+		region	 2, 18, 29,  1, 0q003
 		db	0
 
 		dw	246
-		region	 2, 18, 29,  1, 0q002
-		region	 2, 17, 29,  1, 0q001
 		region	 2, 16, 29,  1, 0q000
+		region	 2, 17, 29,  1, 0q001
+		region	 2, 18, 29,  1, 0q002
 		db	0
 
 		dw	248
-		region	 2, 18, 29,  1, 0q001
 		region	 2, 17, 29,  1, 0q000
+		region	 2, 18, 29,  1, 0q001
+		region	 3, 21, 26,  1, 0q003
 		db	0
 
 		dw	250
 		region	 2, 18, 29,  1, 0q000
+		region	 3, 21, 26,  1, 0q002
+		region	 3, 22, 26,  1, 0q003
+		db	0
+
+		dw	252
+		region	 3, 21, 26,  1, 0q001
+		region	 3, 22, 26,  1, 0q002
+		db	0
+
+		dw	254
+		region	 3, 21, 26,  1, 0q000
+		region	 3, 22, 26,  1, 0q001
+		db	0
+
+		dw	256
+		region	 3, 22, 26,  1, 0q000
 		db	0
 
 ;; kittens stripes 2
 		dw	288
-		region	 2, 16, 29,  3, 0q101
+		region	 2, 16, 29,  3, 0q001
 		region	 4, 16,  1,  1, 0q000
 		db	0
 
 		dw	300
-		region	 2, 16, 29,  1, 0q107
-		region	 4, 16,  1,  1, 0q103
+		region	 2, 16, 29,  1, 0q003
 		db	0
 
 		dw	307
-		region	 2, 16, 29,  1, 0q101
+		region	 2, 16, 29,  1, 0q001
 		region	 2, 17, 29,  2, 0q000
-		region	 4, 16,  1,  1, 0q103
+		region	 4, 16,  1,  1, 0q003
 		db	0
 
 		dw	310
-		region	 2, 17, 29,  1, 0q102
+		region	 2, 17, 29,  1, 0q005
 		db	0
 
 		dw	312
-		region	 2, 16, 29,  1, 0q107
-		region	 2, 17, 29,  1, 0q101
-		region	 2, 18, 29,  1, 0q102
-		region	 4, 16,  1,  1, 0q103
+		region	 2, 16, 29,  1, 0q003
+		region	 2, 17, 29,  1, 0q001
+		region	 2, 18, 29,  1, 0q005
+		region	 4, 16,  1,  1, 0q003
 		db	0
 
 		dw	314
-		region	 2, 17, 29,  1, 0q102
+		region	 2, 17, 29,  1, 0q005
 		region	 2, 18, 29,  1, 0q000
+		region	 3, 21, 26,  1, 0q001
 		db	0
 
 		dw	314
-		region	 2, 16, 29,  1, 0q101
-		region	 4, 16,  1,  1, 0q103
+		region	 2, 16, 29,  1, 0q001
+		region	 4, 16,  1,  1, 0q003
+		region	 3, 21, 26,  1, 0q005
+		region	 3, 22, 26,  1, 0q001
 		db	0
 
 		dw	319
-		region	 2, 18, 29,  1, 0q102
+		region	 2, 18, 29,  1, 0q005
 		region	 4, 16,  1,  1, 0q000
+		region	 3, 21, 26,  1, 0q003
+		region	 3, 22, 26,  1, 0q005
 		db	0
 
 		dw	325
 		region	 2, 16, 29,  1, 0q001
-		region	 2, 17, 29,  1, 0q107
-		region	 2, 18, 29,  1, 0q102
+		region	 2, 17, 29,  1, 0q003
+		region	 2, 18, 29,  1, 0q005
 		region	 4, 16,  1,  1, 0q000
+		region	 3, 21, 26,  1, 0q001
+		region	 3, 22, 26,  1, 0q003
 		db	0
 
 		dw	328
 		region	 2, 17, 29,  1, 0q001
-		region	 2, 18, 29,  1, 0q107
+		region	 2, 18, 29,  1, 0q003
+		region	 3, 22, 26,  1, 0q001
 		db	0
 
 		dw	331
@@ -495,48 +519,60 @@ scenario:
 
 		; ten
 		dw	355
-		region	 7, 16,  6,  3, 0q102
 		region	 4, 16,  1,  1, 0q000
+		region	 7, 16,  6,  3, 0q102
+		region	22, 21,  7,  2, 0q102
 		db	0
 		dw	357
 		region	 7, 16,  6,  3, 0q103
+		region	22, 21,  7,  2, 0q103
 		db	0
 		dw	359
 		region	 7, 16,  6,  3, 0q107
+		region	22, 21,  7,  2, 0q107
 		db	0
 
-		; res
+		; res | de
 		dw	367
-		region	13, 16,  7,  3, 0q102
 		region	 4, 16,  1,  1, 0q103
+		region	13, 16,  7,  3, 0q102
+		region	15, 21,  7,  2, 0q102
 		db	0
 		dw	369
 		region	13, 16,  7,  3, 0q103
+		region	15, 21,  7,  2, 0q103
 		db	0
 		dw	371
 		region	13, 16,  7,  3, 0q107
+		region	15, 21,  7,  2, 0q107
 		db	0
 
-		; cue->rs
+		; cue->rs | va->in
 		dw	373
-		region	20, 16,  6,  3, 0q102
 		region	 4, 16,  1,  1, 0q000
+		region	20, 16,  6,  3, 0q102
+		region	 8, 21,  7,  2, 0q102
 		db	0
 		dw	375
 		region	20, 16,  6,  3, 0q103
+		region	 8, 21,  7,  2, 0q103
 		db	0
 		dw	377
 		region	20, 16,  6,  3, 0q107
 		region	26, 16,  5,  3, 0q102
+		region	 8, 21,  7,  2, 0q107
+		region	 3, 21,  5,  2, 0q102
 		db	0
 
-		; rs
+		; rs | in
 		dw	379
-		region	26, 16,  5,  3, 0q103
 		region	 4, 16,  1,  1, 0q103
+		region	26, 16,  5,  3, 0q103
+		region	 3, 21,  5,  2, 0q103
 		db	0
 		dw	381
 		region	26, 16,  5,  3, 0q107
+		region	 3, 21,  5,  2, 0q107
 		db	0
 
 ;; sindikat
@@ -726,23 +762,23 @@ scenario:
 		region	 0,  1, 17,  4, 0q102
 		region	22,  2, 10,  3, 0q102
 		region	17,  1,  5,  4, 0q107
-		region	12, 21,  8,  2, 0q107
+		region	15, 19,  2,  2, 0q107
 		region	 4, 16,  1,  1, 0q107
 		db	0
 
-;; present
+;; and
 		dw	578
-		region	12, 21,  8,  2, 0q106
+		region	15, 19,  2,  2, 0q106
 		region	 4, 16,  1,  1, 0q103
 		db	0
 		dw	581
-		region	12, 21,  8,  2, 0q105
+		region	15, 19,  2,  2, 0q105
 		db	0
 		dw	584
-		region	12, 21,  8,  2, 0q103
+		region	15, 19,  2,  2, 0q103
 		db	0
 		dw	586
-		region	12, 21,  8,  2, 0q102
+		region	15, 19,  2,  2, 0q102
 		db	0
 
 ;; heart beating

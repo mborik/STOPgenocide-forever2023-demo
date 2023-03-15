@@ -1,9 +1,9 @@
 fx_intro: EQU 0x00006000
 fx_intro.pg: EQU 0x00000010
 fx_intro.sync: EQU 0x00000000
-fx_plasma2: EQU 0x00006655
+fx_plasma2: EQU 0x0000671B
 fx_plasma2.pg: EQU 0x00000010
 fx_plasma2.sync: EQU 0x0000125C
-fx_recyshow: EQU 0x00006DA7
+fx_recyshow: EQU 0x00006E6D
 fx_recyshow.pg: EQU 0x00000010
 fx_recyshow.sync: EQU 0x00001CE3
