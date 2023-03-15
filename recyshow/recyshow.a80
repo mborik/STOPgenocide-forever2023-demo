@@ -1,7 +1,7 @@
 		device	zxspectrum128
 
 	ifdef isFX
-		display "Compiling 'recyclefall'"
+		display "Compiling 'recyshow'"
 	endif
 
 		include "../kernel/constants.inc"
@@ -122,6 +122,6 @@ lid
 		define	PRESET.paper 0q177
 		define	PRESET.waitfor 7395
 		include "../kernel/kernel.micro.inc"
-		savesna "recyclefall.sna",microkernel
+		savesna "recyshow.sna",microkernel
 	opt pop
 	endif

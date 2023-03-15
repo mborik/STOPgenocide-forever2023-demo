@@ -71,9 +71,9 @@ cd ../plasma2
 ASM plasma2.a80 -DisFX --lst=plasma2.lst
 PAK final.bin final.pak
 
-cd ../recyclefall
+cd ../recyshow
 . preparegfx.sh &> /dev/null
-ASM recyclefall.a80 -DisFX --lst=recyclefall.lst
+ASM recyshow.a80 -DisFX --lst=recyshow.lst
 PAK final.bin final.pak
 
 cd ../recytwist

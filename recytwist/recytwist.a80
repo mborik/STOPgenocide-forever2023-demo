@@ -565,7 +565,7 @@ patterns.length
 	ifndef isFX
 	opt push listoff
 		org #4000
-		incbin "../recyclefall/gfx/13.scr"
+		incbin "../recyshow/gfx/13.scr"
 
 		define	PRESET.border 7
 		define	PRESET.noclearscr 1
@@ -574,7 +574,7 @@ patterns.length
 
 		page 7
 		org #C000
-		incbin "../recyclefall/gfx/13.scr"
+		incbin "../recyshow/gfx/13.scr"
 		savesna "recytwist.sna",microkernel
 	opt pop
 	endif

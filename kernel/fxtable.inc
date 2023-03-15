@@ -54,9 +54,9 @@ LDIR = #80
 		dw	fx_simon
 		dw	fx_simon.sync
 
-		db	fx_recyclefall.pg
-		dw	fx_recyclefall
-		dw	fx_recyclefall.sync
+		db	fx_recyshow.pg
+		dw	fx_recyshow
+		dw	fx_recyshow.sync
 
 		db	fx_recytwist.pg | LDIR
 		dw	fx_recytwist

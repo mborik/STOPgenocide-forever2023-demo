@@ -954,7 +954,7 @@ rutexe		ds	#2000	;; Zobrazovaci engine
 	ifndef isFX
 	opt push listoff
 		org #4000
-		incbin "../recyclefall/gfx/13.scr"
+		incbin "../recyshow/gfx/13.scr"
 
 		define	PRESET.border 7
 		define	PRESET.noclearscr 1
@@ -963,7 +963,7 @@ rutexe		ds	#2000	;; Zobrazovaci engine
 
 		page 7
 		org #C000
-		incbin "../recyclefall/gfx/13.scr"
+		incbin "../recyshow/gfx/13.scr"
 		savesna "recyplazmy.sna",microkernel
 	opt pop
 	endif
