@@ -1,0 +1,1143 @@
+		device	zxspectrum128
+
+	ifdef	isFX
+		display	"Compiling 'vodocat'"
+	endif
+
+		include	"../kernel/constants.inc"
+
+;;-----------------------------------------------------------------------------
+wait	macro	time
+	if	time > 5
+		ld	b,time
+		halt
+		djnz	$-1
+	else
+	dup	time
+		halt
+	edup
+	endif
+	endm
+
+;;-----------------------------------------------------------------------------
+
+attrpatt = #7D00
+
+
+		org	#B700	;; Tabulky a buffery
+tables
+bufatt		ds	#0100	;; Buffer pre atributy scenara
+
+tabsyn		ds	#0100	;; Sinus tabulka - absolutne hodnoty
+tabsin		ds	#0100	;; Sinus tabulka - 128-0-128-255-128
+tabsnh		ds	#0100	;; Sinus tabulka - zmensene hodnoty
+
+tabhi2		ds	#0100	;; Line: Vyssi bajt adresy pre Y pre pixely 2x2
+tabhiy		ds	#0100	;; Line: Vyssi bajt adresy pre Y
+tabloy		ds	#0100	;; Line: Nizsi bajt adresy pre Y
+tablox		ds	#0100	;; Line: Offset #00-#1F adresy pre X
+tabpix		ds	#0100	;; Line: Maska pixela v bajte pre X
+tabpx2		ds	#0100	;; Line: Maska pre pixel 2x2
+
+		org	#E000
+tabidx		ds	#2000	;; 8kB tabulka zindexovanych dat v banke 0
+
+;;-----------------------------------------------------------------------------
+;; Busy soft ;; 02.03.2023 - 09.03.2023 ;; Vodorovny twister ;;
+
+
+		org	RUNZONE
+
+start		ei
+		halt
+		ld	hl,scratt
+		ld	de,#5800
+		ld	bc,#0300
+.setbrightdark	ld	a,(hl)
+		and	#40
+		ld	(de),a
+		inc	hl
+		inc	de
+		dec	bc
+		ld	a,b
+		or	c
+		jr	nz,.setbrightdark
+
+		ld	hl,screen
+		ld	de,#4000
+		ld	bc,#1800
+		ldir
+
+		call	init
+fx_start	ld	a,#3E
+fx_loop		call	frame
+		inc	a
+fx_end		cp	#FE
+		jr	nz,fx_loop
+
+efekt		ld	a,#57		;; Zapnutie banky 7
+		ld	(act128page),a
+		out	(#fd),a
+
+		ld	hl,#4000	;; Presun obsahu z prvej do druhej videoramky
+		ld	de,#C000
+		ld	bc,#1B00
+		ldir
+
+		ld	a,#CD		;; Nastavenie rutinky volanej z prerusenia
+		ld	hl,rutint
+		ld	(IMCALL+1),hl
+		ld	(IMCALL),a
+
+;; Prva cast efektu - blikanie trubice - akoze nabeh peknelneho stroja
+
+		ld	a,#10		;; Cervene atributy
+		call	blik		;; Bliknutie trubicou
+
+		wait	5		;; Cakaj 50 frejmov
+
+		ld	a,#30		;; Zlte atributy
+		call	blik		;; Bliknutie trubicou
+
+		wait	7
+
+		ld	a,#08		;; Postupne blikanie od modrej az po bielu farbu
+ukaz11		push	af
+		call	blik
+		wait	5
+		pop	af
+		add	#08
+		cp	#38
+		jr	c,ukaz11
+		call	blik
+
+		wait	25
+
+		ld	a,#08		;; "Plynuly" nabeh z ciernej do bielej
+ukaz22		push	af
+		call	setbox
+		wait	3
+		pop	af
+		add	#08
+		cp	#40
+		jr	c,ukaz22
+
+		wait	25
+
+neblik		ld	a,#3F		;; Zaverecne inicialne nastavenie
+		call	setbox		;; na PAPER 7:INK 7 pred zapnutim twistera
+
+;; Druha cast efektu - samotny twister
+
+		ld	a,#57
+		ld	(vid128+1),a
+		ld	(act128page),a
+		out	(#fd),a
+
+		ld	hl,#5900	;; Presun atributov twisteru z prvej do druhej videoramky
+		ld	de,#D900
+		ld	bc,#0100
+		ldir
+
+		ld	a,#50		;; Banka 0 - tam zasahuju zdrojove data pre twister
+		ld	(act128page),a
+		out	(#fd),a
+
+		call	makidx		;; Konverzia a zindexovanie dat pre twister
+		call	maksin		;; Vytvorenie tabulky pre sinus (tri tabulky)
+		call	makbod		;; Vytvorenie tabulky pre adresaciu videoramky
+
+		ld	a,50		;; Inicializacia atributoveho scenaru
+		ld	hl,scdata	;; pre objavovanie a miznutie twisteru
+		ld	(sccnt+1),a
+		ld	(scadd+1),hl
+
+		halt			;; Vykonanie matematiky z prerusenia pre spravnu inicializaciu polohy
+
+		ld	a,#57
+		ld	(vid128+1),a
+		ld	(act128page),a
+		out	(#fd),a
+
+slucka		ei
+		halt
+
+		ld	hl,(scadd+1)	;; Test ci sa atributovy scenar uz vykonal cely
+		ld	a,(hl)
+		cp	#80
+		jr	z,koniec	;; Ak ano, skok na koniec
+
+		call	vidxch		;; Prepnutie aktivnej videoramky
+		call	zmaz		;; Zmazanie stareho twistera
+
+toc1		ld	c,#55		;; Parametre jednej fazy otacania twisterom
+toc2		ld	de,#5555
+toc3		ld	hl,#5555
+
+		exx
+
+		ld	xh,#A0		;; Sirka twistera v pixeloch
+		ld	bc,#8006	;; B = bitova maska  C = offset videoram adresy
+
+pos1		ld	l,#00		;; Offset v ramci obrazku macky
+
+znovu		exx			;; Slucka pre pixelove stlpce
+		ld	a,(de)
+		add	a,(hl)
+		add	a,c
+		dec	e
+		dec	l
+		exx			;; A = uhol natocenia daneho pixeloveho stlpca
+
+		rrca
+		rrca
+		or	high tabidx
+		ld	h,a		;; HL = smernik do indexovej tabulky
+
+vid128		ld	a,#57
+		and	#58
+		ld	(act128page),a	;; Zapne banku 0
+		out	(#fd),a
+
+		ld	e,(hl)		;; Precitanie adresy z indexovej tabulky
+		inc	l		;; (adresa = zaciatok sekvencie Y suradnic)
+		ld	d,(hl)
+		inc	l
+
+		ld	a,(vid128+1)	;; Zapne banku s pracovnou obrazovkou
+		ld	(act128page),a
+		out	(#fd),a
+
+		push	hl
+		jr	read
+
+pixel		ld	h,high tabloy	;; Nakreslenie pixelu
+		ld	l,a
+		ld	a,(hl)
+		dec	h
+		ld	h,(hl)		;; HA = adresa pixeloveho riadku
+		or	c		;;  C = offset adresy
+		ld	l,a		;; HL = adresa pixela
+		ld	a,b		;;  B = maska pixela
+		or	(hl)
+		ld	(hl),a
+
+read		ld	a,(de)		;; A = Y suradnica pixelu
+		inc	de
+		or	a		;; (nula znamena koniec sekvencie Y suradnic)
+		jr	nz,pixel
+
+		pop	hl
+
+		rrc	b		;; Posun pixelovej masky a offsetu adresy o 1 pixel vpravo
+		jr	nc,move
+		inc	c
+move
+		dec	xh		;; Opakuj pre vsetky pixelove sltpce
+		jr	nz,znovu
+
+		jp	slucka
+
+;; Vymena obrazoviek
+
+vidxch		ld	hl,vid128+1	;; Vymena videoramiek pre animaciu
+		ld	a,(hl)
+		xor	#0A
+		ld	(hl),a
+		ld	(act128page),a
+		out	(#fd),a
+		ret
+
+;; Upratanie obrazovky na koniec
+
+koniec		ld	a,#50
+		ld	(act128page),a
+		out	(#fd),a
+
+		ld	a,#3F
+zmizni		push	af
+		call	setbox
+		wait	1
+		pop	af
+		sub	#09
+		jr	nc,zmizni
+
+		ld	a,#01
+		ld	(IMCALL),a
+		ret
+
+;; Zmazanie stareho efektu
+;;
+;;  clsadd = offset videoram adresy pre pravy horny roh mazaneho okna
+;;  clslin = pocet mazanych pixelovych riadokov
+;;  clspus = sirka mazaneho okna v PUSHoch
+
+clsadd = #081A		;; Offset videoram adresy pre pravy horny roh mazaneho okna
+clslin = #40		;; Pocet mazanych pixelovych riadokov
+clspus = 10		;; Sirka mazaneho okna v PUSHoch
+
+zmaz		ld	b,#40
+		ld	de,#0000	;; + #0180 ;; pre zviditelnenie mazanej oblasti
+		ld	hl,#C000+clsadd
+		ld	(zmzstk+1),sp
+zmzlop		ld	sp,hl
+	dup clspus
+		push	de
+	edup
+		inc	h		;; downhl
+		ld	a,h
+		and	#07
+		jr	nz,zmznxt
+		ld	a,#20
+		add	a,l
+		ld	l,a
+		jr	c,zmznxt
+		ld	a,#F8
+		add	a,h
+		ld	h,a
+zmznxt		djnz	zmzlop
+zmzstk		ld	sp,#5555
+		ret
+
+;; Nastavenie atributov celeho twisteru
+;; Vstup: A = hodnota atributov
+
+blik		call	setbox		;; Bliknutie danou farbou
+		halt
+		halt
+		halt
+tma		xor	a		;; Zaciernenie
+setbox		halt
+		ld	c,#08
+		ld	hl,#5906
+		ld	de,#000C
+
+			: ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+		set 6,a : ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+			: ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+		res 6,a : ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+			: ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+			: ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+		set 6,a : ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+		res 6,a : ld b,#14 : ld (hl),a : inc l : djnz $-2 : add hl,de
+
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Matematika a veci volane z prerusenia
+
+rutint
+
+;; Riadenie rotacii twistera
+
+		ld	de,-#0277
+mvuho0		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho0+1),hl
+		ld	a,h
+		ld	(toc1+1),a
+
+		ld	de,#0219
+mvuho1		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho1+1),hl
+		ld	b,h
+
+		ld	de,#0333
+mvuho2		ld	hl,#5555
+		add	hl,de
+		ld	(mvuho2+1),hl
+
+		ld	d,high tabsnh
+		ld	e,h
+		ld	l,b
+		ld	h,d
+
+		ld	(toc2+1),hl	;; Pointer 1 do sinus tabulky
+		ld	(toc3+1),de	;; Pointer 2 do sinus tabulky
+
+;; Riadenie vodorovneho posunu obrazku macky
+
+mvpic0		ld	a,#55
+		inc	a
+		ld	(mvpic0+1),a
+
+		ld	de,#0133
+mvpic1		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic1+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+
+		ld	de,#0077
+mvpic2		ld	hl,#5555
+		add	hl,de
+		ld	(mvpic2+1),hl
+		ld	l,h
+		ld	h,high tabsin
+		add	a,(hl)
+		and	#FE
+		ld	(pos1+1),a
+
+;; Mrkanie kreslenych maciciek
+
+		ld	a,(vid128+1)
+		or	#07		;; Banka 7 aby boli
+		out	(#fd),a		;; obe videoramky dostupne naraz
+
+mrktim		ld	a,100		;; Casovac mrkania
+		dec	a
+		jr	nz,mrkstm
+		call	mrkanie
+		ld	a,c
+mrkstm		ld	(mrktim+1),a
+
+;; Scenar pre atributy pocas behu twisteru
+;; nabeh, beh a dobeh efektu
+
+scenar
+sccnt		ld	a,#01
+		dec	a
+		jr	z,scadd
+		ld	(sccnt+1),a
+		ret
+
+scadd		ld	hl,scend
+		ld	e,(hl)
+		inc	hl
+		ld	b,(hl)
+		inc	hl
+		ld	c,(hl)
+		inc	hl
+
+		ld	a,e
+		sub	#80
+		ret	z
+
+		ld	(scadd+1),hl
+		jr	c,scattr
+
+		ld	(sccnt+1),a
+		ret
+
+scattr		ld	d,#00
+		ld	hl,vzor1
+		add	hl,de		;; HL = zdrojove data
+
+		ld	a,c		;; C = dlzka
+		or	a
+		ret	z
+
+		push	bc
+		ld	b,#00
+		ld	de,bufatt
+		ldir
+		ld	h,d
+		ld	l,e
+		set	5,l
+scajas		dec	l
+		dec	e
+		ld	a,(de)
+		set	6,a
+		ld	(hl),a
+		jr	nz,scajas
+		pop	bc
+
+		ld	a,#06
+		add	a,b
+		ld	e,a
+		ld	d,#59
+		ld	a,c
+		cpl
+		add	#21
+		ld	b,a		;; DE = ciel
+
+presun	macro	bright
+		push	bc
+		ld	l,bright << 5
+		ld	b,#00
+		ldir
+		pop	bc
+		ld	a,b
+		add	a,e
+		ld	e,a
+	endm
+
+scfill		presun	0
+		presun	1
+		presun	1
+		presun	0
+		presun	0
+		presun	0
+		presun	1
+		presun	0
+		bit	7,d
+		set	7,d
+		jr	z,scfill
+
+		ret
+
+;; Format dat: trojice bajtov
+;;  1.bajt ... zdroj = offset 0-15 v datach "vzor1"
+;;  2.bajt ... ciel  = cislo atributoveho stlpca 0-19 v twisteri
+;;  3.bajt ... kolko = pocet sltpcov ktore sa takto nastavia
+
+scdata		db	15,0,1,	0,0,0	;; Pulz zlava doprava
+		db	14,0,2,	0,0,0
+		db	13,0,3,	0,0,0
+		db	12,0,4,	0,0,0
+		db	11,0,5,	0,0,0
+		db	10,0,6,	0,0,0
+		db	9,0,7,	0,0,0
+		db	8,0,8,	0,0,0
+		db	7,0,8,	15,8,1
+		db	6,0,8,	14,8,2
+		db	5,0,8,	13,8,3
+		db	4,0,8,	12,8,4
+		db	3,0,8,	11,8,5
+		db	2,0,8,	10,8,6
+		db	1,0,8,	9,8,7
+		db	0,0,8,	8,8,8
+		db	0,1,8,	8,9,8
+		db	0,2,8,	8,10,8
+		db	0,3,8,	8,11,8
+		db	0,4,8,	8,12,8
+		db	0,4,8,	8,13,7
+		db	0,5,8,	8,14,6
+		db	0,6,8,	8,15,5
+		db	0,7,8,	8,16,4
+		db	0,8,8,	8,17,3
+		db	0,9,8,	8,18,2
+		db	0,10,8,	8,19,1
+		db	0,11,8,	0,0,0
+		db	0,12,8,	0,0,0
+		db	0,13,7,	0,0,0
+		db	0,14,6,	0,0,0
+		db	0,15,5,	0,0,0
+		db	0,16,4,	0,0,0
+		db	0,17,3,	0,0,0
+		db	0,18,2,	0,0,0
+		db	0,19,1,	0,0,0
+
+		db	#80+5,0,0	;; Cakaj 50 pedesiatin
+
+		db	15,0,1,	0,0,0	;; Pulz zlava doprava
+		db	14,0,2,	0,0,0
+		db	13,0,3,	0,0,0
+		db	12,0,4,	0,0,0
+		db	11,0,5,	0,0,0
+		db	10,0,6,	0,0,0
+		db	9,0,7,	0,0,0
+		db	8,0,8,	0,0,0
+		db	7,0,8,	15,8,1
+		db	6,0,8,	14,8,2
+		db	5,0,8,	13,8,3
+		db	4,0,8,	12,8,4
+		db	3,0,8,	11,8,5
+		db	2,0,8,	10,8,6
+		db	1,0,8,	9,8,7
+		db	0,0,8,	8,8,8
+		db	0,1,8,	8,9,8
+		db	0,2,8,	8,10,8
+		db	0,3,8,	8,11,8
+		db	0,4,8,	8,12,8
+		db	0,4,8,	8,13,7
+		db	0,5,8,	8,14,6
+		db	0,6,8,	8,15,5
+		db	0,7,8,	8,16,4
+		db	0,8,8,	8,17,3
+		db	0,9,8,	8,18,2
+		db	0,10,8,	8,19,1
+		db	0,11,8,	0,0,0
+		db	0,12,8,	0,0,0
+		db	0,13,7,	0,0,0
+		db	0,14,6,	0,0,0
+		db	0,15,5,	0,0,0
+		db	0,16,4,	0,0,0
+		db	0,17,3,	0,0,0
+		db	0,18,2,	0,0,0
+		db	0,19,1,	0,0,0
+
+		db	#80+5,0,0	;; Cakaj 50 pedesiatin
+
+		db	1,9,1,	14,10,1	;; Objav od stredu k okrajom
+		db	1,8,2,	13,10,2
+		db	1,7,3,	12,10,3
+		db	1,6,4,	11,10,4
+		db	1,5,5,	10,10,5
+		db	1,4,6,	9,10,6
+		db	1,3,7,	8,10,7
+
+		db	1,2,7,	8,11,7
+		db	1,1,7,	8,12,7
+		db	1,0,7,	8,13,7
+
+		db	2,0,6,	8,14,6
+		db	3,0,5,	8,15,5
+		db	4,0,4,	8,16,4
+		db	5,0,3,	8,17,3
+		db	6,0,2,	8,18,2
+		db	7,0,1,	8,19,1
+
+		db	#80+127,0,0	;; Cakaj 127 pedesiatin
+		db	#80+127,0,0	;; Cakaj 127 pedesiatin
+
+		db	6,0,1,	9,19,1	;; Miznutie od okrajov ku stredu
+		db	5,0,2,	9,18,2
+		db	4,0,3,	9,17,3
+		db	3,0,4,	9,16,4
+		db	2,0,5,	9,15,5
+		db	1,0,6,	9,14,6
+		db	0,0,7,	9,13,7
+
+		db	0,1,7,	9,12,7
+		db	0,2,7,	9,11,7
+		db	0,3,7,	9,10,7
+
+		db	0,4,6,	10,10,6
+		db	0,5,5,	11,10,5
+		db	0,6,4,	12,10,4
+		db	0,7,3,	13,10,3
+		db	0,8,2,	14,10,2
+		db	0,9,1,	15,10,1
+
+		db	#80+20,0,0	;; Cakaj 20 pedesiatin
+		db	#80+16,0,0	;; Cakaj este 16 pedesiatin (toto tu musi byt kvoli ukonceniu mrkania)
+
+scend		db	#80		;; Koniec scenara
+
+vzor1		db	#3F,#3E,#3D,#3C,#3B,#3A,#39,#38
+vzor2		db	#38,#39,#3A,#3B,#3C,#3D,#3E,#3F
+
+;vzor1	db	#7F,#7E,#7D,#7C,#7B,#7A,#79,#78
+;vzor2	db	#78,#79,#7A,#7B,#7C,#7D,#7E,#7F
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Mrkanie maciciek
+
+mrktm1 = 4		;; Doba zatvarania a otvarania oci
+mrktm2 = 8		;; Doba zatvorenych oci (vsetko v pedesiatinach)
+
+mrkanie		ld	a,#FF		;; Faza mrkania:
+		inc	a		;; 0=zacni mrk    1=uplne zatvor oci
+		ld	(mrkanie+1),a	;; 2=pootvor oci  3=uplne otvor
+		and	#03
+		jr	z,mrksel	;; Faza 0 ... nahodny vyber macky
+mrkadd		ld	hl,#5555	;;            a ciastocne zatvorenie oci
+		ld	c,mrktm2
+		dec	a
+		jr	z,mrknxt	;; Faza 1 ... uplne zatvorenie oci
+		ld	c,mrktm1
+mrkpre		dec	hl
+		ld	d,(hl)
+		dec	hl
+		ld	e,(hl)
+		dec	a
+		jr	z,mrkmrk	;; Faza 2 ... ciastocne pootvorenie oci
+		ld	a,r		;; Faza 3 ... uplne otvorenie oci a nahodna doba neaktivity
+		and	#1F
+		add	#10
+		ld	c,a
+		jr	mrkmrk
+
+mrksel		ld	c,#FF
+		ld	hl,(scadd+1)	;; Ak scenar na konci caka 16 pedesiatin
+		ld	a,(hl)		;; uz nemrkaj aby pri konci efektu
+		cp	#90		;; oci nezamrzli v nejakej medzipolohe
+		ret	z
+
+		ld	a,r		;; Nahodny vyber ktora macka bude mrkat
+		and	#01		;; (robeny nahodnym posunom v kruhu)
+		inc	a		;; (aby nemrkala ta ista macka 2x za sebou)
+mrkrnd		add	a,#55		;; (a zaroven aby vyber nebol pravidelny)
+		ld	(mrkrnd+1),a
+		add	a,a
+		add	a,a
+		and	#0C
+		ld	c,a
+		ld	b,#00
+		ld	hl,mrkance
+		add	hl,bc
+
+		ld	c,#04
+
+mrknxt		ld	e,(hl)
+		inc	hl
+		ld	d,(hl)
+		inc	hl
+mrkmrk		ld	(mrkadd+1),hl
+		ex	de,hl
+
+mrkvid		ld	a,(hl)		;; Prekreslenie obrazovky
+		or	a
+		ret	z
+		ld	d,a
+		inc	hl
+		ld	e,(hl)
+		inc	hl
+		ld	a,(hl)
+		inc	hl
+		ex	de,hl
+		xor	(hl)
+		ld	(hl),a		;; Zapis do prvej videoramky
+		set	7,h
+		ld	(hl),a		;; Zapis do druhej videoramky
+		ex	de,hl
+		jr	mrkvid
+
+mrkance		dw	m1stred,m2stred	;; Macka uprostred
+		dw	m1vlavo,m2vlavo	;; Macka vlavo
+		dw	m1pravo,m2pravo	;; Macka vpravo
+		dw	m1dole,m2dole	;; Macka dole
+
+;; m1* ... rozdiel medzi otvorenymi a pootvorenymi ocami
+;; m2* ... rozdiel medzi potvorenymi a zatvorenymi ocami
+;; Format dat: 2 bajty adresa do videoram + 1 bajt XOR
+
+m1stred		db	#40,#92,#01	;; Macka uprostred
+		db	#47,#72,#0F
+		db	#47,#73,#02
+		db	#00
+
+m1pravo		db	#40,#B9,#20	;; Macka vpravo
+		db	#44,#98,#18
+		db	#45,#98,#04
+		db	#47,#99,#C0
+		db	#00
+
+m1vlavo		db	#40,#C8,#80	;; Macka vlavo
+		db	#41,#C7,#02
+		db	#41,#C8,#C0
+		db	#42,#C7,#0C
+		db	#00
+
+m1dole		db	#51,#29,#01	;; Macka dole
+		db	#51,#2A,#C0
+		db	#51,#2B,#06
+		db	#52,#2A,#20
+		db	#52,#2B,#08
+		db	#53,#2A,#8C
+		db	#53,#2B,#62
+		db	#54,#2A,#60
+		db	#54,#2B,#04
+		db	#55,#2A,#18
+		db	#55,#2B,#30
+		db	#00
+
+m2stred		db	#40,#93,#C6	;; Macka uprostred
+		db	#41,#92,#01
+		db	#41,#93,#80
+		db	#47,#72,#0F
+		db	#47,#73,#C4
+		db	#00
+
+m2vlavo		db	#41,#C8,#A0	;; Macka vlavo
+		db	#42,#C7,#0A
+		db	#42,#C8,#C0
+		db	#43,#C7,#0C
+		db	#00
+
+m2pravo		db	#40,#B9,#30	;; Macka vpravo
+		db	#41,#B9,#30
+		db	#42,#B9,#E0
+		db	#43,#98,#1C
+		db	#43,#99,#80
+		db	#44,#98,#28
+		db	#44,#99,#C0
+		db	#45,#98,#24
+		db	#45,#99,#E0
+		db	#46,#98,#24
+		db	#46,#99,#40
+		db	#47,#99,#50
+		db	#00
+
+m2dole		db	#52,#2A,#C0	;; Macka dole
+		db	#52,#2B,#06
+		db	#53,#2A,#60
+		db	#53,#2B,#0C
+		db	#54,#2A,#1C
+		db	#54,#2B,#78
+		db	#00
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Priprava dat pre twister
+;;
+;;  - presun na adresu urcenia (1.cast: #6000-#7F0x 2.cast: codend-kolko treba)
+;;  - offsetnutie podla zadanej Y-polohy na obrazovke
+;;  - zindexovanie pre rychly priamy pristup ku ktorejkolvek casti
+
+posyyy = #40		;; Suradnica Y prveho pixeloveho riadku
+
+	assert	posyyy > 0
+
+makidx		ld	hl,tabidx	;; Vytvarana indexova tabulka
+		ld	de,patterns	;; Zdrojove data pre twister
+		ld	bc,#6000	;; Cielove data pre twister
+
+mkiset		res	7,l
+		ld	(hl),c
+		inc	l
+		ld	(hl),b
+		dec	l
+		set	7,l
+		ld	(hl),c
+		inc	l
+		ld	(hl),b
+		inc	hl
+
+mkisea		ld	a,(de)
+		inc	de
+		or	a
+		jr	z,mkinul
+		cpl
+		add	a,#78 + posyyy
+		ld	(bc),a
+		inc	bc
+		jr	mkisea
+
+mkinul		ld	(bc),a
+mkinxt		inc	bc
+
+		bit	7,h
+		jr	z,mkiend
+
+		ld	a,b
+		cp	#7F
+		jr	nz,mkiset
+		ld	bc,codend
+		jr	mkiset
+
+mkiend		xor	a
+		ld	(bc),a
+		inc	bc
+		ld	(bc),a
+		ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+maksin		ld	hl,sintab		;; Vytvorenie sinus tabuliek
+		ld	de,tabsyn
+		ld	bc,tabsyn+#80
+mksin1		ld	a,(hl)
+		ld	(de),a
+		ld	(bc),a
+		inc	hl
+		inc	e
+		inc	c
+		bit	6,e
+		jr	z,mksin1
+mksin2		ld	a,(hl)
+		ld	(de),a
+		ld	(bc),a
+		dec	hl
+		inc	e
+		inc	c
+		jr	nz,mksin2
+
+		inc	b
+		ld	e,c
+		ex	de,hl
+		ld	de,tabsnh
+
+mksin3		ld	a,c
+		add	a,c
+		sbc	a,a
+		xor	(hl)
+		rra
+		bit	7,c
+		jr	nz,mksin4
+		xor	#80
+mksin4		ld	(bc),a
+		or	a
+		rra
+		ld	(de),a
+		inc	l
+		inc	e
+		inc	c
+		jr	nz,mksin3
+
+		ret
+
+sintab		db	#00,#06,#0D,#13,#19,#1F,#25,#2C
+		db	#32,#38,#3E,#44,#4A,#50,#56,#5C
+		db	#62,#67,#6D,#73,#78,#7E,#83,#88
+		db	#8E,#93,#98,#9D,#A2,#A7,#AB,#B0
+		db	#B4,#B9,#BD,#C1,#C5,#C9,#CD,#D0
+		db	#D4,#D7,#DB,#DE,#E1,#E4,#E7,#E9
+		db	#EC,#EE,#F0,#F2,#F4,#F6,#F7,#F9
+		db	#FA,#FB,#FC,#FD,#FE,#FE,#FF,#FF
+		db	#FF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+makbod		ld	de,#C000	;; Vytvorenie tabulky adries bodov
+		ld	l,e		;; pre rychly prepocet suradnic pre plot
+		ld	b,#80
+mkb111		ld	h,high tabhi2
+		ld	a,d
+		and	#07
+		ld	a,d
+		jr	nz,mkb444
+		inc	a
+mkb444		ld	(hl),a
+		inc	h
+		ld	(hl),d		;; Vyssi bajt adresy pre Y
+		inc	h
+		ld	(hl),e		;; Nizsi bajt adresy pre Y
+		inc	h
+		inc	d
+		ld	a,d
+		and	#07
+		jr	nz,mkb333
+		ld	a,#20
+		add	a,e
+		ld	e,a
+		jr	c,mkb333
+		ld	a,#F8
+		add	a,d
+		ld	d,a
+mkb333		ld	a,d			;; Ak Y>191
+		cp	high(#C000) + #18	;; tak adresa riadku bude #1000
+		jr	c,mkb222		;; (aby to nebolo vidno)
+		ld	d,#10
+mkb222		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#1F
+		ld	(hl),a		;; Offset #00-#1F adresy pre X
+		inc	h
+		ld	(hl),b		;; Maska pixela v bajte pre X
+		inc	h
+		ld	a,b
+		add	a,a
+		jr	nc,mkb555
+		ld	a,#C0
+mkb555		or	b
+		ld	(hl),a		;; Maska dvojiteho pixela
+		rrc	b
+		inc	l
+		jr	nz,mkb111
+		ret
+
+frame		ld	xh,a
+		push	af
+		halt
+		halt
+		di			;; DI kvoli pristupu
+		ld	(backsp+1),sp	;; k datam cez zasobnik
+		ld	sp,vzoatt
+		ld	bc,#5800	;; Hlavny engine zaberie
+		ld	h,high tabsel	;; cca 40000 taktov
+		jp	rutexe		;; takze za prerusenie
+backsp		ld	sp,#5555	;; sa v pohode stiha
+		ei
+		pop	af
+		ret
+
+;; initialization / generators
+init		ld	hl,shades
+		ld	de,tabmul
+		ld	bc,#0100
+		ldir
+
+makvza		ld	hl,scratt
+		ld	de,attrpatt+#02FF
+		ld	bc,vzoatt
+mkvzll		ld	a,(hl)
+		ld	(bc),a
+		inc	hl
+		inc	bc
+		ld	a,(de)
+		ld	(bc),a
+		dec	de
+		inc	bc
+		ld	a,h
+		cp	high scratt + #03
+		jr	c,mkvzll
+
+		ld	hl,tabsel+#80
+		ld	de,tabsel+#7F
+		ld	bc,#0F10 + high tabpal
+		ld	a,high tabpal + #0F
+mksel1		ld	(hl),c
+		ld	(de),a
+		dec	a
+		dec	e
+		inc	l
+		inc	c
+		djnz	mksel1
+mksel2		ld	(hl),c
+		ld	(de),a
+		dec	e
+		inc	l
+		jr	nz,mksel2
+
+		ld	hl,tabpal
+		ld	d,high tabmul
+mkpal1		ld	a,h
+		sub	high tabpal
+		add	a,a
+		add	a,a
+		add	a,a
+		ld	e,a
+		ld	a,l
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		ld	c,a	;; INK
+		ld	a,e
+		and	#F8
+		ld	e,a
+		ld	a,l
+		rrca
+		rrca
+		rrca
+		and	#07
+		or	e
+		ld	e,a
+		ld	a,(de)
+		add	a,a
+		add	a,a
+		add	a,a
+		or	c
+		ld	(hl),a	;; PAPER
+		inc	l
+		bit	6,l
+		jr	z,mkpal1
+		ld	c,l
+		ld	b,h
+		ld	l,#00
+mkpal2		ld	a,c
+		and	#C0	;; BRIGHT FLASH
+		or	(hl)
+		ld	(bc),a
+		inc	l
+		inc	c
+		res	6,l
+		jr	nz,mkpal2
+		inc	h
+		ld	a,h
+		cp	high tabpal + #20
+		jr	c,mkpal1
+
+makrut		ld	hl,rutzac
+		ld	de,rutexe
+		ld	bc,rutlen
+		push	de
+		ldir
+		pop	hl
+		ld	bc,rutlen * #2FF
+		ldir
+		ex	de,hl
+		ld	(hl),#C3
+		inc	hl
+		ld	(hl),low backsp
+		inc	hl
+		ld	(hl),high backsp
+
+		ld	hl,attrpatt
+		ld	de,#00FF	;; D=max,E=min
+minmax		ld	a,(hl)
+		cp	d
+		jr	c,mmxx11
+		ld	d,a
+mmxx11		cp	e
+		jr	nc,mmxx22
+		ld	e,a
+mmxx22		inc	hl
+		ld	a,h
+		cp	high attrpatt + #03
+		jr	c,minmax
+		ld	a,#70
+		sub	d
+		ld	(fx_start+1),a
+		ld	a,#90
+		sub	e
+		ld	(fx_end+1),a
+
+		ret
+
+rutzac		pop	de		;; D=vzor, E=original
+		ld	a,xh
+		add	a,d		;; Faza
+		ld	l,a
+		ld	d,(hl)		;; tabsel
+		ld	a,(de)		;; tabpal
+		ld	(bc),a		;; Atributy na obrazovke
+		inc	bc		;; \ 51 T
+rutlen = $-rutzac
+
+
+		;;	0-1-2-3-4-5-6-7
+shades		db	0,0,0,0,0,0,0,0	;; 32 stupnov pre fade-in + fade-out
+		db	0,0,0,0,0,0,0,0
+		db	0,0,0,0,0,0,0,1
+		db	0,0,0,0,0,0,1,1
+		db	0,0,0,0,0,1,1,1
+		db	0,0,0,0,1,1,1,1
+		db	0,0,0,0,1,1,1,2
+		db	0,0,0,1,1,1,1,2
+		db	0,0,0,1,1,1,2,2
+		db	0,0,1,1,1,1,2,2
+		db	0,0,1,1,1,2,2,2
+		db	0,0,1,1,1,2,2,3
+		db	0,0,1,1,2,2,2,3
+		db	0,1,1,1,2,2,2,3
+		db	0,1,1,1,2,2,3,3
+		db	0,1,1,2,2,2,3,3
+		db	0,1,1,2,2,3,3,3
+		db	0,1,1,2,2,3,3,4
+		db	0,1,1,2,2,3,4,4
+		db	0,1,1,2,3,3,4,4
+		db	0,1,2,2,3,3,4,4
+		db	0,1,2,2,3,3,4,5
+		db	0,1,2,2,3,4,4,5
+		db	0,1,2,3,3,4,4,5
+		db	0,1,2,3,3,4,5,5
+		db	0,1,2,3,3,4,5,6
+		db	0,1,2,3,4,4,5,6
+		db	0,1,2,3,4,5,5,6
+		db	0,1,2,3,4,5,6,6
+		db	0,1,2,3,4,5,6,7
+		db	0,1,2,3,4,5,6,6
+		db	0,1,2,3,4,5,6,7
+codend
+
+patterns	incbin	"patterns.bin"
+patterns.length
+		assert	(patterns.length - #2000) < tables
+
+
+		align	256
+
+screen		incbin "vodocat.scr"
+scratt = screen + #1800
+
+
+		savebin "final.bin",start,$-start
+
+tabmul = screen		;; Tabulka pre proporcionalnu zmenu farieb
+tabsel = tabmul + #0100	;; Tabulka pre adresovanie paliet
+tabpal = tabsel + #0100	;; 32 paliet pre 32 urovni jasov obrazku
+vzoatt = tabpal + #2000	;; Skombinovane originalne atributy so vzorom
+rutexe = #6000	;; Zobrazovaci engine
+
+;;-----------------------------------------------------------------------------
+	ifndef isFX
+	opt push listoff
+		org attrpatt
+		incbin "../recyplazmy/pattern.bin"
+
+		define PRESET.border 0
+		define PRESET.paper 0q000
+		define PRESET.waitfor 9536
+		include "../kernel/kernel.micro.inc"
+		savesna "vodocat.sna",microkernel
+	opt pop
+	endif

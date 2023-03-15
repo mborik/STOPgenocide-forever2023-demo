@@ -85,6 +85,11 @@ cd ../recyplazmy
 ASM recyplazmy.a80 -DisFX --lst=recyplazmy.lst
 PAK final.bin final.pak
 
+cd ../vodocat
+ASM vodocat.a80 -DisFX --lst=vodocat.lst
+PAK final.bin final.pak
+ASM bank.a80 -DisFX --lst=bank.lst
+
 # banks composition
 cd ..
 rm -f bank*

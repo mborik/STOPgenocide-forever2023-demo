@@ -1,6 +1,9 @@
 fx_kitty_bank: EQU 0x0000C000
 fx_kitty_bank.pg: EQU 0x00000013
 fx_kitty_bank.length: EQU 0x00001963
-fx_recytwist: EQU 0x0000D963
+fx_kitty: EQU 0x0000D963
+fx_kitty.pg: EQU 0x00000013
+fx_kitty.sync: EQU 0x00000D7A
+fx_recytwist: EQU 0x0000DD60
 fx_recytwist.pg: EQU 0x00000013
 fx_recytwist.length: EQU 0x00002263

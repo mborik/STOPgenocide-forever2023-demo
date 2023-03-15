@@ -20,6 +20,11 @@ fx_kitty_bank:	incbin "hellokitty/bank.bin"
 .length = $-fx_kitty_bank
 		display "'hellokitty' bank length: ",/D,($-fx_kitty_bank)
 
+fx_kitty:	incbin "hellokitty/final.pak"
+.pg = _fxpage
+.sync = 3450
+		display "'hellokitty' part length: ",/D,($-fx_kitty)
+
 fx_recytwist:	incbin "recytwist/bank.bin"
 .pg = _fxpage ; data transfer part
 .length = $-fx_recytwist
@@ -47,6 +52,10 @@ fx_recytwist:	incbin "recytwist/bank.bin"
 		export fx_kitty_bank
 		export fx_kitty_bank.pg
 		export fx_kitty_bank.length
+
+		export fx_kitty
+		export fx_kitty.pg
+		export fx_kitty.sync
 
 		export fx_recytwist
 		export fx_recytwist.pg

@@ -1,0 +1,32 @@
+		device	zxspectrum128
+
+	ifdef isFX
+		display "Preparation of 'vodocat' mover"
+	endif
+
+		include "../kernel/constants.inc"
+
+		org	RUNZONE
+
+start		ld	a,#50
+		call	xchg.bnk
+		ld	hl,moveblock.src
+		ld	de,moveblock.dest
+		push	de
+		ld	bc,moveblock.length
+		ldir
+		ret
+
+moveblock.src
+	phase #DB00
+moveblock.dest
+		ld	hl,packed
+		ld	de,RUNZONE
+		push	de
+		jp	depack
+
+packed		incbin "final.pak"
+	dephase
+moveblock.length = $ - moveblock.src
+
+		savebin "bank.bin",start,$-start

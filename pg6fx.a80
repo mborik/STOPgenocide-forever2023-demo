@@ -25,15 +25,15 @@ fx_plasma1:	incbin "plasma1/final.pak"
 .sync = 2868
 		display "'plasma1' part length: ",/D,($-fx_plasma1)
 
-fx_kitty:	incbin "hellokitty/final.pak"
-.pg = _fxpage
-.sync = 3450
-		display "'hellokitty' part length: ",/D,($-fx_kitty)
-
 fx_lucyshow:	incbin "lucyshow/final.pak"
 .pg = _fxpage
 .sync = 5370
 		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
+
+fx_vodocat:	incbin "vodocat/bank.bin"
+.pg = _fxpage ; data transfer part
+.length = $-fx_vodocat
+		display "'vodocat' part length: ",/D,($-fx_vodocat)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -61,10 +61,10 @@ fx_lucyshow:	incbin "lucyshow/final.pak"
 		export fx_plasma1.pg
 		export fx_plasma1.sync
 
-		export fx_kitty
-		export fx_kitty.pg
-		export fx_kitty.sync
-
 		export fx_lucyshow
 		export fx_lucyshow.pg
 		export fx_lucyshow.sync
+
+		export fx_vodocat
+		export fx_vodocat.pg
+		export fx_vodocat.length

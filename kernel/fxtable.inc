@@ -65,3 +65,7 @@ LDIR = #80
 		db	fx_recyplazmy.pg
 		dw	fx_recyplazmy
 		dw	fx_recyplazmy.sync
+
+		db	fx_vodocat.pg | LDIR
+		dw	fx_vodocat
+		dw	fx_vodocat.length
