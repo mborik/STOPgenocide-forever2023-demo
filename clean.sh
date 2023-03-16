@@ -14,8 +14,16 @@ subdirs=(
 	intro
 	priskocmicka
 	grinder
-	recycle
 	hellokitty
+	plasma1
+	plasma2
+	simon
+	lucy
+	lucyshow
+	recyshow
+	recytwist
+	recyplazmy
+	vodocat
 	music
 )
 
