@@ -111,7 +111,7 @@ ukaz11		push	af
 		jr	c,ukaz11
 		call	blik
 
-		wait	25
+		wait	24
 
 		ld	a,#08		;; "Plynuly" nabeh z ciernej do bielej
 ukaz22		push	af
@@ -121,8 +121,6 @@ ukaz22		push	af
 		add	#08
 		cp	#40
 		jr	c,ukaz22
-
-		wait	25
 
 neblik		ld	a,#3F		;; Zaverecne inicialne nastavenie
 		call	setbox		;; na PAPER 7:INK 7 pred zapnutim twistera
@@ -170,7 +168,7 @@ slucka		ei
 		call	vidxch		;; Prepnutie aktivnej videoramky
 		call	zmaz		;; Zmazanie stareho twistera
 
-toc1		ld	c,#55		;; Parametre jednej fazy otacania twisterom
+toc1		ld	c,#99		;; Parametre jednej fazy otacania twisterom
 toc2		ld	de,#5555
 toc3		ld	hl,#5555
 
@@ -583,6 +581,7 @@ scdata		db	15,0,1,	0,0,0	;; Pulz zlava doprava
 
 		db	#80+127,0,0	;; Cakaj 127 pedesiatin
 		db	#80+127,0,0	;; Cakaj 127 pedesiatin
+		db	#80+64,0,0	;; Cakaj 127 pedesiatin
 
 		db	6,0,1,	9,19,1	;; Miznutie od okrajov ku stredu
 		db	5,0,2,	9,18,2
@@ -604,7 +603,6 @@ scdata		db	15,0,1,	0,0,0	;; Pulz zlava doprava
 		db	0,9,1,	15,10,1
 
 		db	#80+20,0,0	;; Cakaj 20 pedesiatin
-		db	#80+16,0,0	;; Cakaj este 16 pedesiatin (toto tu musi byt kvoli ukonceniu mrkania)
 
 scend		db	#80		;; Koniec scenara
 
@@ -1136,7 +1134,7 @@ rutexe = #6000	;; Zobrazovaci engine
 
 		define PRESET.border 0
 		define PRESET.paper 0q000
-		define PRESET.waitfor 9536
+		define PRESET.waitfor 9511
 		include "../kernel/kernel.micro.inc"
 		savesna "vodocat.sna",microkernel
 	opt pop

@@ -9,4 +9,4 @@ fx_lucyshow.pg: EQU 0x00000016
 fx_lucyshow.sync: EQU 0x000014FA
 fx_vodocat: EQU 0x0000DAFC
 fx_vodocat.pg: EQU 0x00000016
-fx_vodocat.length: EQU 0x000024F3
+fx_vodocat.length: EQU 0x000024F4
