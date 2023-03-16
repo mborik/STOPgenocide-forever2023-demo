@@ -171,7 +171,7 @@ line3:		db	0, 3
 		dw	line3.len
 line3.cmds	; PAUSE VAL "42"
 		db	C_PAUSE
-		VAL	42, ":"
+		VAL	100, ":"
 		; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
 		VAL	loader.fadeoutandrun, EOL
@@ -181,9 +181,8 @@ line4:		db	0, 4
 		dw	line4.len
 line4.cmds	; LOAD _"epilog" CODE:
 		db	C_LOAD, ' "epilog"', C_CODE, ':'
-		; RANDOMIZE USR VAL "x"
-		db	C_RANDOMIZE, C_USR
-		VAL	omegaEpilogStartAddress, EOL
+		; RANDOMIZE USR VAL "25e3"
+		db	C_RANDOMIZE, C_USR, C_VAL, '"25e3"', EOL
 line4.len = $ - line4.cmds
 
 line9:		db	0, 9
@@ -245,19 +244,19 @@ total = $ - line1
 ;;-----------------------------------------------------------------------------
 		display "Storing epilog part into output tape"
 
-omegaEpilogStartAddress = 25000
 
 	module epilog
+start = 25000
 		tapout OUTPUT,0
 			db	3 ;; BYTES
 			db	"epilog    "
 			dw	.filelength
-			dw	omegaEpilogStartAddress
+			dw	start
 			dw	#8000
 		tapend
 
 		tapout OUTPUT
-			org	omegaEpilogStartAddress
+			org	start
 .filedata		incbin "../epilog.bin"
 .filelength = $-.filedata
 		tapend
