@@ -30,6 +30,54 @@ bnk:		ld	(act128page),a
 depack:		module zx0
 		include "dzx0_fast.a80"
 		endmodule
+
+downhl		inc	h
+		ld	a,h
+		and	7
+		ret	nz
+		ld	a,32
+		add	a,l
+		ld	l,a
+		ret	c
+		ld	a,-8
+		add	a,h
+		ld	h,a
+		ret
+
+downde		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+upde		dec	d
+		ld	a,d
+		inc	a
+		and	7
+		ret	nz
+		ld	a,e
+		sub	32
+		ld	e,a
+		ret	c
+		ld	a,d
+		add	a,8
+		ld	d,a
+		ret
+
+waitforit	ei
+		halt
+		ld	hl,(FRAMES)
+		xor	a
+		sbc	hl,bc
+		jr	c,.waitforit
+		ret
 	endmodule
 
 @microkernel:	di

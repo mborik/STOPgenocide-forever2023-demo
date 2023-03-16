@@ -198,23 +198,8 @@ zmzlop		ld	c,l
 		inc	l
 	edup
 		ld	l,c
-		call	dole
+		call	downhl
 		djnz	zmzlop
-		ret
-
-;; Posun HL o riadok nizsie
-
-dole		inc	h
-dolex		ld	a,h
-		and	#07
-		ret	nz
-		ld	a,#20
-		add	a,l
-		ld	l,a
-		ret	c
-		ld	a,#F8
-		add	a,h
-		ld	h,a
 		ret
 
 ;; Posun video buffera o jeden riadok
@@ -262,7 +247,7 @@ msksub		push	hl
 		and	(hl)
 		ld	(hl),a
 		inc	de
-		call	dole
+		call	downhl
 	edup
 		pop	hl
 		ret

@@ -10,8 +10,7 @@
 wait	macro	time
 	if	time > 5
 		ld	b,time
-		halt
-		djnz	$-1
+		call	justwait
 	else
 	dup	time
 		halt

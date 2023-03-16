@@ -158,7 +158,7 @@ TWISTER_VRAM	ld	de,4F56h
 		ld	(de),a
 		dec	e
 		dec	e
-		call	UPDE
+		call	upde
 
 TWISTER_HEIGHT	ld	a,1
 TWISTER_FULL	ex	af,af'
@@ -201,7 +201,7 @@ TWISTER_LINE	push	hl
 		inc	bc
 		ld	e,a
 
-		call	UPDE
+		call	upde
 
 		dec	b
 		dec	b
@@ -256,7 +256,7 @@ TWISTER_STAT3X	ld	a,0
 		jr	nz,TWISTER_STAT3R
 		ld	hl,(TWISTER_VRAM+1)
 		ex	de,hl
-		call	UPDE
+		call	upde
 		ex	de,hl
 		ld	(TWISTER_VRAM+1),hl
 		ld	a,(TWISTER_HEIGHT+1)
@@ -456,7 +456,7 @@ INTER_UPDATE1	ex	af,af'
 		dec	e
 		dec	e
 		dec	e
-		call	DOWNDE
+		call	downde
 		ex	af,af'
 		dec	a
 		jr	nz,INTER_UPDATE1
@@ -465,7 +465,7 @@ INTER_UPDATE1	ex	af,af'
 		ld	(de),a
 		inc	e
 		ld	(de),a
-		call	DOWNDE
+		call	downde
 		xor	a
 		ld	(de),a
 		dec	e
@@ -474,7 +474,7 @@ INTER_UPDATE1	ex	af,af'
 		ld	(de),a
 
 		ld	de,(INTER_POS+1)
-		call	UPDE
+		call	upde
 		ld	(INTER_POS+1),de
 
 		ld	a,(INTER_PHASE+1)
@@ -506,7 +506,7 @@ INTER_NOHAIR2
 		xor	a
 		ld	(INTER_PHASE+1),a
 		ld	de,(INTER_POS+1)
-		call	DOWNDE
+		call	downde
 		xor	a
 		ld	(de),a
 		inc	e
@@ -539,7 +539,7 @@ VIEW_SPRITE10	ld	a,e
 		ld	bc,8
 		add	hl,bc
 		ld	e,a
-		call	DOWNDE
+		call	downde
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE1
@@ -563,7 +563,7 @@ VIEW_SPRITE20	ld	a,e
 		ld	bc,6
 		add	hl,bc
 		ld	e,a
-		call	DOWNDE
+		call	downde
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE2
@@ -585,37 +585,10 @@ VIEW_SPRITE30	ld	a,e
 		ld	bc,4
 		add	hl,bc
 		ld	e,a
-		call	DOWNDE
+		call	downde
 		pop	af
 		dec	a
 		jr	nz,VIEW_SPRITE3
-		ret
-
-DOWNDE		inc	d
-		ld	a,d
-		and	7
-		ret	nz
-		ld	a,e
-		add	a,32
-		ld	e,a
-		ret	c
-		ld	a,d
-		sub	8
-		ld	d,a
-		ret
-
-UPDE		dec	d
-		ld	a,d
-		inc	a
-		and	7
-		ret	nz
-		ld	a,e
-		sub	32
-		ld	e,a
-		ret	c
-		ld	a,d
-		add	a,8
-		ld	d,a
 		ret
 
 DEC40

@@ -32,28 +32,57 @@
 		include "dzx0_fast.a80"
 		endmodule
 
-gameover:	ld	a,100
-.fadeout	ei
+@downhl		inc	h
+		ld	a,h
+		and	7
+		ret	nz
+		ld	a,32
+		add	a,l
+		ld	l,a
+		ret	c
+		ld	a,-8
+		add	a,h
+		ld	h,a
+		ret
+
+@downde		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
+		ret
+
+@upde		dec	d
+		ld	a,d
+		inc	a
+		and	7
+		ret	nz
+		ld	a,e
+		sub	32
+		ld	e,a
+		ret	c
+		ld	a,d
+		add	a,8
+		ld	d,a
+		ret
+
+@justwait	ei
 		halt
+		djnz	justwait
+		ret
+
+@waitforit	ei
 		halt
-		ex	af,af'
-		call	attrhide
-		ex	af,af'
-		dec	a
-		jr	nz,.fadeout
-		ld	a,#57
-		out	(#FD),a
+		ld	hl,(FRAMES)
 		xor	a
-		ld	hl,#5AFF
-		ld	de,#5AFE
-		ld	bc,#1AFF
-		ld	(hl),a
-		lddr
-		ld	de,#C000
-		ld	b,#1B
-		ldir
-		ld	a,#50
-		out	(#FD),a
+		sbc	hl,bc
+		jr	c,waitforit
 		ret
 
 attrhide:	ld	hl,22528
@@ -236,7 +265,28 @@ im2vector = ((high $) + 1) << 8
 		call	RUNZONE
 		jr	.run
 
-.end		call	gameover
+.end		ld	a,100
+.fadeout	ei
+		halt
+		halt
+		ex	af,af'
+		call	attrhide
+		ex	af,af'
+		dec	a
+		jr	nz,.fadeout
+		ld	a,#57
+		out	(#FD),a
+		xor	a
+		ld	hl,#5AFF
+		ld	de,#5AFE
+		ld	bc,#1AFF
+		ld	(hl),a
+		lddr
+		ld	de,#C000
+		ld	b,#1B
+		ldir
+		ld	a,#50
+		out	(#FD),a
 		di
 		im	1
 		ld	iy,#5C3A
@@ -260,9 +310,14 @@ backsp		ld	sp,0
 		export kernel
 		export IMCALL
 		export RUNZONE
-		export depack
 		export xchg.vram
 		export xchg.bnk
+		export depack
+		export downhl
+		export downde
+		export upde
+		export justwait
+		export waitforit
 		export MUSIC.page
 		export MUSIC.out
 		export MUSIC.init

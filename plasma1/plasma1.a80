@@ -22,9 +22,7 @@ start		ld	a,#1F
 		call	mkadsp	;; Vygenerovanie farebnej palety - atributy a pixely
 
 		ld	b,25
-.redwait	ei
-		halt
-		djnz	.redwait
+		call	justwait
 
 		xor	a
 		ld	(actborder),a

@@ -111,13 +111,9 @@ start
 		pop	bc
 		djnz	.standloop
 
+; wait for dead
 		ld	bc,1296
-.waitfordead	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitfordead
+		call	waitforit
 
 		ld	hl,gfx.dead.part1
 		ld	de,#D000
@@ -169,14 +165,10 @@ start
 		ld	de,#C000
 		call	depack
 
+; wait for end
 		ld	bc,1339
-.waitforend	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforend
-		ret
+		jp	waitforit
+
 
 waitf:		ei
 		halt

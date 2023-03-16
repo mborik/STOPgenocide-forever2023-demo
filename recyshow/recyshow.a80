@@ -19,21 +19,9 @@ start
 		call	depack
 		call	rollscreen
 
+; wait for start
 		ld	bc,7441
-.waitforstart	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforstart
-
-; 		ld	bc,7555
-; .waitforlid	ei
-; 		halt
-; 		ld	hl,(FRAMES)
-; 		xor	a
-; 		sbc	hl,bc
-; 		jr	c,.waitforlid
+		call	waitforit
 
 		ld	hl,gfx.p2
 		ld	de,#C5E1
@@ -87,19 +75,6 @@ sprite
 		pop	de
 		call	downde
 		djnz	.loopR
-		ret
-
-downde		inc	d
-		ld	a,d
-		and	7
-		ret	nz
-		ld	a,e
-		add	a,32
-		ld	e,a
-		ret	c
-		ld	a,d
-		sub	8
-		ld	d,a
 		ret
 
 rollscreen	ld	hl,#DAE0

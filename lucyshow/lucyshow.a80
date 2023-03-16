@@ -52,13 +52,7 @@ fx_end		cp	#FE
 		jr	nz,fx_loop
 
 fx_finish	ld	bc,5520
-.waitforit	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforit
-		ret
+		jp	waitforit
 
 frame		ld	xh,a
 		push	af
@@ -311,19 +305,6 @@ view_spr3	ld	a,16
 		ex	af,af'
 		dec	a
 		jr	nz,.loop
-		ret
-
-downde		inc	d
-		ld	a,d
-		and	7
-		ret	nz
-		ld	a,e
-		add	a,32
-		ld	e,a
-		ret	c
-		ld	a,d
-		sub	8
-		ld	d,a
 		ret
 
 lucyeyes_table	db	0, 10, 10, 20, 20, 20, 10, 10, 0

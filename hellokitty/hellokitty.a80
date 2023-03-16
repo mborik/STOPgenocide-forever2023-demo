@@ -37,13 +37,7 @@ start		ld	a,#10 + PATTERN_BANK
 		ld	(IMCALL),a
 
 		ld	bc,3455
-.waitforit	ei
-		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforit
-
+		call	waitforit
 
 efekt1		ld	xh,col000
 
@@ -52,7 +46,7 @@ efekt1		ld	xh,col000
 		call	ukaz
 
 		ld	b,140
-		call	wait
+		call	justwait
 
 		ld	de,#5808
 		ld	hl,#5988
@@ -62,14 +56,14 @@ efekt1		ld	xh,col000
 efekt2		ld	xh,col111
 
 		ld	b,28
-		call	wait
+		call	justwait
 
 		ld	hl,#59D0
 		ld	a,6
 		call	ukaz
 
 		ld	b,140
-		call	wait
+		call	justwait
 
 		ld	de,#58F0
 		ld	hl,#5AD0
@@ -79,14 +73,14 @@ efekt2		ld	xh,col111
 efekt3		ld	xh,col222
 
 		ld	b,28
-		call	wait
+		call	justwait
 
 		ld	hl,#5960
 		ld	a,11
 		call	ukaz
 
 		ld	b,140
-		call	wait
+		call	justwait
 
 		ld	de,#5800
 		ld	hl,#5AE0
@@ -100,7 +94,7 @@ efekt4		ld	xh,col111
 		call	ukaz
 
 		ld	b,90
-		call	wait
+		call	justwait
 
 		ld	xh,col222
 
@@ -109,7 +103,7 @@ efekt4		ld	xh,col111
 		call	ukaz
 
 		ld	b,16
-		call	wait
+		call	justwait
 
 		ld	de,#5808
 		ld	hl,#5988
@@ -123,14 +117,14 @@ efekt4		ld	xh,col111
 efekt5		ld	xh,col333
 
 		ld	b,24
-		call	wait
+		call	justwait
 
 		ld	hl,#5970
 		ld	a,11
 		call	ukaz
 
 		ld	b,24
-		call	wait
+		call	justwait
 
 		ld	xh,col222
 
@@ -139,7 +133,7 @@ efekt5		ld	xh,col333
 		call	ukaz
 
 		ld	b,24
-		call	wait
+		call	justwait
 
 		ld	xh,col111
 
@@ -148,7 +142,7 @@ efekt5		ld	xh,col333
 		call	ukaz
 
 		ld	b,24
-		call	wait
+		call	justwait
 
 		ld	xh,col000
 
@@ -157,7 +151,7 @@ efekt5		ld	xh,col333
 		call	ukaz
 
 		ld	b,200
-		call	wait
+		call	justwait
 
 
 		ld	de,#5800
@@ -186,10 +180,6 @@ cls		ld	hl,#4000
 		ld	bc,#02FF
 		ld	(hl),colnot
 		ldir
-		ret
-
-wait		halt
-		djnz	wait
 		ret
 
 ;; Zmazanie jedneho stlpca
@@ -426,19 +416,6 @@ mkupsh		ld	(hl),a
 		ld	(hl),low pusret
 		inc	hl
 		ld	(hl),high pusret
-		ret
-
-downhl		inc	h
-		ld	a,h
-		and	7
-		ret	nz
-		ld	a,32
-		add	a,l
-		ld	l,a
-		ret	c
-		ld	a,-8
-		add	a,h
-		ld	h,a
 		ret
 
 

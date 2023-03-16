@@ -183,7 +183,7 @@ line4.cmds	; LOAD _"epilog" CODE:
 		db	C_LOAD, ' "epilog"', C_CODE, ':'
 		; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
-		VAL	epilog.startaddress, EOL
+		VAL	omegaEpilogStartAddress, EOL
 line4.len = $ - line4.cmds
 
 line9:		db	0, 9
@@ -245,19 +245,19 @@ total = $ - line1
 ;;-----------------------------------------------------------------------------
 		display "Storing epilog part into output tape"
 
-	module epilog
-startaddress = 25000
+omegaEpilogStartAddress = 25000
 
+	module epilog
 		tapout OUTPUT,0
 			db	3 ;; BYTES
 			db	"epilog    "
 			dw	.filelength
-			dw	startaddress
+			dw	omegaEpilogStartAddress
 			dw	#8000
 		tapend
 
 		tapout OUTPUT
-			org startaddress
+			org	omegaEpilogStartAddress
 .filedata		incbin "../epilog.bin"
 .filelength = $-.filedata
 		tapend
