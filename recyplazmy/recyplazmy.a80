@@ -30,13 +30,6 @@ start		ld	a,#17
 		call	mksin		;; Vygenerovanie sinus tabulky (pouziva plazma)
 		call	mkpatt		;; Vygenerovanie patternov pre raster viewer
 
-; 		ld	bc,-8064
-; .waitforstart	ei
-; 		halt
-; 		ld	hl,(FRAMES)
-; 		add	hl,bc
-; 		jr	nc,.waitforstart
-
 znovu		ld	hl,scenar
 slucka		ld	a,(hl)
 		ld	(ppzoom+2),a
@@ -69,14 +62,24 @@ scenar		db	6,3
 
 ending		ld	a,#10
 		call	xchg.bnk
-		call	init
-		ld	b,50
+		ld	bc,-9427
 .waitfor	halt
-		djnz	.waitfor
+		push	bc
+		call	followscene
+		pop	bc
+		ld	hl,(FRAMES)
+		add	hl,bc
+		jr	nc,.waitfor
+
+		call	init
+		ld	hl,attrpatt
+		ld	de,#7D00
+		ld	bc,#0300
+		ldir
 .phaseEnd	ld	a,#55
 .loop		call	frame
 		ex	af,af'
-		ld	a,(#5AFF)
+		ld	a,(#5AE0)
 		rrca
 		rrca
 		rrca
@@ -86,11 +89,6 @@ ending		ld	a,#10
 		dec	a
 .phaseStart	cp	#55
 		jr	nz,.loop
-		ld	hl,attrpatt
-		ld	de,#7D00
-		ld	bc,#0300
-		ldir
-		ret
 
 frame		ld	xh,a
 		push	af
