@@ -6,4 +6,4 @@ fx_kitty.pg: EQU 0x00000013
 fx_kitty.sync: EQU 0x00000D7A
 fx_recytwist: EQU 0x0000DD60
 fx_recytwist.pg: EQU 0x00000013
-fx_recytwist.length: EQU 0x00002263
+fx_recytwist.length: EQU 0x00002275

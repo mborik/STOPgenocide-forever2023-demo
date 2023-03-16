@@ -541,13 +541,13 @@ followscene:	ld	ix,scenario
 
 scenario:
 	opt push listoff
-		hilite	7685, 15,  5, 16, 3, 0q174, 0q177
-		hilite	7725, 15,  5, 16, 3, 0q171, 0q176
+		hilite	7685, 15,  3, 16, 2, 0q074, 0q077
+		hilite	7725, 15,  3, 16, 2, 0q070, 0q076
 
-		hilite	7785, 16,  8, 15, 3, 0q171, 0q177
-		hilite	7797, 16, 12, 15, 2, 0q171, 0q177
-		hilite	7804, 16, 15, 15, 3, 0q171, 0q177
-		hilite	7816, 16, 19, 15, 2, 0q171, 0q177
+		hilite	7785, 16,  5, 15, 3, 0q070, 0q077
+		hilite	7797, 16,  8, 15, 2, 0q070, 0q077
+		hilite	7804, 16, 10, 15, 3, 0q070, 0q077
+		hilite	7816, 16, 13, 15, 2, 0q070, 0q077
 	opt pop
 		dw	0
 
@@ -565,16 +565,16 @@ patterns.length
 	ifndef isFX
 	opt push listoff
 		org #4000
-		incbin "../recyshow/gfx/13.scr"
+		incbin "../recyshow/gfx/04.scr"
 
 		define	PRESET.border 7
 		define	PRESET.noclearscr 1
-		define	PRESET.waitfor 7567
+		define	PRESET.waitfor 7450
 		include "../kernel/kernel.micro.inc"
 
 		page 7
 		org #C000
-		incbin "../recyshow/gfx/13.scr"
+		incbin "../recyshow/gfx/04.scr"
 		savesna "recytwist.sna",microkernel
 	opt pop
 	endif

@@ -5,12 +5,21 @@
 	endif
 
 		include "../kernel/constants.inc"
+		include "../simon/anim.inc"
 
 ;;-----------------------------------------------------------------------------
 		org	RUNZONE
 
 start
-		ld	bc,7442
+		ld	a,#1D
+		call	xchg.vram + 2
+
+		ld	hl,gfx.p1
+		ld	de,#C000
+		call	depack
+		call	rollscreen
+
+		ld	bc,7441
 .waitforstart	ei
 		halt
 		ld	hl,(FRAMES)
@@ -18,69 +27,47 @@ start
 		sbc	hl,bc
 		jr	c,.waitforstart
 
-		ld	a,#1D
-		call	xchg.vram + 2
+; 		ld	bc,7555
+; .waitforlid	ei
+; 		halt
+; 		ld	hl,(FRAMES)
+; 		xor	a
+; 		sbc	hl,bc
+; 		jr	c,.waitforlid
 
-		ld	hl,gfx.fall.p1
-		ld	de,#C000
-		call	depack
+		ld	hl,gfx.p2
+		ld	de,#C5E1
+		ld	b,gfx.p2.h
+		call	sprite
 		call	xchg.vram
 
-		ei
 		halt
-		ld	hl,gfx.fall.p2
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ei
 		halt
-		ld	hl,gfx.fall.p3
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ei
 		halt
-		ld	hl,gfx.fall.p4
-		ld	de,#C000
-		call	depack
-		call	xchg.vralign
 
-		ld	hl,#4000
-		ld	de,#C000
-		ld	bc,#1B00
-		ldir
+		ld	hl,gfx.p3
+		ld	de,#C0C1
+		ld	b,gfx.p3.h
+		call	sprite
 		call	xchg.vram
 
-		ld	bc,7555
-.waitforlid	ei
 		halt
-		ld	hl,(FRAMES)
-		xor	a
-		sbc	hl,bc
-		jr	c,.waitforlid
+		halt
+		halt
 
-		ld	hl,gfx.lid.p1
-		ld	de,#C000
+		ld	hl,gfx.p4
+		ld	de,#C0A1
+		ld	b,gfx.p4.h
+		call	sprite
+		ld	hl,gfx.p4.attrs
+		ld	de,#D800
 		call	depack
-		call	xchg.vram
 
-		ld	b,2
-		call	waitf
-
-		ld	hl,gfx.lid.p2
-		ld	de,#C000
-		call	depack
-		call	xchg.vram
-
-		ld	b,2
-		call	waitf
-
-		ld	hl,gfx.lid.p3
-		ld	de,#C000
-		call	depack
-		call	xchg.vralign
+		halt
+		ld	a,(xchg.vram+1)
+		or	7
+		xor	8
+		call	xchg.bnk
 
 		ld	hl,#C000
 		ld	de,#4000
@@ -88,29 +75,83 @@ start
 		ldir
 		ret
 
-waitf:		ei
-		halt
-		djnz	waitf
+sprite
+.loopR		push	de
+		ld	c,14
+.loopC		ld	a,(hl)
+		inc	hl
+		ld	(de),a
+		inc	e
+		dec	c
+		jr	nz,.loopC
+		pop	de
+		call	downde
+		djnz	.loopR
 		ret
 
-xchg.vralign	ld	a,(xchg.vram+1)
-		or	7
-xchg.vram2	xor	8
-		ld	(act128page),a
-		ld	bc,page128
-		out	(c),a
+downde		inc	d
+		ld	a,d
+		and	7
+		ret	nz
+		ld	a,e
+		add	a,32
+		ld	e,a
+		ret	c
+		ld	a,d
+		sub	8
+		ld	d,a
 		ret
+
+rollscreen	ld	hl,#DAE0
+		exx
+		ld	hl,#D0E0
+.rowloop	ld	a,h
+		cp	#C0
+		ret	c
+		ei
+		halt
+		halt
+		push	hl
+		ld	a,8
+.colloop	ld	bc,#0100
+		ld	d,h
+		ld	e,l
+		res	7,d
+	dup 32
+		ldi
+	edup
+		add	hl,bc
+		dec	a
+		jr	nz,.colloop
+		pop	hl
+		ld	a,l
+		sub	32
+		ld	l,a
+		jr	nc,.attrs
+		ld	a,h
+		sub	8
+		ld	h,a
+.attrs		exx
+		ld	bc,-32
+		ld	d,h
+		ld	e,l
+		res	7,d
+	dup 32
+		ldi
+	edup
+		add	hl,bc
+		exx
+		jp	.rowloop
 
 	module gfx
-fall
-.p1		incbin "gfx/01.pak"
-.p2		incbin "gfx/02.pak"
-.p3		incbin "gfx/03.pak"
-.p4		incbin "gfx/04.pak"
-lid
-.p1		incbin "gfx/11.pak"
-.p2		incbin "gfx/12.pak"
-.p3		incbin "gfx/13.pak"
+p1		incbin "gfx/01.pak"
+p2		incbin "gfx/02.sprite.bin"
+p2.h = ($ - p2) / 14
+p3		incbin "gfx/03.sprite.bin"
+p3.h = ($ - p3) / 14
+p4		incbin "gfx/04.sprite.bin"
+p4.h = ($ - p4) / 14
+p4.attrs	incbin "gfx/04.attrs.pak"
 	endmodule
 
 		savebin "final.bin",start,$-start
@@ -118,9 +159,12 @@ lid
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
+		org #4000
+		incbin "../simon/simon.scr"
+
 		define	PRESET.border 7
-		define	PRESET.paper 0q177
-		define	PRESET.waitfor 7395
+		define	PRESET.noclearscr 1
+		define	PRESET.waitfor 7344
 		include "../kernel/kernel.micro.inc"
 		savesna "recyshow.sna",microkernel
 	opt pop

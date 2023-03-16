@@ -18,7 +18,7 @@ start		ld	a,#50
 		ret
 
 moveblock.src
-	phase #DDAA
+	phase #DD99
 moveblock.dest
 		ld	hl,packed
 		ld	de,RUNZONE

@@ -4,6 +4,6 @@ fx_lucy.sync: EQU 0x0000167E
 fx_simon: EQU 0x0000EBFF
 fx_simon.pg: EQU 0x00000014
 fx_simon.sync: EQU 0x0000197B
-fx_recyplazmy: EQU 0x0000F9F1
+fx_recyplazmy: EQU 0x0000F9D0
 fx_recyplazmy.pg: EQU 0x00000014
 fx_recyplazmy.sync: EQU 0x0000200A

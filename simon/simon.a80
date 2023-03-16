@@ -66,31 +66,31 @@ start		ld	a,AnimBank
 		jr	.loop
 
 ending		pop	hl
-.loop		call	DisplayFrame
-		call	NextFrame
-.ptr		ld	hl,#5800
-		ld	d,h
-		ld	e,l
-		inc	e
-		ld	bc,#001F
-		ld	(hl),0q177
-		ldir
-		ex	de,hl
-		ld	(ending.ptr+1),hl
-		ei
-		halt
-		halt
-		ld	bc,#5AE0
-		xor	a
-		sbc	hl,bc
-		jr	c,.loop
-		inc	de
-		ld	h,d
-		ld	l,e
-		inc	e
-		ld	bc,#001F
-		ld	(hl),0q077
-		ldir
+; .loop		call	DisplayFrame
+; 		call	NextFrame
+; .ptr		ld	hl,#5800
+; 		ld	d,h
+; 		ld	e,l
+; 		inc	e
+; 		ld	bc,#001F
+; 		ld	(hl),0q177
+; 		ldir
+; 		ex	de,hl
+; 		ld	(ending.ptr+1),hl
+; 		ei
+; 		halt
+; 		halt
+; 		ld	bc,#5AE0
+; 		xor	a
+; 		sbc	hl,bc
+; 		jr	c,.loop
+; 		inc	de
+; 		ld	h,d
+; 		ld	l,e
+; 		inc	e
+; 		ld	bc,#001F
+; 		ld	(hl),0q077
+; 		ldir
 		ret
 
 followscene	ld	a,1

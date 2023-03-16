@@ -30,12 +30,12 @@ start		ld	a,#17
 		call	mksin		;; Vygenerovanie sinus tabulky (pouziva plazma)
 		call	mkpatt		;; Vygenerovanie patternov pre raster viewer
 
-		ld	bc,-8256
-.waitforstart	ei
-		halt
-		ld	hl,(FRAMES)
-		add	hl,bc
-		jr	nc,.waitforstart
+; 		ld	bc,-8064
+; .waitforstart	ei
+; 		halt
+; 		ld	hl,(FRAMES)
+; 		add	hl,bc
+; 		jr	nc,.waitforstart
 
 znovu		ld	hl,scenar
 slucka		ld	a,(hl)
@@ -51,7 +51,7 @@ slucka		ld	a,(hl)
 		pop	hl
 		jr	slucka
 
-scenar		db	6,3		;; Osem poloziek v scenari = osem roznych typov plazmy
+scenar		db	6,3
 		db	3,3
 		db	5,2
 		db	7,2
@@ -64,11 +64,15 @@ scenar		db	6,3		;; Osem poloziek v scenari = osem roznych typov plazmy
 		db	7,3
 		db	5,1
 		db	6,3
+		db	5,4
 		db	0
 
 ending		ld	a,#10
 		call	xchg.bnk
 		call	init
+		ld	b,50
+.waitfor	halt
+		djnz	.waitfor
 .phaseEnd	ld	a,#55
 .loop		call	frame
 		ex	af,af'
@@ -373,16 +377,16 @@ followscene:	ld	hl,scenario
 
 scenario:
 	opt push listoff
-		sync	8200
-		region	3, 0, 10, 5, 0q173
-		region	3, 5, 10, 6, 0q163
+		sync	8064
+		region	3, 0, 10, 5, 0q073
+		region	3, 5, 10, 6, 0q063
 		end_region_list
 
-		hilite	9216, 16, 19, 15, 2, 0q177, 0q170
-		hilite	9252, 16, 15, 15, 3, 0q177, 0q170
-		hilite	9312, 16, 12, 15, 2, 0q177, 0q170
-		hilite	9348, 16,  8, 15, 3, 0q177, 0q170
-		hilite	9408, 15,  5, 16, 3, 0q177, 0q170
+		hilite	9216, 16, 13, 15, 2, 0q077, 0q070
+		hilite	9252, 16, 10, 15, 3, 0q077, 0q070
+		hilite	9312, 16,  8, 15, 2, 0q077, 0q070
+		hilite	9348, 16,  5, 15, 3, 0q077, 0q070
+		hilite	9408, 15,  3, 16, 2, 0q077, 0q070
 		end_scenario_list
 	opt pop
 
@@ -1063,16 +1067,16 @@ rutexe		ds	#2000	;; Zobrazovaci engine
 	ifndef isFX
 	opt push listoff
 		org #4000
-		incbin "../recyshow/gfx/13.scr"
+		incbin "../recyshow/gfx/04.scr"
 
 		define	PRESET.border 7
 		define	PRESET.noclearscr 1
-		define	PRESET.waitfor 8202
+		define	PRESET.waitfor 8084
 		include "../kernel/kernel.micro.inc"
 
 		page 7
 		org #C000
-		incbin "../recyshow/gfx/13.scr"
+		incbin "../recyshow/gfx/04.scr"
 		savesna "recyplazmy.sna",microkernel
 	opt pop
 	endif
