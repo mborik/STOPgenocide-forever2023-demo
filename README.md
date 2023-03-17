@@ -1,0 +1,74 @@
+```
+             uuuuuuuuuuuuuuuuuuuu     (c) 2023
+           u" uuuuuuuuuuuuuuuuuu "u
+         u" u$$$$$$$$$$$$$$$$$$$$u "u
+       u" u$$$$$$$$$$$$$$$$$$$$$$$$u "u
+     u" u$$$$$$$$$$$$$$$$$$$$$$$$$$$$u "u
+   u" u$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$u "u
+ u" u$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$u "u
+ $ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ $
+ $ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ $
+ $ $$$" ... "$...  ...$" ... "$$$  ... "$$$ $
+ $ $$$u `"$$$$$$$  $$$  $$$$$  $$  $$$  $$$ $
+ $ $$$$$$uu "$$$$  $$$  $$$$$  $$  """ u$$$ $
+ $ $$$""$$$  $$$$  $$$u "$$$" u$$  $$$$$$$$ $
+ $ $$$$....,$$$$$..$$$$$....,$$$$..$$$$$$$$ $
+ $ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ $
+ "u "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" u"
+   "u "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" u"
+     "u "$$$$$$$$$$$$$$$$$$$$$$$$$$$$" u"
+       "u "$$$$$$$$$$$$$$$$$$$$$$$$" u"
+         "u "$$$$$$$$$$$$$$$$$$$$" u"
+           "u """""""""""""""""" u"
+             """"""""""""""""""""      o
+                                      O
+          demo for ZX-Specrum 128k    o
+                                      o
+.oOoO .oOo. 'OoOo. .oOo. .oOo  O  .oOoO  .oOo.
+o   O OooO'  o   O O   o O     o  o   O  OooO'
+O   o O      O   o o   O o     O  O   o  O
+`OoOo `OoO'  o   O `OoO' `OoO' o' `OoO'o `OoO'
+    O
+ OoO'    by Kitten Rescuers & Invaders
+       under the supervision of SinDiKat
+
+            *** PRODUCTION TEAM ***
+
+                    MUSIC
+                     aki
+              CODE         GRAPHIC
+           baze busy      hepterida
+         mborik mike     mborik mike
+          omega ped       omega z00m
+
+       DIRECTED AND LINKED TOGETHER BY
+                mborik & omega
+
+STORY
+-----
+Rumor has it...
+whenever you do
+PLASMA or TWISTER
+god kills a kitten!
+
+Lucy like to code oldschool effects,
+but she didn't know her code is killing kittens.
+Don't be like Lucy!
+
+-----
+
+The state of demomaking
+on planet Earth has become unsustainable.
+
+Lucy's "Movement for Twister & Plasma Coding"
+has led to the extinction
+of almost all kitten species.
+
+In response of that,
+a secret organization called SinDiCat
+has gathered the last surviving specimens
+to preserve this rare genetic life form.
+
+The space ark of the CAT-X Corporation
+is now leaving planet Earth.
+```
