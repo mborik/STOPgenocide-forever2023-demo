@@ -16,19 +16,7 @@ BLIK_BLUEY = #1F
 		org	RUNZONE
 
 
-start		ei
-		halt
-	ifndef isFX
-		ld	hl,LUCYSCR
-		ld	de,#4000
-		ld	bc,#1B00
-		ldir
-		ld	a,#CD
-		ld	hl,NOOP
-		ld	(IMCALL),a
-		ld	(IMCALL+1),hl
-	endif
-
+start
 .mainloop	ei
 		halt
 		ld	b,0
@@ -679,6 +667,8 @@ M3		dec	b
 		jr	M0
 
 
+		align	256
+
 LUCY_HAIR	db	00110000b
 		db	00111000b
 		db	00011000b
@@ -772,15 +762,24 @@ TWISTER_DATA	incbin "twistdata.bin"
 
 PLASMA_FRAME	ds	(15 + 2) * 256
 
+
+		align	256
+
+LUCY_VRAM
+
 ;;-----------------------------------------------------------------------------
 	ifndef isFX
 	opt push listoff
-LUCYSCR		incbin "../lucyshow/lucyshow.scr"
+		org #4000
+		incbin "../lucyshow/lucyshow.scr"
 
 		define PRESET.border 1
-		define PRESET.paper 0q011
+		define PRESET.noclearscr
 		define PRESET.waitfor SYNC-1
 		include "../kernel/kernel.micro.inc"
+
+		org IMCALL
+		call NOOP
 		savesna "lucy.sna",microkernel
 	opt pop
 	endif
