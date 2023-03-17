@@ -71,12 +71,17 @@ upde		dec	d
 		ld	d,a
 		ret
 
+justwait	ei
+		halt
+		djnz	justwait
+		ret
+
 waitforit	ei
 		halt
 		ld	hl,(FRAMES)
 		xor	a
 		sbc	hl,bc
-		jr	c,.waitforit
+		jr	c,waitforit
 		ret
 	endmodule
 
