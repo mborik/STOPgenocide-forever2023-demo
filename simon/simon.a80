@@ -227,7 +227,7 @@ SIBCREW		include "greetz/sibcrew.sprite.inc": ret
 DEMARCHE	include "greetz/demarche.sprite.inc": ret
 LIFEONMARS	include "greetz/lifeonmars.sprite.inc": ret
 TRIEBKRAFT	include "greetz/triebkraft.sprite.inc": ret
-MAYHEM		include "greetz/mayhem.sprite.inc": ret
+UKSCENE		include "greetz/ukscene.sprite.inc": ret
 THESUPER	include "greetz/thesuper.sprite.inc": ret
 TECHNOLAB	include "greetz/technolab.sprite.inc": ret
 EXODUS		include "greetz/exodus.sprite.inc": ret
@@ -261,7 +261,7 @@ scenario:
 		dw	6763
 		dw	spr.TRIEBKRAFT
 		dw	6816
-		dw	spr.MAYHEM
+		dw	spr.UKSCENE
 		dw	6864
 		dw	spr.THESUPER
 		dw	6883

@@ -7,7 +7,7 @@ node ../../_utils/sprite2code.js sibcrew.sprite.bin 44B4 8 OR
 node ../../_utils/sprite2code.js demarche.sprite.bin 46CB 9 OR
 node ../../_utils/sprite2code.js lifeonmars.sprite.bin 4B4A 10 OR
 node ../../_utils/sprite2code.js triebkraft.sprite.bin 4C8D 9 OR
-node ../../_utils/sprite2code.js mayhem.sprite.bin 4B56 8 OR
+node ../../_utils/sprite2code.js ukscene.sprite.bin 4B55 9 OR
 node ../../_utils/sprite2code.js thesuper.sprite.bin 46D5 8 OR
 node ../../_utils/sprite2code.js technolab.sprite.bin 4E0B 9 OR
 node ../../_utils/sprite2code.js exodus.sprite.bin 40B3 7 OR
