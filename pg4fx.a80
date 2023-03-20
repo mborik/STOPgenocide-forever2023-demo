@@ -38,7 +38,7 @@ fx_simon:	incbin "simon/final.pak"
 		display /D,(#10000-$)," bytes free in bank ",/D,isFX
 	endif
 
-		align	16384,0
+;		align	16384,0
 		savebin "bank4",(_fxpage_start),$-(_fxpage_start)
 
 ;;-----------------------------------------------------------------------------

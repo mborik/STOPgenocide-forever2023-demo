@@ -97,11 +97,11 @@ ASM pg0fx.a80 --lst=kernel/pg0fx.lst --exp=kernel/pg0fx.inc
 ASM pg1fx.a80 --lst=kernel/pg1fx.lst --exp=kernel/pg1fx.inc
 PAK bank1 bank1.pak
 ASM pg3fx.a80 --lst=kernel/pg3fx.lst --exp=kernel/pg3fx.inc
-PAK bank3 bank3.pak
+### PAK bank3 bank3.pak
 ASM pg4fx.a80 --lst=kernel/pg4fx.lst --exp=kernel/pg4fx.inc
-PAK bank4 bank4.pak
+### PAK bank4 bank4.pak
 ASM pg6fx.a80 --lst=kernel/pg6fx.lst --exp=kernel/pg6fx.inc
-PAK bank6 bank6.pak
+### PAK bank6 bank6.pak
 ASM pg7fx.a80 --lst=kernel/pg7fx.lst --exp=kernel/pg7fx.inc
 PAK bank7 bank7.pak
 

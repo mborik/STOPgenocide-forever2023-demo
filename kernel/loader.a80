@@ -22,7 +22,16 @@ unpackpage:	ld	hl,#51A1
 		di
 		ld	hl,#8000
 		ld	de,#C000
+		ld	a,(hl)
+		and	15
+		cp	4
+		jr	nz,.nonpacked
 		call	introzx0.depack
+		ei
+		ret
+
+.nonpacked	ld	bc,#4000
+		ldir
 		ei
 		ret
 
@@ -212,6 +221,7 @@ total = $ - line1
 		endlua
 
 		tapout OUTPUT,0
+			org	0
 			db	3 ;; BYTES
 		lua allpass
 			_pc("db 'block"..tostring(_c('__putBank_number')).."    '")
@@ -236,9 +246,9 @@ total = $ - line1
 		display "Storing banks into output tape"
 
 		putBank 1,"../bank1.pak"
-		putBank 3,"../bank3.pak"
-		putBank 4,"../bank4.pak"
-		putBank 6,"../bank6.pak"
+		putBank 3,"../bank3"
+		putBank 4,"../bank4"
+		putBank 6,"../bank6"
 		putBank 7,"../bank7.pak"
 
 ;;-----------------------------------------------------------------------------
