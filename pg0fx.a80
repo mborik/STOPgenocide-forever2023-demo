@@ -30,6 +30,13 @@ fx_recyshow:	incbin "recyshow/final.pak"
 .sync = 7395
 		display "'recyshow' part length: ",/D,($-fx_recyshow)
 
+fx_grinder_bubble:
+		include "grinder/baze_bubble.inc"
+
+		align	256
+fx_grinder_shades:
+		include "grinder/shades.inc"
+
 ;;-----------------------------------------------------------------------------
 	if $ > #7D00
 		display "Too long! ",/D,($-#7D00)," bytes out!"
@@ -58,3 +65,6 @@ fx_recyshow:	incbin "recyshow/final.pak"
 		export fx_recyshow
 		export fx_recyshow.pg
 		export fx_recyshow.sync
+
+		export fx_grinder_bubble
+		export fx_grinder_shades

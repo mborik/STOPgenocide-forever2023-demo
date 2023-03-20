@@ -4,13 +4,15 @@
 		display "Compiling 'grinder'"
 	endif
 
-		define STARTTIME 1340
+		include "../kernel/constants.inc"
+		include "../kernel/pg0fx.inc"
+		include "../kernel/pg1fx.inc"
 
+@STARTTIME = 1340
 @DEBUG = 0
 @VOID = #57E0
 
-		include "../kernel/constants.inc"
-		include "../kernel/pg1fx.inc"
+lineShades = fx_grinder_shades + #80
 
 ;;-----------------------------------------------------------------------------
 	macro border n
@@ -166,6 +168,7 @@ fnAddGrinder	ld	b,high finalTabs
 		border	3
 		call	followscene
 		border	0
+.fillBubble	ld	bc,fillBubble
 		jr	mainloop
 
 fnSlideDown	ld	h,(high vramTabs) + 3
@@ -263,6 +266,49 @@ scrollScreenOut	dec	a
 		ldir
 		ret
 
+fillBubble	ld	hl,fx_grinder_bubble
+		ld	a,(hl)
+		or	a
+		jr	nz,.vram
+		inc	a
+		ld	(fnAddGrinder.fillBubble),a
+		ret
+.vram		ld	de,#4A6C
+		ld	(de),a
+		inc	hl
+		inc	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		inc	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		inc	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		call	upde
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		dec	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		dec	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		dec	e
+		ld	a,(hl)
+		ld	(de),a
+		inc	hl
+		ld	(fillBubble+1),hl
+		call	upde
+		ld	(.vram+1),de
+		ret
+
 shadeLines	ld	ix,lineShades
 		xor	a
 		ld	de,#4000
@@ -285,7 +331,7 @@ shadeLines	ld	ix,lineShades
 		add	hl,bc
 		ld	c,l
 		ld	b,h
-		ld	h,fiftyShades/256
+		ld	h,high fx_grinder_shades
 		ld	a,(ix+1)
 		call	shadeLine
 		pop	bc
@@ -436,6 +482,11 @@ kiteyes.attrs	ld	a,#46
 		ld	(hl),a
 		ret
 
+@action.fillBubble
+		ld	a,#CD
+		ld	(fnAddGrinder.fillBubble),a
+		ret
+
 @action.addGrinder
 		ld	a,low ((fnAddGrinder - randomFn) - 2)
 		ld	(randomFn+1),a
@@ -466,155 +517,6 @@ scenario	include "scenario.a80"
 
 bgImage		incbin "background.scr"
 
-fiftyShades	db	00000000b	;0
-		db	00000000b
-		db	00000000b
-		db	00000000b
-		db	00000000b
-		db	00000000b
-		db	00000000b
-		db	00000000b
-
-		db	10001000b	;1
-		db	00000000b
-		db	00000000b
-		db	00000000b
-		db	10001000b
-		db	00000000b
-		db	00000000b
-		db	00000000b
-
-		db	10101000b	;2
-		db	00000000b
-		db	00100010b
-		db	00000000b
-		db	10001000b
-		db	00000000b
-		db	00100010b
-		db	00000000b
-
-		db	10101010b	;3
-		db	00000000b
-		db	00100010b
-		db	00000000b
-		db	10101010b
-		db	00000000b
-		db	00100010b
-		db	00000000b
-
-		db	10101010b	;4
-		db	01000000b
-		db	10101010b
-		db	00000000b
-		db	10101010b
-		db	00000000b
-		db	10101010b
-		db	00000000b
-
-		db	10101010b	;5
-		db	01000100b
-		db	10101010b
-		db	00010000b
-		db	10101010b
-		db	01000100b
-		db	10101010b
-		db	00000000b
-
-		db	10101010b	;6
-		db	01010100b
-		db	10101010b
-		db	00010001b
-		db	10101010b
-		db	01000101b
-		db	10101010b
-		db	00010001b
-
-		db	10101010b	;7
-		db	01010101b
-		db	10101010b
-		db	01010001b
-		db	10101010b
-		db	01010101b
-		db	10101010b
-		db	00010001b
-
-		db	11101010b	;8
-		db	01010101b
-		db	10101010b
-		db	01010101b
-		db	10101110b
-		db	01010101b
-		db	10101010b
-		db	01010101b
-
-		db	11101110b	;9
-		db	01010101b
-		db	10111010b
-		db	01010101b
-		db	11101110b
-		db	01010101b
-		db	10101011b
-		db	01010101b
-
-		db	11111111b	;10
-		db	01010101b
-		db	10111011b
-		db	01010101b
-		db	11101111b
-		db	01010101b
-		db	10111011b
-		db	01010101b
-
-		db	11111111b	;11
-		db	01010101b
-		db	11111011b
-		db	01010101b
-		db	11111111b
-		db	01010101b
-		db	10111111b
-		db	01010101b
-
-		db	11111111b	;12
-		db	11011101b
-		db	11111111b
-		db	01010101b
-		db	11111111b
-		db	11011101b
-		db	10111111b
-		db	01010101b
-
-		db	11111111b	;13
-		db	11011101b
-		db	11111111b
-		db	01110111b
-		db	11111111b
-		db	11011101b
-		db	11111111b
-		db	01010111b
-
-		db	11111111b	;14
-		db	11111111b
-		db	11111111b
-		db	01110111b
-		db	11111111b
-		db	11111111b
-		db	11111111b
-		db	01110111b
-
-		db	11111111b	;15
-		db	11111111b
-		db	11111111b
-		db	11111111b
-		db	11111111b
-		db	11111111b
-		db	11111111b
-		db	11111111b
-
-lineShades	block	21,0
-		db	1
-		block	6,0
-		db	1
-		block	99,0
 
 		; Display list. Total 192 * 4 = 768 bytes (unaligned).
 		; Contains pairs { source address, destination VRAM address }.
@@ -631,6 +533,11 @@ displayList
 	module lookupTables
 		include "lookups.a80"
 	endmodule
+
+		org fx_grinder_bubble
+		include "baze_bubble.inc"
+		org fx_grinder_shades
+		include "shades.inc"
 
 		define PRESET.border 7
 		define PRESET.paper 0q117

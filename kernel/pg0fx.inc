@@ -7,3 +7,5 @@ fx_plasma2.sync: EQU 0x0000125C
 fx_recyshow: EQU 0x00006E6D
 fx_recyshow.pg: EQU 0x00000010
 fx_recyshow.sync: EQU 0x00001CE3
+fx_grinder_bubble: EQU 0x00007A2B
+fx_grinder_shades: EQU 0x00007B00

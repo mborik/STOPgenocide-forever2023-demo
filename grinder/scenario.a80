@@ -154,6 +154,9 @@
 
 		fillin	581, 0q167, 0q127
 
+		sync	1108
+		action	action.fillBubble
+
 		sync	1340
 		action	action.slideDown
 
