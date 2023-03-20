@@ -1,9 +1,9 @@
-fx_lucy: EQU 0x0000C000
+fx_lucyshow: EQU 0x0000C000
+fx_lucyshow.pg: EQU 0x00000014
+fx_lucyshow.sync: EQU 0x000014FA
+fx_lucy: EQU 0x0000C631
 fx_lucy.pg: EQU 0x00000014
 fx_lucy.sync: EQU 0x0000167E
-fx_simon: EQU 0x0000EBEB
+fx_simon: EQU 0x0000F21C
 fx_simon.pg: EQU 0x00000014
 fx_simon.sync: EQU 0x0000197B
-fx_recyplazmy: EQU 0x0000F9CF
-fx_recyplazmy.pg: EQU 0x00000014
-fx_recyplazmy.sync: EQU 0x0000200A

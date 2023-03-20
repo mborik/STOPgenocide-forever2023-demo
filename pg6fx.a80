@@ -25,10 +25,10 @@ fx_plasma1:	incbin "plasma1/final.pak"
 .sync = 2868
 		display "'plasma1' part length: ",/D,($-fx_plasma1)
 
-fx_lucyshow:	incbin "lucyshow/final.pak"
+fx_recyplazmy:	incbin "recyplazmy/final.pak"
 .pg = _fxpage
-.sync = 5370
-		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
+.sync = 8202
+		display "'recyplazmy' part length: ",/D,($-fx_recyplazmy)
 
 fx_vodocat:	incbin "vodocat/bank.bin"
 .pg = _fxpage ; data transfer part
@@ -61,9 +61,9 @@ fx_vodocat:	incbin "vodocat/bank.bin"
 		export fx_plasma1.pg
 		export fx_plasma1.sync
 
-		export fx_lucyshow
-		export fx_lucyshow.pg
-		export fx_lucyshow.sync
+		export fx_recyplazmy
+		export fx_recyplazmy.pg
+		export fx_recyplazmy.sync
 
 		export fx_vodocat
 		export fx_vodocat.pg

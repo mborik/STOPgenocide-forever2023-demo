@@ -15,6 +15,11 @@
 ; .sync = 1234      ; some constant to sync with part passed in DE
 ; .length           ; optional when data transfer (ldir) needed
 
+fx_lucyshow:	incbin "lucyshow/final.pak"
+.pg = _fxpage
+.sync = 5370
+		display "'lucyshow' part length: ",/D,($-fx_lucyshow)
+
 fx_lucy:	incbin "lucy/final.pak"
 .pg = _fxpage
 .sync = 5758
@@ -24,11 +29,6 @@ fx_simon:	incbin "simon/final.pak"
 .pg = _fxpage
 .sync = 6523
 		display "'simon' part length: ",/D,($-fx_simon)
-
-fx_recyplazmy:	incbin "recyplazmy/final.pak"
-.pg = _fxpage
-.sync = 8202
-		display "'recyplazmy' part length: ",/D,($-fx_recyplazmy)
 
 ;;-----------------------------------------------------------------------------
 	if $ > #10000
@@ -48,6 +48,10 @@ fx_recyplazmy:	incbin "recyplazmy/final.pak"
 ;		export fx_demopart.pg
 ;		export fx_demopart.sync
 
+		export fx_lucyshow
+		export fx_lucyshow.pg
+		export fx_lucyshow.sync
+
 		export fx_lucy
 		export fx_lucy.pg
 		export fx_lucy.sync
@@ -55,7 +59,3 @@ fx_recyplazmy:	incbin "recyplazmy/final.pak"
 		export fx_simon
 		export fx_simon.pg
 		export fx_simon.sync
-
-		export fx_recyplazmy
-		export fx_recyplazmy.pg
-		export fx_recyplazmy.sync
