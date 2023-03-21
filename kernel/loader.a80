@@ -18,21 +18,19 @@ introseq:	di
 		call	introzx0.depack
 
 test48		ld	hl,#C000
-		ld	a,#51
+		ld	a,#53		; #53 and #54 used for test
 		out	(#fd),a
 		ld	(hl),a
-		push	af
-		ld	a,#53
+		inc	a
 		out	(#fd),a
 		ld	(hl),a
-		pop	af
+		dec	a
 		out	(#fd),a
 		cp	(hl)
-		jr	nz,.failed
 		ei
-		ret
-
-.failed		ld	hl,ERR.48k
+		ret	z
+		; 128k memory test failed
+		ld	hl,ERR.48k
 		call	printout
 		di
 		halt
@@ -112,8 +110,7 @@ attrhide:	ld	hl,22528
 		jr	nz,.atthd2
 		ret
 
-printout	ei
-		push	hl
+printout	push	hl
 		ld	a,#F4
 		ld	(23739),a
 		ld	a,2
