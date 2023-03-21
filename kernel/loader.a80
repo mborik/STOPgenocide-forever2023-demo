@@ -91,10 +91,10 @@ kernelblock	incbin "final.pak"
 ; LOADER auto-detect/test HW (positioned after kernelblock, free to overwrite by later blocks)
 
 		; Read NextReg into A (does modify A and BC, and NextReg selected at I/O port)
-	MACRO NEXTREG2A register?
+	macro NEXTREG2A register?
 		ld	a,register?
 		call	readNextReg
-	ENDM
+	endm
 
 introseq:	di
 		ld	hl,introseq.dat
@@ -103,7 +103,7 @@ introseq:	di
 
 testnext	; detect Z80N CPU ; canonical test from ped7g/ZXSpectrumNextMisc/ code snippets
 		ld	a,#80
-		HEX	ED240000	; mirror a : nop : nop
+		hex	ED240000	; mirror a : nop : nop
 		dec	a
 		jr	nz,test48
 		; Z80N detected, try to read next registers and reconfigure machine, A = 0 here
@@ -138,10 +138,10 @@ testnext	; detect Z80N CPU ; canonical test from ped7g/ZXSpectrumNextMisc/ code 
 		or	%1010'0000	; unlock #7FFD I/O, contention ON, AY ACB stereo
 		out	(c),a
 		; set 3.5MHz
-		HEX	ED910700	; nextreg TURBO_CONTROL_NR_07, 0
+		hex	ED910700	; nextreg TURBO_CONTROL_NR_07, 0
 
 test48		ld	hl,#C000
-		ld	a,#53		; #53 and #54 used for test
+		ld	a,#56		; #56 and #57 used for test
 		out	(#fd),a
 		ld	(hl),a
 		inc	a
@@ -152,7 +152,7 @@ test48		ld	hl,#C000
 		cp	(hl)
 		ei
 		ret	z
-		; 128k memory test failed
+	; 128k memory test failed
 		ld	hl,ERR.48k
 	;	|
 	; fallthrough into printout routine
