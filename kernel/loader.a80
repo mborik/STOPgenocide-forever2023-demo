@@ -12,6 +12,31 @@ begin = $
 		incbin "../bank0"
 
 
+introseq:	di
+		ld	hl,introseq.dat
+		ld	de,#4000
+		call	introzx0.depack
+
+test48		ld	hl,#C000
+		ld	a,#51
+		out	(#fd),a
+		ld	(hl),a
+		push	af
+		ld	a,#53
+		out	(#fd),a
+		ld	(hl),a
+		pop	af
+		out	(#fd),a
+		cp	(hl)
+		jr	nz,.failed
+		ei
+		ret
+
+.failed		ld	hl,ERR.48k
+		call	printout
+		di
+		halt
+
 numberOfBanks = 5
 unpackpage:	ld	hl,#51A1
 		ld	bc,((30 / numberOfBanks) << 8) | #FF
@@ -48,9 +73,6 @@ fadeoutandrun:	ld	a,25
 		ld	de,#8000
 		call	introzx0.depack
 		jp	kernel
-
-introscr:	ld	hl,introscr.dat
-		ld	de,#4000
 
 	module introzx0
 depack
@@ -90,8 +112,27 @@ attrhide:	ld	hl,22528
 		jr	nz,.atthd2
 		ret
 
+printout	ei
+		push	hl
+		ld	a,#F4
+		ld	(23739),a
+		ld	a,2
+		call	#1601
+		pop	hl
+.loop		ld	a,(hl)
+		and	127
+		rst	16
+		bit	7,(hl)
+		ret	nz
+		inc	hl
+		jr	.loop
+
+ERR.48k		db	22, 21, 3
+		db	16, 2
+		dc	"this demo won't run on 48k"
+
 kernelblock	incbin "final.pak"
-introscr.dat:	incbin "loading.pak"
+introseq.dat:	incbin "loading.pak"
 
 total = $-begin
 	endmodule
@@ -146,7 +187,7 @@ line1.cmds	; POKE VAL "23624",NOT PI:
 		db	C_LOAD, ' "block0"', C_CODE, ':'
 		; RANDOMIZE USR VAL "x"
 		db	C_RANDOMIZE, C_USR
-		VAL	loader.introscr, EOL
+		VAL	loader.introseq, EOL
 line1.len = $ - line1.cmds
 
 line2:		db	0, 2
