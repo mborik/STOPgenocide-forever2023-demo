@@ -274,8 +274,8 @@ im2vector = ((high $) + 1) << 8
 		ex	af,af'
 		dec	a
 		jr	nz,.fadeout
-		ld	a,#17
-		call	xchg.bnk
+		ld	a,#57
+		out	(#fd),a
 		xor	a
 		ld	hl,#5AFF
 		ld	de,#5AFE

@@ -287,7 +287,15 @@ line3.len = $ - line3.cmds
 
 line4:		db	0, 4
 		dw	line4.len
-line4.cmds	; LOAD _"epilog" CODE:
+line4.cmds	; POKE VAL "23388",VAL "16":
+		db	C_POKE
+		VAL	23388, ','
+		VAL	16, ':'
+		; OUT VAL "32765",VAL "16":
+		db	C_OUT
+		VAL	32765, ','
+		VAL	16, ':'
+		; LOAD _"epilog" CODE:
 		db	C_LOAD, ' "epilog"', C_CODE, ':'
 		; RANDOMIZE USR VAL "25e3"
 		db	C_RANDOMIZE, C_USR, C_VAL, '"25e3"', EOL
