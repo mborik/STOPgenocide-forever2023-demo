@@ -87,15 +87,14 @@ attrhide:	ld	hl,22528
 		ret
 
 kernelblock	incbin "final.pak"
-introseq.dat:	incbin "loading.pak"
 
 ; LOADER auto-detect/test HW (positioned after kernelblock, free to overwrite by later blocks)
 
 		; Read NextReg into A (does modify A and BC, and NextReg selected at I/O port)
-		MACRO NEXTREG2A register?
-			ld     a,register?
-			call   readNextReg
-		ENDM
+	MACRO NEXTREG2A register?
+		ld	a,register?
+		call	readNextReg
+	ENDM
 
 introseq:	di
 		ld	hl,introseq.dat
@@ -163,21 +162,25 @@ printout	push	hl
 		ld	(23739),a
 		ld	a,2
 		call	#1601
+		ld	hl,ERR
+		call	.loop
 		pop	hl
+		call	.loop
+		jr	$	; infinite loop after message is printed
+
 .loop		ld	a,(hl)
 		and	127
 		rst	16
 		bit	7,(hl)
-		jr	nz,$		; infinite loop after message is printed
+		ret	nz
 		inc	hl
 		jr	.loop
 
-ERR.48k		db	22, 21, 3
+ERR		db	22, 21, 1
 		db	16, 2
-		dc	"this demo won't run on 48k"
-ERR.60Hz	db	22, 21, 3
-		db	16, 2
-		dc	"this demo won't run in 60Hz"
+		dc	"this demo does not work "
+ERR.48k		dc	"on 48k"
+ERR.60Hz	dc	"in 60Hz"
 
 readNextReg	; reads nextreg in A into A (does modify currently selected NextReg at I/O port)
 		ld	bc,#243B	; bc = TBBLUE_REGISTER_SELECT_P_243B
@@ -185,6 +188,8 @@ readNextReg	; reads nextreg in A into A (does modify currently selected NextReg 
 		inc	b		; bc = TBBLUE_REGISTER_ACCESS_P_253B
 		in	a,(c)		; read desired NextReg state
 		ret
+
+introseq.dat:	incbin "loading.pak"
 
 total = $-begin
 	endmodule
