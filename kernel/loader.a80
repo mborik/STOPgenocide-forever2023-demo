@@ -91,10 +91,54 @@ introseq.dat:	incbin "loading.pak"
 
 ; LOADER auto-detect/test HW (positioned after kernelblock, free to overwrite by later blocks)
 
+		; Read NextReg into A (does modify A and BC, and NextReg selected at I/O port)
+		MACRO NEXTREG2A register?
+			ld     a,register?
+			call   readNextReg
+		ENDM
+
 introseq:	di
 		ld	hl,introseq.dat
 		ld	de,#4000
 		call	introzx0.depack
+
+testnext	; detect Z80N CPU ; canonical test from ped7g/ZXSpectrumNextMisc/ code snippets
+		ld	a,#80
+		HEX	ED240000	; mirror a : nop : nop
+		dec	a
+		jr	nz,test48
+		; Z80N detected, try to read next registers and reconfigure machine, A = 0 here
+		call	readNextReg	; check if machine ID is 8 or 10 (in lower 4b)
+		add	a,5
+		and	#0F
+		cp	8+5		; 8 is emulator, 10 is ZX Next
+		jr	c,test48	; machineID 0..7, 11..15
+		; read video mode (50/60Hz, VGA / HDMI)
+		NEXTREG2A 5		; PERIPHERAL_1_NR_05
+		and	4
+		ld	hl,ERR.60Hz
+		jr	nz,printout	; error in 60Hz modes
+; 		NEXTREG2A #11		; VIDEO_TIMING_NR_11
+; 		inc	a
+; 		and	#07
+;		ld	hl,ERR.HDMI
+; 		jr	z,printout	; error in HDMI 50Hz mode
+		; try to force 128 +3 timing, but don't require it (user can have lock)
+		NEXTREG2A #03		; MACHINE_TYPE_NR_03
+		and	#0F
+		or	%1'011'0000	; try to set "011 = ZX +2A/+2B/+3 display timing"
+		out	(c),a
+		; AY sound chip, disable buttons
+		NEXTREG2A #06		; PERIPHERAL_2_NR_06
+		and	%0'1'000'1'00	; disable buttons: CPU speed, 50/60Hz, DRIVE, NMI
+		inc	a		; set AY sound chip
+		out	(c),a
+		; ACB stereo
+		NEXTREG2A #08		; PERIPHERAL_3_NR_08
+		and	%0001'0000	; preserve: internal speaker, disable: DAC, #FF I/O Timex read, Turbosound
+		or	%1010'0000	; unlock #7FFD I/O, contention ON, AY ACB stereo
+		; set 3.5MHz
+		HEX	ED910700	; nextreg TURBO_CONTROL_NR_07, 0
 
 test48		ld	hl,#C000
 		ld	a,#53		; #53 and #54 used for test
@@ -131,7 +175,16 @@ printout	push	hl
 ERR.48k		db	22, 21, 3
 		db	16, 2
 		dc	"this demo won't run on 48k"
+ERR.60Hz	db	22, 21, 3
+		db	16, 2
+		dc	"this demo won't run in 60Hz"
 
+readNextReg	; reads nextreg in A into A (does modify currently selected NextReg at I/O port)
+		ld	bc,#243B	; bc = TBBLUE_REGISTER_SELECT_P_243B
+		out	(c),a
+		inc	b		; bc = TBBLUE_REGISTER_ACCESS_P_253B
+		in	a,(c)		; read desired NextReg state
+		ret
 
 total = $-begin
 	endmodule
