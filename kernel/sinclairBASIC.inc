@@ -1,8 +1,6 @@
 	macro VAL number?, appendix?
-@__VAL_number = number?
-@__VAL_appendix = appendix?
 	lua allpass
-_pc("		db	C_VAL, '\""..tostring(_c('__VAL_number')).."\"', ".._c('__VAL_appendix'))
+_pc("		db	C_VAL, '\""..tostring(_c('number?')).."\"', appendix?")
 	endlua
 	endm
 
