@@ -11,30 +11,6 @@
 begin = $
 		incbin "../bank0"
 
-
-introseq:	di
-		ld	hl,introseq.dat
-		ld	de,#4000
-		call	introzx0.depack
-
-test48		ld	hl,#C000
-		ld	a,#53		; #53 and #54 used for test
-		out	(#fd),a
-		ld	(hl),a
-		inc	a
-		out	(#fd),a
-		ld	(hl),a
-		dec	a
-		out	(#fd),a
-		cp	(hl)
-		ei
-		ret	z
-		; 128k memory test failed
-		ld	hl,ERR.48k
-		call	printout
-		di
-		halt
-
 numberOfBanks = 5
 unpackpage:	ld	hl,#51A1
 		ld	bc,((30 / numberOfBanks) << 8) | #FF
@@ -110,6 +86,34 @@ attrhide:	ld	hl,22528
 		jr	nz,.atthd2
 		ret
 
+kernelblock	incbin "final.pak"
+introseq.dat:	incbin "loading.pak"
+
+; LOADER auto-detect/test HW (positioned after kernelblock, free to overwrite by later blocks)
+
+introseq:	di
+		ld	hl,introseq.dat
+		ld	de,#4000
+		call	introzx0.depack
+
+test48		ld	hl,#C000
+		ld	a,#53		; #53 and #54 used for test
+		out	(#fd),a
+		ld	(hl),a
+		inc	a
+		out	(#fd),a
+		ld	(hl),a
+		dec	a
+		out	(#fd),a
+		cp	(hl)
+		ei
+		ret	z
+		; 128k memory test failed
+		ld	hl,ERR.48k
+	;	|
+	; fallthrough into printout routine
+	;	|
+	;	v
 printout	push	hl
 		ld	a,#F4
 		ld	(23739),a
@@ -120,7 +124,7 @@ printout	push	hl
 		and	127
 		rst	16
 		bit	7,(hl)
-		ret	nz
+		jr	nz,$		; infinite loop after message is printed
 		inc	hl
 		jr	.loop
 
@@ -128,8 +132,6 @@ ERR.48k		db	22, 21, 3
 		db	16, 2
 		dc	"this demo won't run on 48k"
 
-kernelblock	incbin "final.pak"
-introseq.dat:	incbin "loading.pak"
 
 total = $-begin
 	endmodule
