@@ -136,6 +136,7 @@ testnext	; detect Z80N CPU ; canonical test from ped7g/ZXSpectrumNextMisc/ code 
 		NEXTREG2A #08		; PERIPHERAL_3_NR_08
 		and	%0001'0000	; preserve: internal speaker, disable: DAC, #FF I/O Timex read, Turbosound
 		or	%1010'0000	; unlock #7FFD I/O, contention ON, AY ACB stereo
+		out	(c),a
 		; set 3.5MHz
 		HEX	ED910700	; nextreg TURBO_CONTROL_NR_07, 0
 
