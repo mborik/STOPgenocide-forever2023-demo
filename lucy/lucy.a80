@@ -362,13 +362,11 @@ HAIR_GROW	ld	l,a
 		ld	a,e
 		add	a,32
 		ld	e,a
-PLASMA_GROW1	ld	bc,LUCY_HAIR
-		ld	h,0
-		add	hl,bc
+PLASMA_GROW1	ld	h,high LUCY_HAIR
 		ld	a,(hl)
 		cpl
 		ld	(de),a
-		inc	hl
+		inc	l
 		inc	d
 		ld	a,(hl)
 		cpl
@@ -381,7 +379,7 @@ PLASMA_SHRINK	ld	a,(PLASMA_SKIP+2)
 		inc	a
 		inc	a
 		ld	(PLASMA_SKIP+2),a
-		sub	72-16
+		sub	72-14
 		ret	c
 HAIR_SHRINK	ld	de,4800h+19
 		add	a,d
@@ -395,7 +393,6 @@ HAIR_SHRINK	ld	de,4800h+19
 		ld	e,a
 PLASMA_SHRINK1	ld	a,255
 		ld	(de),a
-		inc	hl
 		inc	d
 		ld	(de),a
 		ret
@@ -469,22 +466,22 @@ INTER_UPDATE1	ex	af,af'
 		inc	a
 		ld	(INTER_PHASE+1),a
 
-		cp	16
+		cp	15
 		jr	nc,INTER_NOHAIR
-		ld	l,a
+		ld	e,a
 		ld	a,16
-		sub	l
+		sub	e
 		call	HAIR_GROW
 		jr	INTER_NOHAIR2
 INTER_NOHAIR
 		ld	a,(INTER_PHASE+1)
-		cp	40-16
+		cp	40-14
 		jr	c,INTER_NOHAIR2
 		cp	40
 		jr	nc,INTER_NOHAIR2
-		ld	l,a
+		ld	e,a
 		ld	a,39
-		sub	l
+		sub	e
 		call	HAIR_SHRINK
 INTER_NOHAIR2
 
