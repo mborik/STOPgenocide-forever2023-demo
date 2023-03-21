@@ -366,8 +366,8 @@ mkalta		ld	hl,dspatt+#700
 		ld	de,dspatt2
 		ld	b,l
 .loop		ld	a,(hl)
-		or	0q160
-		xor	0b11110
+		or	0q120
+		xor	0q055
 .justcopy	ld	(de),a
 		inc	l
 		inc	e
@@ -400,15 +400,15 @@ blik_scheduler	di
 		ret
 
 fx_blik		dw	-3048
-		db	high dspatt2, 5
+		db	high dspatt2, 2
 		dw	-3051
 		db	high dspatt + 7, 0
 		dw	-3055
-		db	high dspatt2, 5
+		db	high dspatt2, 2
 		dw	-3058
 		db	high dspatt + 7, 0
 		dw	-3060
-		db	high dspatt2, 5
+		db	high dspatt2, 2
 		dw	-3064
 		db	high dspatt + 7, 0
 		dw	0
